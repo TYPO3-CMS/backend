@@ -1,0 +1,7 @@
+/* - - - - - - - - - - - - - - - - - - - - -
+Topbar (whole upper area), containts Logo and toolbar
+- - - - - - - - - - - - - - - - - - - - - */
+
+#typo3-logo {
+	float: left;
+}

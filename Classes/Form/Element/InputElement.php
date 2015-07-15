@@ -174,9 +174,6 @@ class InputElement extends AbstractFormElement {
 		if (isset($config['max']) && (int)$config['max'] > 0) {
 			$attributes['maxlength'] = (int)$config['max'];
 		}
-		if (!empty($styles)) {
-			$attributes['style'] = implode(' ', $styles);
-		}
 		if (!empty($classes)) {
 			$attributes['class'] = implode(' ', $classes);
 		}

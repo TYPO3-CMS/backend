@@ -21,7 +21,7 @@ use TYPO3\CMS\Lang\LanguageService;
 /**
  * Handle flex forms that have tabs (multiple "sheets").
  *
- * This container is called by FlexFormLanguageContainer. It resolves each
+ * This container is called by FlexFormEntryContainer. It resolves each
  * sheet and hands rendering of single sheet content over to FlexFormElementContainer.
  */
 class FlexFormTabsContainer extends AbstractContainer {
@@ -40,17 +40,16 @@ class FlexFormTabsContainer extends AbstractContainer {
 		$fieldName = $this->data['fieldName']; // field name of the flex form field in DB
 		$parameterArray = $this->data['parameterArray'];
 		$flexFormDataStructureArray = $this->data['flexFormDataStructureArray'];
-		$flexFormCurrentLanguage = $this->data['flexFormCurrentLanguage'];
 		$flexFormRowData = $this->data['flexFormRowData'];
 
-		$tabId = 'TCEFORMS:flexform:' . $this->data['parameterArray']['itemFormElName'] . $flexFormCurrentLanguage;
+		$tabId = 'TCEFORMS:flexform:' . $this->data['parameterArray']['itemFormElName'] . 'lDEF';
 		$tabIdString = $docTemplate->getDynTabMenuId($tabId);
 		$tabCounter = 0;
 
 		$resultArray = $this->initializeResultArray();
 		$tabsContent = array();
 		foreach ($flexFormDataStructureArray['sheets'] as $sheetName => $sheetDataStructure) {
-			$flexFormRowSheetDataSubPart = $flexFormRowData['data'][$sheetName][$flexFormCurrentLanguage];
+			$flexFormRowSheetDataSubPart = $flexFormRowData['data'][$sheetName]['lDEF'] ?: [];
 
 			if (!is_array($sheetDataStructure['ROOT']['el'])) {
 				$resultArray['html'] .= LF . 'No Data Structure ERROR: No [\'ROOT\'][\'el\'] found for sheet "' . $sheetName . '".';
@@ -72,7 +71,7 @@ class FlexFormTabsContainer extends AbstractContainer {
 			$options = $this->data;
 			$options['flexFormDataStructureArray'] = $sheetDataStructure['ROOT']['el'];
 			$options['flexFormRowData'] = $flexFormRowSheetDataSubPart;
-			$options['flexFormFormPrefix'] = '[data][' . $sheetName . '][' . $flexFormCurrentLanguage . ']';
+			$options['flexFormFormPrefix'] = '[data][' . $sheetName . '][lDEF]';
 			$options['parameterArray'] = $parameterArray;
 			// Merge elements of this tab into a single list again and hand over to
 			// palette and single field container to render this group

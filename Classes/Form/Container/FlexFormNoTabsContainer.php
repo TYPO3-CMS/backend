@@ -19,7 +19,7 @@ use TYPO3\CMS\Core\Utility\GeneralUtility;
 /**
  * Handle a flex form that has no tabs.
  *
- * This container is called by FlexFormLanguageContainer if only a default sheet
+ * This container is called by FlexFormEntryContainer if only a default sheet
  * exists. It evaluates the display condition and hands over rendering of single
  * fields to FlexFormElementContainer.
  */
@@ -36,14 +36,13 @@ class FlexFormNoTabsContainer extends AbstractContainer {
 		$fieldName = $this->data['fieldName']; // field name of the flex form field in DB
 		$parameterArray = $this->data['parameterArray'];
 		$flexFormDataStructureArray = $this->data['flexFormDataStructureArray'];
-		$flexFormCurrentLanguage = $this->data['flexFormCurrentLanguage'];
 		$flexFormRowData = $this->data['flexFormRowData'];
 		$resultArray = $this->initializeResultArray();
 
 		// Flex ds was normalized in flex provider to always have a sheet.
 		// Determine this single sheet name, most often it ends up with sDEF, except if only one sheet was defined
 		$sheetName = array_pop(array_keys($flexFormDataStructureArray['sheets']));
-		$flexFormRowDataSubPart = $flexFormRowData['data'][$sheetName][$flexFormCurrentLanguage];
+		$flexFormRowDataSubPart = $flexFormRowData['data'][$sheetName]['lDEF'] ?: [];
 
 		// That was taken from GeneralUtility::resolveSheetDefInDS - no idea if it is important
 		unset($flexFormDataStructureArray['meta']);
@@ -66,7 +65,7 @@ class FlexFormNoTabsContainer extends AbstractContainer {
 		$options = $this->data;
 		$options['flexFormDataStructureArray'] = $flexFormDataStructureArray['sheets'][$sheetName]['ROOT']['el'];
 		$options['flexFormRowData'] = $flexFormRowDataSubPart;
-		$options['flexFormFormPrefix'] = '[data][' . $sheetName . '][' . $flexFormCurrentLanguage . ']';
+		$options['flexFormFormPrefix'] = '[data][' . $sheetName . '][lDEF]';
 		$options['parameterArray'] = $parameterArray;
 
 		$options['renderType'] = 'flexFormElementContainer';

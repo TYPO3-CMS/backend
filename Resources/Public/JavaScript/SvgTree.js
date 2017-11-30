@@ -12,10 +12,20 @@
  */
 
 /**
- * Module: TYPO3/CMS/Backend/FormEngine/Element/SvgTree
+ * Module: TYPO3/CMS/Backend/SvgTree
  */
-define(['jquery', 'd3', 'TYPO3/CMS/Backend/Icons'],
-  function ($, d3, Icons) {
+define(
+  [
+    'jquery',
+    'd3',
+    'TYPO3/CMS/Backend/ContextMenu',
+    'TYPO3/CMS/Backend/Modal',
+    'TYPO3/CMS/Backend/Severity',
+    'TYPO3/CMS/Backend/Notification',
+    'TYPO3/CMS/Backend/Icons',
+    'TYPO3/CMS/Lang/Lang',
+  ],
+  function ($, d3, ContextMenu, Modal, Severity, Notification, Icons) {
     'use strict';
 
     /**
@@ -26,10 +36,13 @@ define(['jquery', 'd3', 'TYPO3/CMS/Backend/Icons'],
       this.settings = {
         showCheckboxes: false,
         showIcons: false,
+        allowRecursiveDelete: false,
         nodeHeight: 20,
         indentWidth: 16,
+        width: 300,
         duration: 400,
-        dataUrl: 'tree-configuration.json',
+        dataUrl: '',
+        nodeOver: {},
         validation: {
           maxItems: Number.MAX_VALUE,
         },
@@ -50,11 +63,32 @@ define(['jquery', 'd3', 'TYPO3/CMS/Backend/Icons'],
       this.svg = null;
 
       /**
+       * Wrapper of svg element
+       *
+       * @type {Selection}
+       */
+      this.d3wrapper = null;
+
+      /**
+       * SVG <g> container wrapping all .nodes, .links, .nodes-bg  elements
+       *
+       * @type {Selection}
+       */
+      this.container = null;
+
+      /**
        * SVG <g> container wrapping all .node elements
        *
        * @type {Selection}
        */
       this.nodesContainer = null;
+
+      /**
+       * SVG <g> container wrapping all .nodes-bg elements
+       *
+       * @type {Selection}
+       */
+      this.nodesBgContainer = null;
 
       /**
        * SVG <defs> container wrapping all icon definitions
@@ -123,18 +157,41 @@ define(['jquery', 'd3', 'TYPO3/CMS/Backend/Icons'],
         $.extend(this.settings, settings);
         var _this = this;
         this.wrapper = $wrapper;
-        this.dispatch = d3.dispatch('updateNodes', 'updateSvg', 'loadDataAfter', 'prepareLoadedNode', 'nodeSelectedAfter');
-        this.svg = d3
-          .select($wrapper[0])
-          .append('svg')
+        this.dispatch = d3.dispatch(
+          'updateNodes',
+          'updateSvg',
+          'loadDataAfter',
+          'prepareLoadedNode',
+          'nodeSelectedAfter',
+          'nodeRightClick',
+          'contextmenu'
+        );
+
+        /**
+         * Create element:
+         *
+         * <svg version="1.1" width="100%">
+         *   <g class="nodes-wrapper">
+         *     <g class="nodes-bg"><rect class="node-bg"></rect></g>
+         *     <g class="links"><path class="link"></path></g>
+         *     <g class="nodes"><g class="node"></g></g>
+         *   </g>
+         * </svg>
+         */
+        this.d3wrapper = d3
+          .select($wrapper[0]);
+        this.svg = this.d3wrapper.append('svg')
           .attr('version', '1.1')
           .attr('width', '100%');
-        var container = this.svg
+        this.container = this.svg
           .append('g')
+          .attr('class', 'nodes-wrapper')
           .attr('transform', 'translate(' + (this.settings.indentWidth / 2) + ',' + (this.settings.nodeHeight / 2) + ')');
-        this.linksContainer = container.append('g')
+        this.nodesBgContainer = this.container.append('g')
+          .attr('class', 'nodes-bg');
+        this.linksContainer = this.container.append('g')
           .attr('class', 'links');
-        this.nodesContainer = container.append('g')
+        this.nodesContainer = this.container.append('g')
           .attr('class', 'nodes');
         if (this.settings.showIcons) {
           this.iconsContainer = this.svg.append('defs');
@@ -152,7 +209,30 @@ define(['jquery', 'd3', 'TYPO3/CMS/Backend/Icons'],
         this.wrapper.data('svgtree', this);
         this.wrapper.data('svgtree-initialized', true);
         this.wrapper.trigger('svgTree.initialized');
+        this.setWrapperHeight();
+        this.resize();
         return true;
+      },
+
+      /**
+       * Update svg tree after changed window height
+       */
+      resize: function () {
+        var _this = this;
+
+        $(window).resize(function () {
+          _this.setWrapperHeight();
+          _this.updateScrollPosition();
+          _this.update();
+        });
+      },
+
+      /**
+       * Set svg wrapper height
+       */
+      setWrapperHeight: function () {
+        var treeWrapperHeight = ($('#typo3-pagetree').height() - $('#svg-toolbar').height());
+        $('#typo3-pagetree-tree').height(treeWrapperHeight);
       },
 
       /**
@@ -169,39 +249,73 @@ define(['jquery', 'd3', 'TYPO3/CMS/Backend/Icons'],
        */
       loadData: function () {
         var _this = this;
+        _this.nodesAddPlaceholder();
+
         d3.json(this.settings.dataUrl, function (error, json) {
           if (error) throw error;
           var nodes = Array.isArray(json) ? json : [];
-          nodes = nodes.map(function (node, index) {
-            node.open = (_this.settings.expandUpToLevel !== null) ? node.depth < _this.settings.expandUpToLevel : Boolean(node.expanded);
-            node.parents = [];
-            node._isDragged = false;
-            if (node.depth > 0) {
-              var currentDepth = node.depth;
-              for (var i = index; i >= 0; i--) {
-                var currentNode = nodes[i];
-                if (currentNode.depth < currentDepth) {
-                  node.parents.push(i);
-                  currentDepth = currentNode.depth;
-                }
-              }
-            }
-
-            if (typeof node.checked === 'undefined') {
-              node.checked = false;
-              _this.settings.unselectableElements.push(node.identifier);
-            }
-
-            //dispatch event
-            _this.dispatch.call('prepareLoadedNode', _this, node);
-            return node;
-          });
-
-          _this.nodes = nodes;
+          _this.setParametersNode(nodes);
           _this.dispatch.call('loadDataAfter', _this);
           _this.prepareDataForVisibleNodes();
+          _this.nodesContainer.selectAll('.node').remove();
+          _this.nodesBgContainer.selectAll('.node-bg').remove();
+          _this.linksContainer.selectAll('.link').remove();
           _this.update();
+          _this.nodesRemovePlaceholder();
         });
+      },
+
+      /**
+       * Set parameters like node parents, parentsUid, checked
+       *
+       * @param {Node[]} nodes
+       */
+      setParametersNode: function (nodes) {
+        var _this = this;
+
+        nodes = nodes.map(function (node, index) {
+          node.open = (_this.settings.expandUpToLevel !== null) ? node.depth < _this.settings.expandUpToLevel : Boolean(node.expanded);
+          node.parents = [];
+          node.parentsUid = [];
+          node._isDragged = false;
+          if (node.depth > 0) {
+            var currentDepth = node.depth;
+            for (var i = index; i >= 0; i--) {
+              var currentNode = nodes[i];
+              if (currentNode.depth < currentDepth) {
+                node.parents.push(i);
+                node.parentsUid.push(nodes[i].identifier);
+                currentDepth = currentNode.depth;
+              }
+            }
+          } else if (node.hasChildren) {
+            node.open = true;
+          }
+
+          if (typeof node.checked === 'undefined') {
+            node.checked = false;
+            _this.settings.unselectableElements.push(node.identifier);
+          }
+
+          //dispatch event
+          _this.dispatch.call('prepareLoadedNode', _this, node);
+          return node;
+        });
+
+        _this.nodes = nodes;
+      },
+
+      nodesRemovePlaceholder: function () {
+        $('.svg-tree').find('.node-loader').hide();
+        $('.svg-tree').find('.svg-tree-loader').hide();
+      },
+
+      nodesAddPlaceholder: function (node) {
+        if (node) {
+          $('.svg-tree').find('.node-loader').css({ top: node.y + 15 }).show();
+        } else {
+          $('.svg-tree').find('.svg-tree-loader').show();
+        }
       },
 
       /**
@@ -226,10 +340,17 @@ define(['jquery', 'd3', 'TYPO3/CMS/Backend/Icons'],
         });
 
         this.data.links = [];
+        var pathAboveMounts = 0;
+
         this.data.nodes.forEach(function (n, i) {
           //delete n.children;
           n.x = n.depth * _this.settings.indentWidth;
-          n.y = i * _this.settings.nodeHeight;
+
+          if (n.readableRootline) {
+            pathAboveMounts += _this.settings.nodeHeight;
+          }
+
+          n.y = (i * _this.settings.nodeHeight) + pathAboveMounts;
           if (n.parents[0] !== undefined) {
             _this.data.links.push({
               source: _this.nodes[n.parents[0]],
@@ -243,17 +364,22 @@ define(['jquery', 'd3', 'TYPO3/CMS/Backend/Icons'],
           }
         });
 
-        this.svg.attr('height', this.data.nodes.length * this.settings.nodeHeight);
+        this.svg.attr('height', ((this.data.nodes.length * this.settings.nodeHeight) + (this.settings.nodeHeight / 2) + pathAboveMounts));
       },
 
       /**
        * Fetch icon from Icon API and store it in data.icons
        *
        * @param {String} iconName
+       * @param {Boolean} update
        */
-      fetchIcon: function (iconName) {
+      fetchIcon: function (iconName, update) {
         if (!iconName) {
           return;
+        }
+
+        if (typeof update === 'undefined') {
+          update = true;
         }
 
         var _this = this;
@@ -264,7 +390,10 @@ define(['jquery', 'd3', 'TYPO3/CMS/Backend/Icons'],
           };
           Icons.getIcon(iconName, Icons.sizes.small, null, null, 'inline').done(function (icon) {
             _this.data.icons[iconName].icon = icon.match(/<svg.*<\/svg>/im)[0];
-            _this.update();
+
+            if (update) {
+              _this.update();
+            }
           });
         }
       },
@@ -273,11 +402,16 @@ define(['jquery', 'd3', 'TYPO3/CMS/Backend/Icons'],
        * Renders the subset of the tree nodes fitting the viewport (adding, modifying and removing SVG nodes)
        */
       update: function () {
-        var visibleRows = Math.ceil(this.viewportHeight / this.settings.nodeHeight + 1);
-        var position = Math.floor(Math.max(this.scrollTop, 0) / this.settings.nodeHeight);
+        var _this = this;
+        var visibleRows = Math.ceil(_this.viewportHeight / _this.settings.nodeHeight + 1);
+        var position = Math.floor(Math.max(_this.scrollTop, 0) / _this.settings.nodeHeight);
 
         var visibleNodes = this.data.nodes.slice(position, position + visibleRows);
         var nodes = this.nodesContainer.selectAll('.node').data(visibleNodes, function (d) {
+          return d.identifier;
+        });
+
+        var nodesBg = this.nodesBgContainer.selectAll('.node-bg').data(visibleNodes, function (d) {
           return d.identifier;
         });
 
@@ -286,19 +420,36 @@ define(['jquery', 'd3', 'TYPO3/CMS/Backend/Icons'],
           .exit()
           .remove();
 
-        nodes = this.enterSvgElements(nodes);
-        this.updateLinks();
+        // delete
+        nodesBg
+          .exit()
+          .remove();
 
-        // update
+        // update nodes background
+        var nodeBgClass = this.updateNodeBgClass(nodesBg);
+
+        nodeBgClass
+          .attr('class', function (node, i) {
+            return _this.getNodeBgClass(node, i, nodeBgClass);
+          })
+          .attr('style', function (node, i) {
+            return node.backgroundColor ? 'fill: ' + node.backgroundColor + ';' : '';
+          });
+
+        this.updateLinks();
+        nodes = this.enterSvgElements(nodes);
+
+        // update nodes
         nodes
           .attr('transform', this.getNodeTransform)
-          .select('text')
+          .select('.node-name')
           .text(this.getNodeLabel.bind(this));
 
         nodes
           .select('.chevron')
           .attr('transform', this.getChevronTransform)
-          .attr('visibility', this.getChevronVisibility);
+          .style('fill', this.getChevronColor)
+          .attr('class', this.getChevronClass);
 
         if (this.settings.showIcons) {
           nodes
@@ -311,6 +462,93 @@ define(['jquery', 'd3', 'TYPO3/CMS/Backend/Icons'],
 
         //dispatch event
         this.dispatch.call('updateNodes', this, nodes);
+      },
+
+      /**
+       * @param {Node} nodesBg
+       * @returns {Node} nodesBg
+       */
+      updateNodeBgClass: function (nodesBg) {
+        var _this = this;
+
+        return nodesBg.enter()
+          .append('rect')
+          .merge(nodesBg)
+          .attr('width', '100%')
+          .attr('height', this.settings.nodeHeight)
+          .attr('data-uid', this.getNodeIdentifier)
+          .attr('transform', this.getNodeBgTransform)
+          .on('mouseover', function (node) {
+            _this.nodeBgEvents().mouseOver(node, this);
+          })
+          .on('mouseout', function (node) {
+            _this.nodeBgEvents().mouseOut(node, this);
+          })
+          .on('click', function (node) {
+            _this.nodeBgEvents().click(node, this);
+            _this.selectNode(node);
+          })
+          .on('contextmenu', function (node) {
+            _this.dispatch.call('nodeRightClick', node, this);
+          });
+      },
+
+      /**
+       * node background events
+       *
+       */
+      nodeBgEvents: function () {
+        var _this = this;
+        var self = {};
+
+        self.mouseOver = function (node, element) {
+          var elementNodeBg = _this.svg.select('.nodes-bg .node-bg[data-uid="' + node.identifier + '"]');
+
+          node.isOver = true;
+          _this.settings.nodeOver.node = node;
+
+          if (elementNodeBg.size()) {
+            elementNodeBg
+              .classed('node-over', true)
+              .attr('rx', '3')
+              .attr('ry', '3');
+          }
+        };
+
+        self.mouseOut = function (node, element) {
+          var elementNodeBg = _this.svg.select('.nodes-bg .node-bg[data-uid="' + node.identifier + '"]');
+
+          node.isOver = false;
+          _this.settings.nodeOver.node = false;
+
+          if (elementNodeBg.size()) {
+            elementNodeBg
+              .classed('node-over node-alert', false)
+              .attr('rx', '0')
+              .attr('ry', '0');
+          }
+        };
+
+        self.click = function (node, element) {
+          var $nodeBg = $(element).closest('svg').find('.nodes-bg .node-bg[data-uid=' + node.identifier + ']');
+
+          _this.nodes.forEach(function (node) {
+            if (node.selected === true) {
+              node.selected = false;
+            }
+          });
+
+          node.selected = true;
+          if ($nodeBg.length) {
+            $nodeBg.addClass('node-selected')
+              .parents('svg')
+              .find('.node-selected')
+              .not($nodeBg)
+              .removeClass('node-selected');
+          }
+        };
+
+        return self;
       },
 
       /**
@@ -332,7 +570,8 @@ define(['jquery', 'd3', 'TYPO3/CMS/Backend/Icons'],
           .remove();
 
         //create
-        links.enter().append('path')
+        links.enter()
+          .append('path')
           .attr('class', 'link')
 
           //create + update
@@ -347,6 +586,7 @@ define(['jquery', 'd3', 'TYPO3/CMS/Backend/Icons'],
        * @returns {Selection}
        */
       enterSvgElements: function (nodes) {
+        var _this = this;
         this.textPosition = 10;
 
         if (this.settings.showIcons) {
@@ -378,17 +618,15 @@ define(['jquery', 'd3', 'TYPO3/CMS/Backend/Icons'],
         }
 
         // create the node elements
-        var nodeEnter = nodes
-          .enter()
-          .append('g')
-          .attr('class', this.getNodeClass)
-          .attr('transform', this.getNodeTransform);
+        var nodeEnter = _this.nodesUpdate(nodes);
 
         // append the chevron element
         var chevron = nodeEnter
           .append('g')
           .attr('class', 'toggle')
-          .on('click', this.chevronClick.bind(this));
+          .attr('visibility', this.getToggleVisibility)
+          .attr('transform', 'translate(-8, -8)')
+          .on('click', _this.chevronClick.bind(this));
 
         // improve usability by making the click area a 16px square
         chevron
@@ -408,24 +646,24 @@ define(['jquery', 'd3', 'TYPO3/CMS/Backend/Icons'],
             .attr('x', 8)
             .attr('y', -8)
             .attr('class', 'node-icon')
-            .on('click', this.clickOnIcon.bind(this));
+            .attr('data-uid', this.getNodeIdentifier)
+            .on('click', function (node) {
+              _this.clickOnIcon(node, this);
+            });
+
           nodeEnter
             .append('use')
             .attr('x', 8)
             .attr('y', -3)
             .attr('class', 'node-icon-overlay')
-            .on('click', this.clickOnIcon.bind(this));
+            .on('click', function (node) {
+              _this.clickOnIcon(node, this);
+            });
         }
 
         this.dispatch.call('updateSvg', this, nodeEnter);
 
-        // append the text element
-        nodeEnter
-          .append('text')
-          .attr('dx', this.textPosition)
-          .attr('dy', 5)
-          .on('click', this.clickOnLabel.bind(this))
-          .on('dblclick', this.dblClickOnLabel.bind(this));
+        _this.appendTextElement(nodeEnter);
 
         nodeEnter
           .append('title')
@@ -435,13 +673,84 @@ define(['jquery', 'd3', 'TYPO3/CMS/Backend/Icons'],
       },
 
       /**
+       * append the text element
+       *
+       * @param {Node} node
+       * @returns {Node} node
+       */
+      appendTextElement: function (node) {
+        var _this = this;
+
+        return node
+          .append('text')
+          .attr('dx', this.textPosition)
+          .attr('dy', 5)
+          .attr('class', 'node-name')
+          .on('click', function (node) {
+            _this.clickOnLabel(node, this);
+            _this.nodeBgEvents().click(node, this);
+            _this.selectNode(node);
+          });
+      },
+
+      /**
+       * @param {Node} nodes
+       * @returns {Node} nodes
+       */
+      nodesUpdate: function (nodes) {
+        var _this = this;
+
+        nodes = nodes
+          .enter()
+          .append('g')
+          .attr('class', this.getNodeClass)
+          .attr('transform', this.getNodeTransform)
+          .attr('data-table', 'pages')
+          .attr('data-uid', this.getNodeIdentifier)
+          .attr('title', this.getNodeTitle)
+          .on('mouseover', function (node) {
+            _this.nodeBgEvents().mouseOver(node, this);
+          })
+          .on('mouseout', function (node) {
+            _this.nodeBgEvents().mouseOut(node, this);
+          })
+          .on('contextmenu', function (node) {
+            _this.dispatch.call('nodeRightClick', node, this);
+          });
+
+        var nodeStop = nodes
+          .append('text')
+          .text(function (node) {
+            return node.readableRootline;
+          })
+          .attr('class', 'node-rootline')
+          .attr('dx', 0)
+          .attr('dy', -15)
+          .attr('visibility', function (node) {
+            return node.readableRootline ? 'visible' : 'hidden';
+          });
+
+        return nodes;
+      },
+
+      /**
+       * Computes the tree item identifier based on the data
+       *
+       * @param {Node} node
+       * @returns {String}
+       */
+      getNodeIdentifier: function (node) {
+        return node.identifier;
+      },
+
+      /**
        * Computes the tree item label based on the data
        *
        * @param {Node} node
        * @returns {String}
        */
       getNodeLabel: function (node) {
-        return node.name;
+        return (node.prefix || '') + node.name + (node.suffix || '');
       },
 
       /**
@@ -455,13 +764,52 @@ define(['jquery', 'd3', 'TYPO3/CMS/Backend/Icons'],
       },
 
       /**
+       * Computes the tree node-bg class
+       *
+       * @param {Node} node
+       * @param {Integer} i
+       * @param {Object} nodeBgClass
+       * @returns {String}
+       */
+      getNodeBgClass: function (node, i, nodeBgClass) {
+        var bgClass = 'node-bg';
+        var prevNode = false;
+        var nextNode = false;
+
+        if (typeof nodeBgClass === 'object') {
+          prevNode = nodeBgClass.data()[i - 1];
+          nextNode = nodeBgClass.data()[i + 1];
+        }
+
+        if (node.selected) {
+          bgClass += ' node-selected';
+        }
+
+        if ((prevNode && (node.depth > prevNode.depth)) || !prevNode) {
+          node.firstChild = true;
+          bgClass += ' node-firth-child';
+        }
+
+        if ((nextNode && (node.depth > nextNode.depth)) || !nextNode) {
+          node.lastChild = true;
+          bgClass += ' node-last-child';
+        }
+
+        if (node.class) {
+          bgClass += ' ' + node.class;
+        }
+
+        return bgClass;
+      },
+
+      /**
        * Computes the tree item label based on the data
        *
        * @param {Node} node
        * @returns {String}
        */
       getNodeTitle: function (node) {
-        return 'uid=' + node.identifier;
+        return node.tip ? node.tip : 'uid=' + node.identifier;
       },
 
       /**
@@ -471,17 +819,37 @@ define(['jquery', 'd3', 'TYPO3/CMS/Backend/Icons'],
        * @returns {String}
        */
       getChevronTransform: function (node) {
-        return node.open ? 'translate(8 -8) rotate(90)' : 'translate(-8 -8) rotate(0)';
+        return node.open ? 'translate(16,0) rotate(90)' : ' rotate(0)';
       },
 
       /**
-       * Computes chevron 'visibility' attribute value
+       * Returns chevron class
        *
        * @param {Node} node
        * @returns {String}
        */
-      getChevronVisibility: function (node) {
-        return node.hasChildren ? 'visible' : 'hidden';
+      getChevronColor: function (node) {
+        return node.open ? '#000' : '#8e8e8e';
+      },
+
+      /**
+       * Computes toggle 'visibility' attribute value
+       *
+       * @param {Node} node
+       * @returns {String}
+       */
+      getToggleVisibility: function (node) {
+        return node.hasChildren ? 'visible' : 'collapse';
+      },
+
+      /**
+       * Computes chevron 'class' attribute value
+       *
+       * @param {Node} node
+       * @returns {String}
+       */
+      getChevronClass: function (node) {
+        return 'chevron ' + (node.open ? 'expanded' : 'collapsed');
       },
 
       /**
@@ -519,9 +887,9 @@ define(['jquery', 'd3', 'TYPO3/CMS/Backend/Icons'],
         path.push('M' + link.source.x + ' ' + link.source.y);
         path.push('V' + target.y);
         if (target.hasChildren) {
-          path.push('H' + target.x);
+          path.push('H' + (target.x - 2));
         } else {
-          path.push('H' + (target.x + this.settings.indentWidth / 4));
+          path.push('H' + ((target.x + this.settings.indentWidth / 4) - 2));
         }
 
         return path.join(' ');
@@ -533,7 +901,16 @@ define(['jquery', 'd3', 'TYPO3/CMS/Backend/Icons'],
        * @param {Node} node
        */
       getNodeTransform: function (node) {
-        return 'translate(' + node.x + ',' + node.y + ')';
+        return 'translate(' + (node.x || 0) + ',' + (node.y || 0) + ')';
+      },
+
+      /**
+       * Returns a 'transform' attribute value for the node background element (absolute positioning)
+       *
+       * @param {Node} node
+       */
+      getNodeBgTransform: function (node) {
+        return 'translate(-8, ' + ((node.y || 0) - 10) + ')';
       },
 
       /**
@@ -582,8 +959,10 @@ define(['jquery', 'd3', 'TYPO3/CMS/Backend/Icons'],
                 _this.dispatch.call('nodeSelectedAfter', _this, node);
               }
             });
+
             this.exclusiveSelectedNode = node;
           } else if (exclusiveKeys.indexOf('' + node.identifier) === -1 && this.exclusiveSelectedNode) {
+
             //current node is not exclusive, but other exclusive node is already selected
             this.exclusiveSelectedNode.checked = false;
             this.dispatch.call('nodeSelectedAfter', this, this.exclusiveSelectedNode);
@@ -619,25 +998,21 @@ define(['jquery', 'd3', 'TYPO3/CMS/Backend/Icons'],
        * Event handler for clicking on a node's icon
        *
        * @param {Node} node
+       * @param {HTMLElement} element
        */
-      clickOnIcon: function (node) {
+      clickOnIcon: function (node, element) {
+        this.dispatch.call('contextmenu', node, element);
       },
 
       /**
        * Event handler for click on a node's label/text
        *
        * @param {Node} node
+       * @param {HTMLElement} element
        */
-      clickOnLabel: function (node) {
+      clickOnLabel: function (node, element) {
         this.selectNode(node);
-      },
-
-      /**
-       * Event handler for double click on a node's label
-       *
-       * @param {Node} node
-       */
-      dblClickOnLabel: function (node) {
+        this.nodeBgEvents().click(node, element);
       },
 
       /**
@@ -672,6 +1047,13 @@ define(['jquery', 'd3', 'TYPO3/CMS/Backend/Icons'],
        */
       showChildren: function (node) {
         node.open = true;
+      },
+
+      /**
+       * Refresh view with new data
+       */
+      refreshTree: function () {
+        this.loadData();
       },
 
       /**

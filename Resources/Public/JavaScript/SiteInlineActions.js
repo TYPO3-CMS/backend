@@ -15,7 +15,7 @@
 // Override inline 'create' and 'details' route to point to SiteInlineAjaxController
 require(['jquery'], function($) {
   $(function() {
-    TYPO3.inline.addMethod('create', 'site_configuration_inline_create');
-    TYPO3.inline.addMethod('details', 'site_configuration_inline_details');
+    TYPO3.settings.ajaxUrls.record_inline_details = TYPO3.settings.ajaxUrls.site_configuration_inline_details;
+    TYPO3.settings.ajaxUrls.record_inline_create = TYPO3.settings.ajaxUrls.site_configuration_inline_create;
   });
 });

@@ -10,4 +10,4 @@
  *
  * The TYPO3 project - inspiring people to share!
  */
-define(["require","exports","./AbstractClientStorage"],(function(e,t,r){"use strict";class s extends r.default{constructor(){super(),this.storage=localStorage}}return new s}));
+define(["require","exports","./AbstractClientStorage"],(function(e,t,s){"use strict";class r extends s.default{constructor(){super(),this.storage=sessionStorage}}return new r}));

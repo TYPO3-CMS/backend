@@ -2,7 +2,5 @@
     xmlns:f="http://typo3.org/ns/TYPO3/CMS/Fluid/ViewHelpers"
     data-namespace-typo3-fluid="true"
 >
-<f:be.infobox title="{title}" state="{state}">
-    <f:format.raw>{message}</f:format.raw>
-</f:be.infobox>
+<f:render partial="ModuleTemplate/Tabs" arguments="{_all}" />
 </html>

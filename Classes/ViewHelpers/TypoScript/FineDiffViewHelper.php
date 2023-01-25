@@ -15,28 +15,32 @@ declare(strict_types=1);
  * The TYPO3 project - inspiring people to share!
  */
 
-namespace TYPO3\CMS\Backend\ViewHelpers;
+namespace TYPO3\CMS\Backend\ViewHelpers\TypoScript;
 
+use cogpowered\FineDiff\Diff;
+use cogpowered\FineDiff\Granularity\Word;
 use TYPO3Fluid\Fluid\Core\Rendering\RenderingContextInterface;
 use TYPO3Fluid\Fluid\Core\ViewHelper\AbstractViewHelper;
 
 /**
- * Temporary VH for PageTsConfig module. Will vanish soon.
+ * Runs two strings through 'FineDiff' on word level.
  *
- * @internal
+ * @internal This experimental ViewHelper is not part of TYPO3 Core API and may change or vanish any time.
  */
-final class HashViewHelper extends AbstractViewHelper
+final class FineDiffViewHelper extends AbstractViewHelper
 {
+    protected $escapeOutput = false;
+
     public function initializeArguments(): void
     {
-        $this->registerArgument('value', 'string', 'The string to be hashed', true);
+        parent::initializeArguments();
+        $this->registerArgument('from', 'string', 'Source string', true, '');
+        $this->registerArgument('to', 'string', 'Target string', true, '');
     }
 
-    /**
-     * @param array{value: string} $arguments
-     */
     public static function renderStatic(array $arguments, \Closure $renderChildrenClosure, RenderingContextInterface $renderingContext): string
     {
-        return hash('xxh3', $arguments['value']);
+        $diff = new Diff(new Word());
+        return $diff->render($arguments['from'], $arguments['to']);
     }
 }

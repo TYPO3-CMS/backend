@@ -10,4 +10,4 @@
  *
  * The TYPO3 project - inspiring people to share!
  */
-export var KeyTypesEnum;!function(E){E.TAB="Tab",E.ENTER="Enter",E.ESCAPE="Escape",E.SPACE=" ",E.END="End",E.HOME="Home",E.LEFT="ArrowLeft",E.UP="ArrowUp",E.RIGHT="ArrowRight",E.DOWN="ArrowDown",E.PAGE_UP="PageUp",E.PAGE_DOWN="PageDown"}(KeyTypesEnum||(KeyTypesEnum={}));
+export var DataTransferTypes;!function(e){e.treenode="application/x-typo3-treenode",e.newTreenode="application/x-typo3-new-treenode+json",e.pages="application/x-typo3-record-pages+json",e.falResources="application/x-typo3-fal-resources+json",e.dragTooltip="application/x-typo3-drag-tooltip+json"}(DataTransferTypes||(DataTransferTypes={}));

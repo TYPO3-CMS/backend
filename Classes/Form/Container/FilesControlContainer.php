@@ -19,6 +19,7 @@ namespace TYPO3\CMS\Backend\Form\Container;
 
 use Psr\EventDispatcher\EventDispatcherInterface;
 use TYPO3\CMS\Backend\Form\Event\CustomFileControlsEvent;
+use TYPO3\CMS\Backend\Form\Event\CustomFileSelectorsEvent;
 use TYPO3\CMS\Backend\Form\InlineStackProcessor;
 use TYPO3\CMS\Core\Crypto\HashService;
 use TYPO3\CMS\Core\Imaging\IconFactory;
@@ -416,7 +417,11 @@ class FilesControlContainer extends AbstractContainer
             }
         }
 
-        return $controls;
+        $event = $this->eventDispatcher->dispatch(
+            new CustomFileSelectorsEvent($controls, $this->javaScriptModules, $this->data['tableName'], $this->data['fieldName'], $this->data['databaseRow'], $inlineConfiguration, $fileExtensionFilter, $objectPrefix)
+        );
+        $this->javaScriptModules = $event->getJavaScriptModules();
+        return $event->getSelectors();
     }
 
     /**

@@ -48,14 +48,24 @@ class TcaSlug implements FormDataProviderInterface
                 continue;
             }
 
-            $prefix = $fieldConfig['config']['appearance']['prefix'] ?? '';
+            $prefixUserFunc = $fieldConfig['config']['appearance']['prefix'] ?? '';
 
-            if ($prefix !== '') {
-                $parameters = ['site' => $site, 'languageId' => $languageId, 'table' => $table, 'row' => $row];
-                $prefix = GeneralUtility::callUserFunction($prefix, $parameters, $this);
+            if ($prefixUserFunc !== '') {
+                $parameters = [
+                    'site' => $site,
+                    'languageId' => $languageId,
+                    'table' => $table,
+                    'row' => $row,
+                    'fieldName' => $fieldName,
+                    'config' => $fieldConfig['config'],
+                ];
+                $prefix = GeneralUtility::callUserFunction($prefixUserFunc, $parameters, $this);
             } elseif ($site instanceof SiteInterface) {
                 // default behaviour used for pages
                 $prefix = $this->getPrefixForSite($site, $languageId);
+            } else {
+                // no site found, so we cannot determine a prefix
+                $prefix = '';
             }
 
             $result['customData'][$fieldName]['slugPrefix'] = $prefix;

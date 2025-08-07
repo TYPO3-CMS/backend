@@ -20,6 +20,8 @@ use TYPO3\CMS\Core\Authentication\BackendUserAuthentication;
 use TYPO3\CMS\Core\Database\Connection;
 use TYPO3\CMS\Core\Database\ConnectionPool;
 use TYPO3\CMS\Core\Database\Query\QueryBuilder;
+use TYPO3\CMS\Core\Database\Query\Restriction\DeletedRestriction;
+use TYPO3\CMS\Core\Database\Query\Restriction\WorkspaceRestriction;
 use TYPO3\CMS\Core\DataHandling\History\RecordHistoryStore;
 use TYPO3\CMS\Core\Schema\Capability\TcaSchemaCapability;
 use TYPO3\CMS\Core\Schema\TcaSchema;
@@ -30,6 +32,8 @@ use TYPO3\CMS\Core\Utility\GeneralUtility;
 /**
  * Class for fetching the history entries of a record (and if it is a page, its sub elements
  * as well)
+ *
+ * @internal This class is an implementation detail of the backend record history controller and is not considered part of the public TYPO3 API.
  */
 class RecordHistory
 {
@@ -126,6 +130,81 @@ class RecordHistory
     public function getElementString(): string
     {
         return $this->element;
+    }
+
+    /**
+     * Compile a list of record history elements that belong to the same translation root.
+     *
+     * @return array{
+     *     page: int,
+     *     elements: array<array{element: string, language: int}>
+     * }|null
+     */
+    public function getTranslations(string $element): ?array
+    {
+        if ($element === '') {
+            return null;
+        }
+
+        [$table, $recordUid] = explode(':', $element);
+        $recordUid = (int)$recordUid;
+        $schema = $this->getTcaSchema($table);
+        if ($schema === null) {
+            return null;
+        }
+
+        if (!$schema->isLanguageAware()) {
+            return null;
+        }
+
+        $languageCapability = $schema->getCapability(TcaSchemaCapability::Language);
+        $langField = $languageCapability->getLanguageField()->getName();
+        $l10nPointer = $languageCapability->getTranslationOriginPointerField()->getName();
+
+        $record = BackendUtility::getRecord($table, $recordUid);
+        $l10nParentUid = (int)($record[$l10nPointer] ?? 0);
+        $defaultLanguageUid = ($l10nParentUid ?: $recordUid);
+        if ($defaultLanguageUid === $recordUid) {
+            $translationRoot = $record;
+        } else {
+            $translationRoot = BackendUtility::getRecord($table, $defaultLanguageUid);
+        }
+
+        $queryBuilder = GeneralUtility::makeInstance(ConnectionPool::class)
+            ->getQueryBuilderForTable($table);
+        $queryBuilder->getRestrictions()
+            ->removeAll()
+            ->add(GeneralUtility::makeInstance(DeletedRestriction::class))
+            ->add(GeneralUtility::makeInstance(WorkspaceRestriction::class, $this->getBackendUser()->workspace));
+
+        $statement = $queryBuilder->from($table)
+            ->select('*')
+            ->where(
+                $queryBuilder->expr()->eq($l10nPointer, $queryBuilder->createNamedParameter($defaultLanguageUid))
+            )
+            ->executeQuery();
+
+        $translations = [
+            'page' => $table === 'pages' ? $defaultLanguageUid : (int)$translationRoot['pid'],
+            'elements' => [
+                [
+                    'element' => $table . ':' . $defaultLanguageUid,
+                    'language' => (int)$translationRoot[$langField],
+                ],
+            ],
+        ];
+
+        foreach ($statement->fetchAllAssociative() as $row) {
+            BackendUtility::workspaceOL($table, $row, $this->getBackendUser()->workspace);
+            if ($row) {
+                $translations['elements'][] = [
+                    'element' => $table . ':' . $row['uid'],
+                    'language' => (int)$row[$langField],
+                ];
+            }
+        }
+
+        return $translations;
     }
 
     /*******************************

@@ -33,11 +33,14 @@ use TYPO3\CMS\Core\Authentication\BackendUserAuthentication;
 use TYPO3\CMS\Core\DataHandling\History\RecordHistoryStore;
 use TYPO3\CMS\Core\DataHandling\TableColumnType;
 use TYPO3\CMS\Core\Domain\DateTimeFactory;
+use TYPO3\CMS\Core\Exception\SiteNotFoundException;
 use TYPO3\CMS\Core\Imaging\IconFactory;
 use TYPO3\CMS\Core\Imaging\IconSize;
 use TYPO3\CMS\Core\Localization\LanguageService;
 use TYPO3\CMS\Core\Schema\Capability\TcaSchemaCapability;
 use TYPO3\CMS\Core\Schema\TcaSchemaFactory;
+use TYPO3\CMS\Core\Site\Entity\SiteLanguage;
+use TYPO3\CMS\Core\Site\SiteFinder;
 use TYPO3\CMS\Core\Type\Bitmask\Permission;
 use TYPO3\CMS\Core\Utility\DiffGranularity;
 use TYPO3\CMS\Core\Utility\DiffUtility;
@@ -71,6 +74,7 @@ class ElementHistoryController
         private readonly FlexFormValueFormatter $flexFormValueFormatter,
         private readonly TcaSchemaFactory $tcaSchemaFactory,
         private readonly ComponentFactory $componentFactory,
+        private readonly SiteFinder $siteFinder,
     ) {}
 
     /**
@@ -150,6 +154,8 @@ class ElementHistoryController
             }
         }
 
+        $this->addLanguageSwitcher($request, $backendUser, $element);
+
         $this->view->assign('editLock', $editLock);
         $this->view->assign('moduleSettings', $moduleSettings);
         $this->view->assign('settingsFormUrl', $this->buildUrl());
@@ -211,6 +217,55 @@ class ElementHistoryController
             $this->getBackendUser()->pushModuleData('history', $currentSelection);
         }
         return $currentSelection;
+    }
+
+    /**
+     * Add a translation selection dropdown if the record is language aware.
+     */
+    protected function addLanguageSwitcher(
+        ServerRequestInterface $request,
+        BackendUserAuthentication $backendUser,
+        string $element,
+    ): void {
+        $translations = $this->historyObject->getTranslations($element);
+        if ($translations === null) {
+            return;
+        }
+
+        $languageDropDownButton = $this->componentFactory->createDropDownButton()
+            ->setLabel($this->getLanguageService()->sL('core.core:labels.language'))
+            ->setShowLabelText(true);
+
+        try {
+            $site = $this->siteFinder->getSiteByPageId($translations['page']);
+        } catch (SiteNotFoundException) {
+            $site = $request->getAttribute('site');
+        }
+
+        $availableLanguages = $site->getAvailableLanguages($backendUser, false, $translations['page']);
+
+        foreach ($translations['elements'] as $translation) {
+            $siteLanguage = $availableLanguages[$translation['language']] ?? null;
+            if (!$siteLanguage instanceof SiteLanguage) {
+                continue;
+            }
+
+            $languageItem = $this->componentFactory->createDropDownRadio()
+                ->setActive($translation['element'] === $element)
+                ->setIcon($this->iconFactory->getIcon($siteLanguage->getFlagIdentifier()))
+                ->setHref((string)$this->uriBuilder->buildUriFromRoute('record_history', [
+                    'element' => $translation['element'],
+                    'returnUrl' => $this->returnUrl,
+                ]))
+                ->setLabel($siteLanguage->getTitle());
+            $languageDropDownButton->addItem($languageItem);
+
+            if ($languageItem->isActive()) {
+                $languageDropDownButton->setLabel($siteLanguage->getTitle());
+            }
+        }
+
+        $this->view->getDocHeaderComponent()->setLanguageSelector($languageDropDownButton);
     }
 
     /**

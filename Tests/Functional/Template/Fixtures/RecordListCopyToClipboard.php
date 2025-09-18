@@ -1,9 +1,26 @@
+<?php
+
+/*
+ * This file is part of the TYPO3 CMS project.
+ *
+ * It is free software; you can redistribute it and/or modify it under
+ * the terms of the GNU General Public License, either version 2
+ * of the License, or any later version.
+ *
+ * For the full copyright and license information, please read the
+ * LICENSE.txt file that was distributed with this source code.
+ *
+ * The TYPO3 project - inspiring people to share!
+ */
+
+$fileMtimeActions = filemtime(__DIR__ . '/../../../../../core/Resources/Public/Icons/T3Icons/sprites/actions.svg');
+return <<<EOF
 <div class="btn-group">
     <button type="button" class="btn btn-sm btn-default dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false" title="Share">
         <span class="t3js-icon icon icon-size-small icon-state-default icon-actions-share-alt" data-identifier="actions-share-alt" aria-hidden="true">
             <span class="icon-markup">
                 <svg class="icon-color">
-                    <use xlink:href="typo3/sysext/core/Resources/Public/Icons/T3Icons/sprites/actions.svg#actions-share-alt" />
+                    <use xlink:href="/typo3/sysext/core/Resources/Public/Icons/T3Icons/sprites/actions.svg?{$fileMtimeActions}#actions-share-alt" />
                 </svg>
             </span>
         </span>
@@ -12,7 +29,7 @@
         <li>
             <button
                 data-dispatch-action="TYPO3.ShortcutMenu.createShortcut"
-                data-dispatch-args="[&amp;quot;web_list&amp;quot;,&amp;quot;[]&amp;quot;,&amp;quot;Recordlist&amp;quot;,&amp;quot;Create a bookmark to this record&amp;quot;,&amp;quot;{$target}&amp;quot;]"
+                data-dispatch-args="[&amp;quot;web_list&amp;quot;,&amp;quot;[]&amp;quot;,&amp;quot;Recordlist&amp;quot;,&amp;quot;Create a bookmark to this record&amp;quot;,&amp;quot;{\$target}&amp;quot;]"
                 class="dropdown-item dropdown-item-spaced"
                 title="Create a bookmark to this record">
                 <span
@@ -20,7 +37,7 @@
                     data-identifier="actions-system-shortcut-new" aria-hidden="true">
                     <span class="icon-markup">
                         <svg class="icon-color">
-                            <use xlink:href="typo3/sysext/core/Resources/Public/Icons/T3Icons/sprites/actions.svg#actions-star" />
+                            <use xlink:href="/typo3/sysext/core/Resources/Public/Icons/T3Icons/sprites/actions.svg?{$fileMtimeActions}#actions-star" />
                         </svg>
                     </span>
                 </span>Create a bookmark to this record
@@ -36,7 +53,7 @@
                     data-identifier="actions-link" aria-hidden="true">
                     <span class="icon-markup">
                         <svg class="icon-color">
-                            <use xlink:href="typo3/sysext/core/Resources/Public/Icons/T3Icons/sprites/actions.svg#actions-link" />
+                            <use xlink:href="/typo3/sysext/core/Resources/Public/Icons/T3Icons/sprites/actions.svg?{$fileMtimeActions}#actions-link" />
                         </svg>
                     </span>
                 </span>Copy URL of this record
@@ -44,3 +61,4 @@
         </li>
     </ul>
 </div>
+EOF;

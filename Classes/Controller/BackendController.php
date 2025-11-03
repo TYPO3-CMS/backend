@@ -185,7 +185,7 @@ class BackendController
         $content = $view->render('Backend/Main');
         $content = $this->eventDispatcher->dispatch(new AfterBackendPageRenderEvent($content, $view))->getContent();
         $pageRenderer->addBodyContent('<body>' . $content);
-        return $pageRenderer->renderResponse();
+        return $pageRenderer->renderResponse($request);
     }
 
     /**

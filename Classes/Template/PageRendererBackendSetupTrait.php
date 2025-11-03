@@ -19,7 +19,6 @@ namespace TYPO3\CMS\Backend\Template;
 
 use Psr\Http\Message\ServerRequestInterface;
 use TYPO3\CMS\Core\Configuration\ExtensionConfiguration;
-use TYPO3\CMS\Core\Http\NormalizedParams;
 use TYPO3\CMS\Core\Localization\LanguageService;
 use TYPO3\CMS\Core\Package\PackageManager;
 use TYPO3\CMS\Core\Page\PageRenderer;
@@ -58,7 +57,7 @@ trait PageRendererBackendSetupTrait
         ServerRequestInterface $request,
         LanguageService $languageService,
     ): void {
-        $pageRenderer->setLanguage($languageService->getLocale());
+        $pageRenderer->setLanguage($languageService->getLocale(), $request);
         $pageRenderer->setMetaTag('name', 'viewport', 'width=device-width, initial-scale=1');
         $pageRenderer->setFavIcon($this->getBackendFavicon($extensionConfiguration, $request));
         $nonce = $request->getAttribute('nonce');
@@ -124,10 +123,5 @@ trait PageRendererBackendSetupTrait
     protected function getUriForFileName(ServerRequestInterface $request, string $resourceIdentifier): string
     {
         return (string)PathUtility::getSystemResourceUri($resourceIdentifier, $request);
-    }
-
-    protected function getNormalizedParams(ServerRequestInterface $request): NormalizedParams
-    {
-        return $request->getAttribute('normalizedParams');
     }
 }

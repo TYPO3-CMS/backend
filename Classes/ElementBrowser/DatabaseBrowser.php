@@ -130,7 +130,7 @@ class DatabaseBrowser extends AbstractElementBrowser implements ElementBrowserIn
             return $content;
         }
         $this->pageRenderer->setBodyContent('<body ' . $this->getBodyTagParameters() . '>' . $content);
-        return $this->pageRenderer->render();
+        return $this->pageRenderer->render($this->getRequest());
     }
 
     /**

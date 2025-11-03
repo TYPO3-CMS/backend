@@ -117,7 +117,7 @@ final class ModuleTemplate implements ViewInterface, ResponsableViewInterface
     public function render(string $templateFileName = ''): string
     {
         $this->prepareRender($templateFileName);
-        return $this->pageRenderer->render();
+        return $this->pageRenderer->render($this->request);
     }
 
     /**
@@ -127,7 +127,7 @@ final class ModuleTemplate implements ViewInterface, ResponsableViewInterface
     public function renderResponse(string $templateFileName = ''): ResponseInterface
     {
         $this->prepareRender($templateFileName);
-        return $this->pageRenderer->renderResponse();
+        return $this->pageRenderer->renderResponse($this->request);
     }
 
     private function prepareRender(string $templateFileName): void

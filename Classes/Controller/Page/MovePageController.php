@@ -100,7 +100,7 @@ final readonly class MovePageController
             return new HtmlResponse($content);
         }
         $this->pageRenderer->setBodyContent('<body>' . $content);
-        return new HtmlResponse($this->pageRenderer->render());
+        return new HtmlResponse($this->pageRenderer->render($request));
     }
 
     private function getContentVariables(int $pageIdToMove, int $targetPid): array

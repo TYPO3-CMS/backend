@@ -181,7 +181,7 @@ readonly class LoginController
         $templateFile = $loginProvider->modifyView($request, $view);
         $content = $view->render($templateFile);
         $this->pageRenderer->setBodyContent('<body>' . $content);
-        $response = $this->pageRenderer->renderResponse();
+        $response = $this->pageRenderer->renderResponse($request);
         return $this->appendLoginProviderCookie($request, $response);
     }
 

@@ -110,7 +110,7 @@ class MfaController extends AbstractMfaController
         ]);
         $this->addCustomAuthenticationFormStyles($request);
         $this->pageRenderer->setBodyContent('<body>' . $view->render('Mfa/Auth'));
-        return $this->pageRenderer->renderResponse();
+        return $this->pageRenderer->renderResponse($request);
     }
 
     /**

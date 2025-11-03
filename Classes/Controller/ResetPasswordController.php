@@ -75,7 +75,7 @@ class ResetPasswordController
         $this->initialize($request);
         $this->initializeForgetPasswordView($request);
         $this->pageRenderer->setBodyContent('<body>' . $this->view->render('Login/ForgetPasswordForm'));
-        return $this->pageRenderer->renderResponse();
+        return $this->pageRenderer->renderResponse($request);
     }
 
     /**
@@ -104,7 +104,7 @@ class ResetPasswordController
         // can be an indicator if the used email exists or not. Wait a random
         // time between 200 milliseconds and 3 seconds.
         usleep(random_int(200000, 3000000));
-        return $this->pageRenderer->renderResponse();
+        return $this->pageRenderer->renderResponse($request);
     }
 
     /**
@@ -118,7 +118,7 @@ class ResetPasswordController
             $this->view->assign('invalidToken', true);
         }
         $this->pageRenderer->setBodyContent('<body>' . $this->view->render('Login/ResetPasswordForm'));
-        return $this->pageRenderer->renderResponse();
+        return $this->pageRenderer->renderResponse($request);
     }
 
     /**
@@ -140,7 +140,7 @@ class ResetPasswordController
             $this->view->assign('error', true);
         }
         $this->pageRenderer->setBodyContent('<body>' . $this->view->render('Login/ResetPasswordForm'));
-        return $this->pageRenderer->renderResponse();
+        return $this->pageRenderer->renderResponse($request);
     }
 
     protected function initializeForgetPasswordView(ServerRequestInterface $request): void

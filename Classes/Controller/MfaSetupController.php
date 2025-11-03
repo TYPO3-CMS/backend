@@ -176,7 +176,7 @@ class MfaSetupController extends AbstractMfaController
             'providers' => $providers,
         ]);
         $this->pageRenderer->setBodyContent('<body>' . $view->render('Mfa/Standalone/Selection'));
-        return $this->pageRenderer->renderResponse();
+        return $this->pageRenderer->renderResponse($request);
     }
 
     /**
@@ -199,7 +199,7 @@ class MfaSetupController extends AbstractMfaController
             'hasErrors' => (bool)($request->getQueryParams()['hasErrors'] ?? false),
         ]);
         $this->pageRenderer->setBodyContent('<body>' . $view->render('Mfa/Standalone/Setup'));
-        return $this->pageRenderer->renderResponse();
+        return $this->pageRenderer->renderResponse($request);
     }
 
     /**

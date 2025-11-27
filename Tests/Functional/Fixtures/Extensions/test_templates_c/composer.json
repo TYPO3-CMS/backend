@@ -6,7 +6,11 @@
 	},
 	"extra": {
 		"typo3/cms": {
-			"extension-key": "test_templates_c"
+			"extension-key": "test_templates_c",
+			"Package": {
+				"providesPackages": []
+			}
 		}
-	}
+	},
+	"version": "1.0.0"
 }

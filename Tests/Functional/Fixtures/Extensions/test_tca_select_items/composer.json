@@ -2,13 +2,17 @@
 	"name": "typo3tests/tca-select-items",
 	"type": "typo3-cms-extension",
 	"description": "TcaSelectItems Test",
+	"version": "1.0.0",
 	"license": "GPL-2.0-or-later",
 	"require": {
 		"typo3/cms-core": "14.2.*@dev"
 	},
 	"extra": {
 		"typo3/cms": {
-			"extension-key": "test_tca_select_items"
+			"extension-key": "test_tca_select_items",
+			"Package": {
+				"providesPackages": []
+			}
 		}
 	}
 }

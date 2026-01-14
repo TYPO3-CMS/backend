@@ -619,7 +619,7 @@ class RecordListController
             $tableTitle = ': ' . ($tableTitle ?: $tableName);
         }
         return trim(sprintf(
-            $languageService->sL('LLL:EXT:backend/Resources/Private/Language/locallang.xlf:shortcut.title'),
+            $languageService->translate('shortcut.title', 'backend.messages'),
             $languageService->translate('title', 'backend.modules.list'),
             $tableTitle,
             $this->pageContext->getPageTitle(),

@@ -47,7 +47,7 @@ final class TableListTest extends UnitTestCase
                 ],
             ],
             [
-                'data-params="|||pages" data-entry-point="123"',
+                'data-allowed-types="pages" data-entry-point="123"',
             ],
         ];
         yield 'One table with default' => [
@@ -58,7 +58,7 @@ final class TableListTest extends UnitTestCase
                 ],
             ],
             [
-                'data-params="|||pages" data-entry-point="123"',
+                'data-allowed-types="pages" data-entry-point="123"',
             ],
         ];
         yield 'One table with default and table definition' => [
@@ -70,7 +70,7 @@ final class TableListTest extends UnitTestCase
                 ],
             ],
             [
-                'data-params="|||pages" data-entry-point="124"',
+                'data-allowed-types="pages" data-entry-point="124"',
             ],
         ];
         yield 'One table with invalid configuration' => [
@@ -97,8 +97,8 @@ final class TableListTest extends UnitTestCase
                 ],
             ],
             [
-                'data-params="|||pages" data-entry-point="123"',
-                'data-params="|||some_table" data-entry-point="124"',
+                'data-allowed-types="pages" data-entry-point="123"',
+                'data-allowed-types="some_table" data-entry-point="124"',
             ],
         ];
         yield 'Two tables with just _default' => [
@@ -109,8 +109,8 @@ final class TableListTest extends UnitTestCase
                 ],
             ],
             [
-                'data-params="|||pages" data-entry-point="123"',
-                'data-params="|||some_table" data-entry-point="123"',
+                'data-allowed-types="pages" data-entry-point="123"',
+                'data-allowed-types="some_table" data-entry-point="123"',
             ],
         ];
         yield 'Two tables with _default' => [
@@ -123,8 +123,8 @@ final class TableListTest extends UnitTestCase
                 ],
             ],
             [
-                'data-params="|||pages" data-entry-point="124"',
-                'data-params="|||some_table" data-entry-point="125"',
+                'data-allowed-types="pages" data-entry-point="124"',
+                'data-allowed-types="some_table" data-entry-point="125"',
             ],
         ];
         yield 'Entry point is escaped' => [
@@ -134,7 +134,7 @@ final class TableListTest extends UnitTestCase
                     'pages' => '<script>alert(1)</script>',
                 ],
             ], [
-                'data-params="|||pages" data-entry-point="&lt;script&gt;alert(1)&lt;/script&gt;"',
+                'data-allowed-types="pages" data-entry-point="&lt;script&gt;alert(1)&lt;/script&gt;"',
             ],
         ];
         yield 'Pid placeholder is resolved' => [
@@ -145,7 +145,7 @@ final class TableListTest extends UnitTestCase
                 ],
             ],
             [
-                'data-params="|||pages" data-entry-point="123"',
+                'data-allowed-types="pages" data-entry-point="123"',
             ],
         ];
         yield 'Site placeholder is resolved' => [
@@ -156,7 +156,7 @@ final class TableListTest extends UnitTestCase
                 ],
             ],
             [
-                'data-params="|||pages" data-entry-point="123"',
+                'data-allowed-types="pages" data-entry-point="123"',
             ],
         ];
     }

@@ -328,7 +328,9 @@ class FilesControlContainer extends AbstractContainer
                 'style' => !($inlineConfiguration['inline']['showCreateNewRelationButton'] ?? true) ? 'display: none;' : '',
                 'title' => $buttonText,
                 'data-mode' => 'file',
-                'data-params' => '|||allowed=' . implode(',', $fileExtensionFilter->getAllowedFileExtensions() ?? []) . '~disallowed=' . implode(',', $fileExtensionFilter->getDisallowedFileExtensions() ?? []) . '|' . $objectPrefix,
+                'data-allowed-types' => implode(',', $fileExtensionFilter->getAllowedFileExtensions() ?? []),
+                'data-disallowed-types' => implode(',', $fileExtensionFilter->getDisallowedFileExtensions() ?? []),
+                'data-irre-object-id' => $objectPrefix,
             ];
             $controls[] = '
                 <button ' . GeneralUtility::implodeAttributes($attributes, true) . '>

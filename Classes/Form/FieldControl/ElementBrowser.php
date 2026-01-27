@@ -93,7 +93,9 @@ class ElementBrowser extends AbstractNode
         $linkAttributes = [
             'class' => 't3js-element-browser',
             'data-mode' => $elementBrowserType,
-            'data-params' => $elementName . '|||' . $allowed . '|' . $objectPrefix,
+            'data-field-reference' => $elementName,
+            'data-allowed-types' => $allowed,
+            'data-irre-object-id' => $objectPrefix,
         ];
 
         // Add the default entry point - if found

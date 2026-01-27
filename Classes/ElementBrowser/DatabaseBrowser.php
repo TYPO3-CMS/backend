@@ -90,7 +90,7 @@ class DatabaseBrowser extends AbstractElementBrowser implements ElementBrowserIn
     {
         $this->getBackendUser()->initializeWebmountsForElementBrowser();
         $this->modTSconfig = BackendUtility::getPagesTSconfig((int)$this->expandPage)['mod.']['web_list.'] ?? [];
-        [, , , $allowedTables] = explode('|', $this->bparams);
+        $allowedTables = $this->browserParameters->allowedTypes;
 
         $withTree = true;
         if ($allowedTables !== '' && $allowedTables !== '*') {
@@ -193,16 +193,10 @@ class DatabaseBrowser extends AbstractElementBrowser implements ElementBrowserIn
         $dbList->displayRecordDownload = false;
         $dbList->tableList = implode(',', $tablesArr);
 
-        // a string like "data[pages][79][storage_pid]"
-        [$fieldPointerString] = explode('|', $this->bparams);
-        // parts like: data, pages], 79], storage_pid]
-        $fieldPointerParts = explode('[', $fieldPointerString);
-
-        $relatingTableName = substr(($fieldPointerParts[1] ?? ''), 0, -1);
-        $relatingFieldName = substr(($fieldPointerParts[3] ?? ''), 0, -1);
-
-        if ($relatingTableName && $relatingFieldName) {
-            $dbList->setRelatingTableAndField($relatingTableName, $relatingFieldName);
+        // Extract relating table and field from field reference (e.g., "data[pages][79][storage_pid]")
+        $fieldReferenceParts = $this->browserParameters->getFieldReferenceParts();
+        if ($fieldReferenceParts['tableName'] !== '' && $fieldReferenceParts['fieldName'] !== '') {
+            $dbList->setRelatingTableAndField($fieldReferenceParts['tableName'], $fieldReferenceParts['fieldName']);
         }
 
         $selectedTable = (string)($request->getParsedBody()['table'] ?? $request->getQueryParams()['table'] ?? '');
@@ -244,10 +238,12 @@ class DatabaseBrowser extends AbstractElementBrowser implements ElementBrowserIn
     public function getUrlParameters(array $values): array
     {
         $pid = $values['pid'] ?? $this->expandPage;
-        return [
-            'mode' => 'db',
-            'expandPage' => $pid,
-            'bparams' => $this->bparams,
-        ];
+        return array_merge(
+            [
+                'mode' => 'db',
+                'expandPage' => $pid,
+            ],
+            $this->browserParameters->toQueryParameters()
+        );
     }
 }

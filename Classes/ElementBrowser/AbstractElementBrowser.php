@@ -47,21 +47,14 @@ abstract class AbstractElementBrowser
     protected string $identifier = '';
 
     /**
-     * Active with TYPO3 Element Browser: Contains the name of the form field for which this window
-     * opens - thus allows us to make references back to the main window in which the form is.
-     * Example value: "data[pages][39][bodytext]|||tt_content|"
-     * or "data[tt_content][NEW3fba56fde763d][image]|||gif,jpg,jpeg,tif,bmp,pcx,tga,png,pdf,ai|"
-     * Values:
-     * 0: form field name reference, eg. "data[tt_content][123][image]"
-     * 1: htmlArea RTE parameters: editorNo:contentTypo3Language
-     * 2: RTE config parameters: RTEtsConfigParams
-     * 3: allowed types. Eg. "tt_content" or "gif,jpg,jpeg,tif,bmp,pcx,tga,png,pdf,ai"
-     * 4: IRRE uniqueness: target level object-id to perform actions/checks on, eg. "data-4-pages-4-nav_icon-sys_file_reference" ("data-<uid>-<table>-<pid>-<field>-<foreign_table>")
+     * Typed DTO containing all browser parameters.
+     */
+    protected ElementBrowserParameters $browserParameters;
+
+    /**
+     * Legacy bparams string - kept for backward compatibility.
      *
-     * $pArr = explode('|', $this->bparams);
-     * $formFieldName = $pArr[0];
-     * $allowedTablesOrFileTypes = $pArr[3];
-     *
+     * @deprecated since TYPO3 v14.2, will be removed in TYPO3 v15.0. Use $this->browserParameters instead. Remove this in v15.0 together with ElementBrowserParameters::toBparams() and ::fromBparams()
      * @var string
      */
     protected $bparams = '';
@@ -104,7 +97,9 @@ abstract class AbstractElementBrowser
 
     protected function initVariables(ServerRequestInterface $request)
     {
-        $this->bparams = $request->getParsedBody()['bparams'] ?? $request->getQueryParams()['bparams'] ?? '';
+        $this->browserParameters = ElementBrowserParameters::fromRequest($request);
+        // @deprecated Remove in v15.0: Keep bparams populated for backward compatibility
+        $this->bparams = $this->browserParameters->toBparams();
     }
 
     protected function getBodyTagParameters(): string
@@ -125,25 +120,13 @@ abstract class AbstractElementBrowser
     }
 
     /**
-     * Splits parts of $this->bparams and returns needed data attributes for the Javascript
+     * Returns data attributes for the body tag, used by the Javascript.
      *
-     * @return array<string, string> Data attributes for Javascript
+     * @return array<string, string|null> Data attributes for Javascript
      */
     protected function getBParamDataAttributes()
     {
-        $params = explode('|', $this->bparams);
-        $fieldRef = $params[0];
-        $rteParams = $params[1] ?? null;
-        $rteConfig = $params[2] ?? null;
-        $irreObjectId = $params[4] ?? null;
-
-        return [
-            'data-form-field-name' => 'data[' . $fieldRef . '][' . $rteParams . '][' . $rteConfig . ']',
-            'data-field-reference' => $fieldRef,
-            'data-rte-parameters' => $rteParams,
-            'data-rte-configuration' => $rteConfig,
-            'data-irre-object-id' => $irreObjectId,
-        ];
+        return $this->browserParameters->toDataAttributes();
     }
 
     public function setRequest(ServerRequestInterface $request): void

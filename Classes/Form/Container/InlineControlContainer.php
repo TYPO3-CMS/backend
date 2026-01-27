@@ -470,7 +470,9 @@ class InlineControlContainer extends AbstractContainer
                 $createNewRelationText = htmlspecialchars($languageService->sL('LLL:EXT:core/Resources/Private/Language/locallang_core.xlf:cm.createNewRelation'));
             }
             $item .= '
-                <button type="button" class="btn btn-default t3js-element-browser" data-mode="db" data-params="' . htmlspecialchars('|||' . implode(',', $allowed) . '|' . $objectPrefix) . '"
+                <button type="button" class="btn btn-default t3js-element-browser" data-mode="db"
+                    data-allowed-types="' . htmlspecialchars(implode(',', $allowed)) . '"
+                    data-irre-object-id="' . htmlspecialchars($objectPrefix) . '"
                     ' . $buttonStyle . ' title="' . $createNewRelationText . '">
                     ' . $this->iconFactory->getIcon('actions-insert-record', IconSize::SMALL)->render() . '
                     ' . $createNewRelationText . '

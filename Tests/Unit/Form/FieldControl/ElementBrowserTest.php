@@ -50,7 +50,7 @@ final class ElementBrowserTest extends UnitTestCase
         ]);
 
         $result = $elementBrowser->render();
-        self::assertSame($result['linkAttributes']['data-params'], '|||be_users,be_groups|');
+        self::assertSame('be_users,be_groups', $result['linkAttributes']['data-allowed-types']);
     }
 
     #[Test]
@@ -76,7 +76,7 @@ final class ElementBrowserTest extends UnitTestCase
             ],
         ]);
         $result = $elementBrowser->render();
-        self::assertSame($result['linkAttributes']['data-params'], '|||jpg,png|');
+        self::assertSame('jpg,png', $result['linkAttributes']['data-allowed-types']);
     }
 
     public static function renderResolvesEntryPointDataProvider(): \Generator

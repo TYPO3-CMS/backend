@@ -44,9 +44,9 @@ enum ColorScheme: string
     public static function getAvailableItemsForSelection(): array
     {
         return [
-            self::auto->value => self::auto->getLabel(),
-            self::light->value => self::light->getLabel(),
-            self::dark->value => self::dark->getLabel(),
+            ['label' => self::auto->getLabel(), 'value' => self::auto->value],
+            ['label' => self::light->getLabel(), 'value' => self::light->value],
+            ['label' => self::dark->getLabel(), 'value' => self::dark->value],
         ];
     }
 }

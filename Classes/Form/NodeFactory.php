@@ -16,6 +16,7 @@
 namespace TYPO3\CMS\Backend\Form;
 
 use TYPO3\CMS\Core\Utility\GeneralUtility;
+use TYPO3\CMS\Setup\Form\Element\AvatarElement;
 
 /**
  * Create an element object depending on renderType.
@@ -108,6 +109,8 @@ class NodeFactory
         'json' => Element\JsonElement::class,
         'uuid' => Element\UuidElement::class,
         'tablePermission' => Element\TablePermissionElement::class,
+        // special renderTypes for user settings
+        'avatar' => AvatarElement::class,
 
         // Default classes to enrich single elements
         'fieldControl' => NodeExpansion\FieldControl::class,

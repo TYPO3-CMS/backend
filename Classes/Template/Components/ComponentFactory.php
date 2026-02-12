@@ -177,7 +177,6 @@ readonly class ComponentFactory
     {
         $languageService = $this->getLanguageService();
         $this->pageRenderer->loadJavaScriptModule('@typo3/backend/element/qrcode-modal-button.js');
-        $this->pageRenderer->addInlineLanguageLabelFile('EXT:backend/Resources/Private/Language/qrcode.xlf');
         $attributes = [
             'content' => (string)$previewUrl,
             'modal-title' => $languageService->sL('LLL:EXT:backend/Resources/Private/Language/locallang_layout.xlf:showPageQrCode.modalTitle'),

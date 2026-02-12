@@ -30,7 +30,6 @@ use TYPO3\CMS\Core\Resource\Filter\FileExtensionFilter;
 use TYPO3\CMS\Core\Resource\Folder;
 use TYPO3\CMS\Core\Resource\OnlineMedia\Helpers\OnlineMediaHelperRegistry;
 use TYPO3\CMS\Core\Schema\Capability\TcaSchemaCapability;
-use TYPO3\CMS\Core\Schema\TcaSchemaFactory;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 use TYPO3\CMS\Core\Utility\MathUtility;
 use TYPO3\CMS\Core\Utility\StringUtility;
@@ -73,7 +72,6 @@ class FilesControlContainer extends AbstractContainer
         private readonly OnlineMediaHelperRegistry $onlineMediaHelperRegistry,
         private readonly DefaultUploadFolderResolver $defaultUploadFolderResolver,
         private readonly HashService $hashService,
-        private readonly TcaSchemaFactory $tcaSchemaFactory,
     ) {}
 
     /**
@@ -99,8 +97,8 @@ class FilesControlContainer extends AbstractContainer
         $config = $parameterArray['fieldConf']['config'];
         $isReadOnly = (bool)($config['readOnly'] ?? false);
         $language = 0;
-        if ($this->tcaSchemaFactory->has($table) && $this->tcaSchemaFactory->get($table)->hasCapability(TcaSchemaCapability::Language)) {
-            $languageFieldName = $this->tcaSchemaFactory->get($table)->getCapability(TcaSchemaCapability::Language)->getLanguageField()->getName();
+        if ($this->data['tcaSchemata']->has($table) && $this->data['tcaSchemata']->get($table)->hasCapability(TcaSchemaCapability::Language)) {
+            $languageFieldName = $this->data['tcaSchemata']->get($table)->getCapability(TcaSchemaCapability::Language)->getLanguageField()->getName();
             $language = isset($row[$languageFieldName][0]) ? (int)$row[$languageFieldName][0] : (int)$row[$languageFieldName];
         }
 
@@ -177,7 +175,11 @@ class FilesControlContainer extends AbstractContainer
         $resultArray['inlineData'] = $this->fileReferenceData;
 
         // @todo: It might be a good idea to have something like "isLocalizedRecord" or similar set by a data provider
-        $uidOfDefaultRecord = $row[$GLOBALS['TCA'][$table]['ctrl']['transOrigPointerField'] ?? ''] ?? 0;
+        $uidOfDefaultRecord = 0;
+        if ($this->data['tcaSchemata']->has($table) && $this->data['tcaSchemata']->get($table)->hasCapability(TcaSchemaCapability::Language)) {
+            $originPointerField = $this->data['tcaSchemata']->get($table)->getCapability(TcaSchemaCapability::Language)->getTranslationOriginPointerField()->getName();
+            $uidOfDefaultRecord = $row[$originPointerField] ?? 0;
+        }
         $isLocalizedParent = $language > 0
             && ($uidOfDefaultRecord[0] ?? $uidOfDefaultRecord) > 0
             && MathUtility::canBeInterpretedAsInteger($row['uid']);

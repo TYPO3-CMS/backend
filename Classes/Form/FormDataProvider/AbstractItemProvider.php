@@ -39,7 +39,6 @@ use TYPO3\CMS\Core\Schema\Capability\RootLevelCapability;
 use TYPO3\CMS\Core\Schema\Capability\TcaSchemaCapability;
 use TYPO3\CMS\Core\Schema\Struct\SelectItemCollection;
 use TYPO3\CMS\Core\Schema\TcaSchema;
-use TYPO3\CMS\Core\Schema\TcaSchemaFactory;
 use TYPO3\CMS\Core\Site\Entity\Site;
 use TYPO3\CMS\Core\Site\Entity\SiteInterface;
 use TYPO3\CMS\Core\SystemResource\Exception\InvalidSystemResourceIdentifierException;
@@ -63,7 +62,6 @@ abstract class AbstractItemProvider
     private FileRepository $fileRepository;
     private FlashMessageService $flashMessageService;
     private ConnectionPool $connectionPool;
-    private TcaSchemaFactory $tcaSchemaFactory;
     private ItemProcessingService $itemProcessingService;
     private EnvPlaceholderProcessor $envPlaceholderProcessor;
 
@@ -75,11 +73,6 @@ abstract class AbstractItemProvider
     public function injectFileRepository(FileRepository $fileRepository): void
     {
         $this->fileRepository = $fileRepository;
-    }
-
-    public function injectTcaSchemaFactory(TcaSchemaFactory $tcaSchemaFactory): void
-    {
-        $this->tcaSchemaFactory = $tcaSchemaFactory;
     }
 
     public function injectFlashMessageService(FlashMessageService $flashMessageService): void
@@ -336,8 +329,7 @@ abstract class AbstractItemProvider
         $languageService = $this->getLanguageService();
 
         $foreignTable = $result['processedTca']['columns'][$fieldName]['config']['foreign_table'];
-
-        if (!isset($GLOBALS['TCA'][$foreignTable]) || !is_array($GLOBALS['TCA'][$foreignTable])) {
+        if (!$result['tcaSchemata']->has($foreignTable)) {
             throw new \UnexpectedValueException(
                 'Field ' . $fieldName . ' of table ' . $result['tableName'] . ' reference to foreign table '
                 . $foreignTable . ', but this table is not defined in TCA',
@@ -384,9 +376,10 @@ abstract class AbstractItemProvider
                 // that represents this specific row.
                 $iconFieldName = '';
                 $isFileReference = false;
-                if (!empty($GLOBALS['TCA'][$foreignTable]['ctrl']['selicon_field'])) {
-                    $iconFieldName = $GLOBALS['TCA'][$foreignTable]['ctrl']['selicon_field'];
-                    if (($GLOBALS['TCA'][$foreignTable]['columns'][$iconFieldName]['config']['type'] ?? '') === 'file') {
+                $foreignTableSchema = $result['tcaSchemata']->get($foreignTable);
+                if (!empty($foreignTableSchema->getRawConfiguration()['selicon_field'] ?? null)) {
+                    $iconFieldName = $foreignTableSchema->getRawConfiguration()['selicon_field'];
+                    if ($foreignTableSchema->getField($iconFieldName)->getType() === 'file') {
                         $isFileReference = true;
                     }
                 }
@@ -644,7 +637,7 @@ abstract class AbstractItemProvider
         // and using `ANY_VALUES()` aggregation for the `uid` field.
         $hasGroupBy = is_array($foreignTableClauseArray['GROUPBY']) && $foreignTableClauseArray['GROUPBY'] !== [];
         $selectFieldList = [];
-        $schema = $this->tcaSchemaFactory->get($foreignTableName);
+        $schema = $result['tcaSchemata']->get($foreignTableName);
         $commonFieldList = $this->getCommonSelectFields($foreignTableName, $schema);
         foreach ($commonFieldList as $fieldName) {
             if ($hasGroupBy && in_array($fieldName, $foreignTableClauseArray['GROUPBY'], true)) {
@@ -1260,7 +1253,7 @@ abstract class AbstractItemProvider
         $table = $result['tableName'];
         $row = $result['databaseRow'];
         $uid = $row['uid'] ?? 0;
-        if ($this->tcaSchemaFactory->has($table) && $this->tcaSchemaFactory->get($table)->hasCapability(TcaSchemaCapability::Workspace) && (int)($row['t3ver_oid'] ?? 0) > 0) {
+        if ($result['tcaSchemata']->has($table) && $result['tcaSchemata']->get($table)->hasCapability(TcaSchemaCapability::Workspace) && (int)($row['t3ver_oid'] ?? 0) > 0) {
             $uid = $row['t3ver_oid'];
         }
         return $uid;

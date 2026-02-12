@@ -23,6 +23,7 @@ use TYPO3\CMS\Backend\Form\FieldWizard\TableList;
 use TYPO3\CMS\Core\Imaging\Icon;
 use TYPO3\CMS\Core\Imaging\IconFactory;
 use TYPO3\CMS\Core\Localization\LanguageService;
+use TYPO3\CMS\Core\Schema\SchemaCollection;
 use TYPO3\CMS\Core\Site\Entity\Site;
 use TYPO3\TestingFramework\Core\Unit\UnitTestCase;
 
@@ -187,6 +188,7 @@ final class TableListTest extends UnitTestCase
                     'config' => $config,
                 ],
             ],
+            'tcaSchemata' => new SchemaCollection([]),
         ]);
         $result = $tableList->render();
 

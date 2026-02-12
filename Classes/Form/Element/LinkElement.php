@@ -393,7 +393,7 @@ class LinkElement extends AbstractFormElement
                 $hasPageAccess = BackendUtility::readPageAccess($record['pid'] ?? null, $pagePermissionClause) !== false;
                 if ($record && $hasPageAccess && $backendUser->check('tables_select', $table)) {
                     $recordTitle = BackendUtility::getRecordTitle($table, $record);
-                    $tableTitle = $this->getLanguageService()->sL($GLOBALS['TCA'][$table]['ctrl']['title']);
+                    $tableTitle = $this->getLanguageService()->sL($this->data['tcaSchemata']->get($table)->getTitle());
                     $data = [
                         'text' => sprintf('%s [%s:%d]', $recordTitle, $tableTitle, $linkData['uid']),
                         'icon' => $this->iconFactory->getIconForRecord($table, $record, IconSize::SMALL)->render(),

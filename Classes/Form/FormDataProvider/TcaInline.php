@@ -28,7 +28,6 @@ use TYPO3\CMS\Core\Localization\LanguageService;
 use TYPO3\CMS\Core\Messaging\FlashMessage;
 use TYPO3\CMS\Core\Messaging\FlashMessageService;
 use TYPO3\CMS\Core\Schema\Capability\TcaSchemaCapability;
-use TYPO3\CMS\Core\Schema\TcaSchemaFactory;
 use TYPO3\CMS\Core\Type\ContextualFeedbackSeverity;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 use TYPO3\CMS\Core\Utility\MathUtility;
@@ -42,7 +41,6 @@ class TcaInline extends AbstractDatabaseRecordProvider implements FormDataProvid
     public function __construct(
         private readonly FlashMessageService $flashMessageService,
         private readonly InlineStackProcessor $inlineStackProcessor,
-        private readonly TcaSchemaFactory $tcaSchemaFactory,
     ) {}
 
     /**
@@ -118,8 +116,10 @@ class TcaInline extends AbstractDatabaseRecordProvider implements FormDataProvid
             }
             if (MathUtility::canBeInterpretedAsInteger($pid)) {
                 $pageRecord = BackendUtility::getRecord('pages', (int)$pid);
-                if (($pageRecord[$GLOBALS['TCA']['pages']['ctrl']['transOrigPointerField'] ?? null] ?? 0) > 0) {
-                    $pid = (int)$pageRecord[$GLOBALS['TCA']['pages']['ctrl']['transOrigPointerField']];
+                $pageSchema = $result['tcaSchemata']->get('pages');
+                if ($pageSchema->hasCapability(TcaSchemaCapability::Language)
+                    && ($pageRecord[$pageSchema->getCapability(TcaSchemaCapability::Language)->getTranslationOriginPointerField()->getName()] ?? 0) > 0) {
+                    $pid = (int)$pageRecord[$pageSchema->getCapability(TcaSchemaCapability::Language)->getTranslationOriginPointerField()->getName()];
                 }
             } elseif (!str_starts_with($pid, 'NEW')) {
                 throw new \RuntimeException(
@@ -154,7 +154,7 @@ class TcaInline extends AbstractDatabaseRecordProvider implements FormDataProvid
             );
         }
         $result['databaseRow'][$fieldName] = implode(',', $connectedUidsOfLocalizedOverlay);
-        $connectedUidsOfLocalizedOverlay = $this->getSubstitutedWorkspacedUids($connectedUidsOfLocalizedOverlay, $childTableName);
+        $connectedUidsOfLocalizedOverlay = $this->getSubstitutedWorkspacedUids($result, $connectedUidsOfLocalizedOverlay, $childTableName);
         if ($result['inlineCompileExistingChildren']) {
             $tableNameWithDefaultRecords = $result['tableName'];
             $connectedUidsOfDefaultLanguageRecord = $this->resolveConnectedRecordUids(
@@ -163,13 +163,14 @@ class TcaInline extends AbstractDatabaseRecordProvider implements FormDataProvid
                 $result['defaultLanguageRow'],
                 (string)($result['defaultLanguageRow'][$fieldName] ?? '')
             );
-            $connectedUidsOfDefaultLanguageRecord = $this->getSubstitutedWorkspacedUids($connectedUidsOfDefaultLanguageRecord, $childTableName);
+            $connectedUidsOfDefaultLanguageRecord = $this->getSubstitutedWorkspacedUids($result, $connectedUidsOfDefaultLanguageRecord, $childTableName);
 
             $showPossibleLocalizationRecords = $result['processedTca']['columns'][$fieldName]['config']['appearance']['showPossibleLocalizationRecords'] ?? false;
 
             // Find which records are localized, which records are not localized and which are
             // localized but miss default language record
-            $fieldNameWithDefaultLanguageUid = $GLOBALS['TCA'][$childTableName]['ctrl']['transOrigPointerField'] ?? '';
+            $childTableSchema = $result['tcaSchemata']->has($childTableName) ? $result['tcaSchemata']->get($childTableName) : null;
+            $fieldNameWithDefaultLanguageUid = $childTableSchema?->hasCapability(TcaSchemaCapability::Language) ? $childTableSchema->getCapability(TcaSchemaCapability::Language)->getTranslationOriginPointerField()->getName() : '';
             foreach ($connectedUidsOfLocalizedOverlay as $localizedUid) {
                 try {
                     $localizedRecord = $this->getRecordFromDatabase($childTableName, $localizedUid);
@@ -196,7 +197,7 @@ class TcaInline extends AbstractDatabaseRecordProvider implements FormDataProvid
                         // This localized child has a default language record. Remove this record from list of default language records
                         $connectedUidsOfDefaultLanguageRecord = array_diff($connectedUidsOfDefaultLanguageRecord, [$uidOfDefaultLanguageRecord]);
                     }
-                    $uidOfDefaultLanguageRecordWorkspaceVersionArray = $this->getSubstitutedWorkspacedUids([$uidOfDefaultLanguageRecord], $childTableName);
+                    $uidOfDefaultLanguageRecordWorkspaceVersionArray = $this->getSubstitutedWorkspacedUids($result, [$uidOfDefaultLanguageRecord], $childTableName);
                     if (!empty($uidOfDefaultLanguageRecordWorkspaceVersionArray)
                         && in_array($uidOfDefaultLanguageRecordWorkspaceVersionArray[0], $connectedUidsOfDefaultLanguageRecord, true)
                     ) {
@@ -256,7 +257,7 @@ class TcaInline extends AbstractDatabaseRecordProvider implements FormDataProvid
         );
         $result['databaseRow'][$fieldName] = implode(',', $connectedUidsOfDefaultLanguageRecord);
 
-        $connectedUidsOfDefaultLanguageRecord = $this->getSubstitutedWorkspacedUids($connectedUidsOfDefaultLanguageRecord, $childTableName);
+        $connectedUidsOfDefaultLanguageRecord = $this->getSubstitutedWorkspacedUids($result, $connectedUidsOfDefaultLanguageRecord, $childTableName);
 
         if ($result['inlineCompileExistingChildren']) {
             foreach ($connectedUidsOfDefaultLanguageRecord as $uid) {
@@ -311,6 +312,10 @@ class TcaInline extends AbstractDatabaseRecordProvider implements FormDataProvid
                 ],
                 'inlineExpandCollapseStateArray' => $result['inlineExpandCollapseStateArray'],
                 'site' => $result['site'],
+                // pass through schemata as they are immutable once they are set
+                'tcaSchemata' => $result['tcaSchemata'],
+                // pass through fullTca as it is immutable once set
+                'fullTca' => $result['fullTca'],
             ];
             $formDataGroup = GeneralUtility::makeInstance(OnTheFly::class);
             $formDataGroup->setProviderList([TcaSelectItems::class]);
@@ -364,6 +369,10 @@ class TcaInline extends AbstractDatabaseRecordProvider implements FormDataProvid
             'inlineTopMostParentUid' => $result['inlineTopMostParentUid'] ?: $inlineTopMostParent['uid'] ?? '',
             'inlineTopMostParentTableName' => $result['inlineTopMostParentTableName'] ?: $inlineTopMostParent['table'] ?? '',
             'inlineTopMostParentFieldName' => $result['inlineTopMostParentFieldName'] ?: $inlineTopMostParent['field'] ?? '',
+            // pass through schemata as they are immutable once they are set
+            'tcaSchemata' => $result['tcaSchemata'],
+            // pass through fullTca as it is immutable once set
+            'fullTca' => $result['fullTca'],
         ];
 
         // For foreign_selector with useCombination $mainChild is the mm record
@@ -422,6 +431,10 @@ class TcaInline extends AbstractDatabaseRecordProvider implements FormDataProvid
             'inlineTopMostParentUid' => $child['inlineTopMostParentUid'],
             'inlineTopMostParentTableName' => $child['inlineTopMostParentTableName'],
             'inlineTopMostParentFieldName' => $child['inlineTopMostParentFieldName'],
+            // pass through schemata as they are immutable once they are set
+            'tcaSchemata' => $child['tcaSchemata'],
+            // pass through fullTca as it is immutable once set
+            'fullTca' => $child['fullTca'],
         ];
         $childChild = $formDataCompiler->compile($formDataCompilerInput, GeneralUtility::makeInstance(TcaDatabaseRecord::class));
         return $childChild;
@@ -430,17 +443,21 @@ class TcaInline extends AbstractDatabaseRecordProvider implements FormDataProvid
     /**
      * Substitute given list of uids in child table with workspace uid if needed
      *
+     * @param array $result Result array
      * @param array $connectedUids List of connected uids
      * @param string $childTableName Name of child table
      * @return int[] List of substituted uids
      */
-    protected function getSubstitutedWorkspacedUids(array $connectedUids, string $childTableName): array
+    protected function getSubstitutedWorkspacedUids(array $result, array $connectedUids, string $childTableName): array
     {
         $backendUser = $this->getBackendUser();
         $newConnectedUids = [];
         foreach ($connectedUids as $uid) {
             // Fetch workspace version of a record (if any):
-            if ($backendUser->workspace !== 0 && $this->tcaSchemaFactory->has($childTableName) && $this->tcaSchemaFactory->get($childTableName)->hasCapability(TcaSchemaCapability::Workspace)) {
+            if ($backendUser->workspace !== 0
+                && $result['tcaSchemata']->has($childTableName)
+                && $result['tcaSchemata']->get($childTableName)->hasCapability(TcaSchemaCapability::Workspace)
+            ) {
                 $workspaceVersion = BackendUtility::getWorkspaceVersionOfRecord($backendUser->workspace, $childTableName, $uid, 'uid,t3ver_state');
                 if (!empty($workspaceVersion)) {
                     $versionState = VersionState::tryFrom($workspaceVersion['t3ver_state'] ?? 0);

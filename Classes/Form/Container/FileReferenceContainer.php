@@ -31,6 +31,7 @@ use TYPO3\CMS\Core\Imaging\ImageManipulation\CropVariantCollection;
 use TYPO3\CMS\Core\Localization\LanguageService;
 use TYPO3\CMS\Core\Resource\ProcessedFile;
 use TYPO3\CMS\Core\Resource\ResourceFactory;
+use TYPO3\CMS\Core\Schema\Capability\TcaSchemaCapability;
 use TYPO3\CMS\Core\Type\Bitmask\Permission;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 use TYPO3\CMS\Core\Utility\MathUtility;
@@ -300,7 +301,7 @@ class FileReferenceContainer extends AbstractContainer
         $languageService = $this->getLanguageService();
         $backendUser = $this->getBackendUserAuthentication();
         $isNewItem = str_starts_with((string)$databaseRow['uid'], 'NEW');
-        $fileReferenceTableTca = $GLOBALS['TCA'][self::FILE_REFERENCE_TABLE];
+        $fileReferenceTableTca = $this->data['tcaSchemata']->get(self::FILE_REFERENCE_TABLE);
         $calcPerms = new Permission(
             $backendUser->calcPerms(BackendUtility::readPageAccess(
                 (int)($this->data['parentPageRow']['uid'] ?? 0),
@@ -331,7 +332,7 @@ class FileReferenceContainer extends AbstractContainer
         }
         // If the table is NOT a read-only table, then show these links:
         if (!($parentConfig['readOnly'] ?? false)
-            && !($fileReferenceTableTca['ctrl']['readOnly'] ?? false)
+            && !($fileReferenceTableTca->getCapability(TcaSchemaCapability::AccessReadOnly)->getValue() ?? false)
             && !($this->data['isInlineDefaultLanguageRecordInLocalizedParentContext'] ?? false)
         ) {
             if ($event->isControlEnabled('sort')) {
@@ -357,8 +358,9 @@ class FileReferenceContainer extends AbstractContainer
                         ' . $this->iconFactory->getIcon($icon, IconSize::SMALL)->render() . '
                     </button>';
             }
+            $sysFileMetadataTableTca = $this->data['tcaSchemata']->has('sys_file_metadata') ? $this->data['tcaSchemata']->get('sys_file_metadata') : null;
             if (!$isNewItem
-                && ($languageField = ($GLOBALS['TCA']['sys_file_metadata']['ctrl']['languageField'] ?? false))
+                && ($languageField = ($sysFileMetadataTableTca?->getRawConfiguration()['languageField'] ?? false))
                 && $backendUser->check('tables_modify', 'sys_file_metadata')
                 && $event->isControlEnabled('edit')
             ) {
@@ -404,11 +406,11 @@ class FileReferenceContainer extends AbstractContainer
                         ' . $this->iconFactory->getIcon('actions-edit-delete', IconSize::SMALL)->render() . '
                     </button>';
             }
-            if (($hiddenField = (string)($fileReferenceTableTca['ctrl']['enablecolumns']['disabled'] ?? '')) !== ''
-                && ($fileReferenceTableTca['columns'][$hiddenField] ?? false)
+            if (($hiddenField = ($fileReferenceTableTca->getCapability(TcaSchemaCapability::RestrictionDisabledField)->getFieldName())) !== ''
+                && ($fileReferenceTableTca->hasField($hiddenField))
                 && $event->isControlEnabled('hide')
                 && (
-                    !($fileReferenceTableTca['columns'][$hiddenField]['exclude'] ?? false)
+                    !($fileReferenceTableTca->getField($hiddenField)->getConfiguration()['exclude'] ?? false)
                     || $backendUser->check('non_exclude_fields', self::FILE_REFERENCE_TABLE . ':' . $hiddenField)
                 )
             ) {

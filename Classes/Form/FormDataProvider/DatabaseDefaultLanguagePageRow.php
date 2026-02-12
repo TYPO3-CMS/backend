@@ -18,6 +18,7 @@ declare(strict_types=1);
 namespace TYPO3\CMS\Backend\Form\FormDataProvider;
 
 use TYPO3\CMS\Backend\Form\FormDataProviderInterface;
+use TYPO3\CMS\Core\Schema\Capability\TcaSchemaCapability;
 
 /**
  * Fetch page in default language from database if it's a translated pages record
@@ -34,8 +35,11 @@ class DatabaseDefaultLanguagePageRow extends AbstractDatabaseRecordProvider impl
     {
         // $defaultLanguagePageRow end up NULL if a record added or edited on root node
         $tableName = $result['tableName'];
-        if ($tableName === 'pages' && ($result['databaseRow'][$GLOBALS['TCA'][$tableName]['ctrl']['transOrigPointerField']] ?? 0) > 0) {
-            $result['defaultLanguagePageRow'] = $this->getRecordFromDatabase('pages', $result['databaseRow'][$GLOBALS['TCA'][$tableName]['ctrl']['transOrigPointerField']]);
+        if ($tableName === 'pages'
+            && ($tableSchema = $result['tcaSchemata']->get($tableName))
+            && $tableSchema->isLanguageAware()
+            && ($result['databaseRow'][$tableSchema->getCapability(TcaSchemaCapability::Language)->getTranslationOriginPointerField()->getName()] ?? 0) > 0) {
+            $result['defaultLanguagePageRow'] = $this->getRecordFromDatabase('pages', $result['databaseRow'][$tableSchema->getCapability(TcaSchemaCapability::Language)->getTranslationOriginPointerField()->getName()]);
         }
         return $result;
     }

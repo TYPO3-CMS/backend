@@ -19,7 +19,6 @@ use TYPO3\CMS\Backend\Form\Exception\DatabaseRecordException;
 use TYPO3\CMS\Backend\Form\Exception\DatabaseRecordWorkspaceDeletePlaceholderException;
 use TYPO3\CMS\Backend\Form\FormDataProviderInterface;
 use TYPO3\CMS\Core\Schema\Capability\TcaSchemaCapability;
-use TYPO3\CMS\Core\Schema\TcaSchemaFactory;
 use TYPO3\CMS\Core\Versioning\VersionState;
 
 /**
@@ -27,10 +26,6 @@ use TYPO3\CMS\Core\Versioning\VersionState;
  */
 class DatabaseEditRow extends AbstractDatabaseRecordProvider implements FormDataProviderInterface
 {
-    public function __construct(
-        private readonly TcaSchemaFactory $tcaSchemaFactory
-    ) {}
-
     /**
      * Fetch existing record from database
      *
@@ -52,8 +47,8 @@ class DatabaseEditRow extends AbstractDatabaseRecordProvider implements FormData
                 1437663061
             );
         }
-        if ($this->tcaSchemaFactory->has($result['tableName'])
-            && $this->tcaSchemaFactory->get($result['tableName'])->hasCapability(TcaSchemaCapability::Workspace)
+        if ($result['tcaSchemata']->has($result['tableName'])
+            && $result['tcaSchemata']->get($result['tableName'])->hasCapability(TcaSchemaCapability::Workspace)
             && VersionState::tryFrom($databaseRow['t3ver_state'] ?? 0) === VersionState::DELETE_PLACEHOLDER
         ) {
             // Workspace delete placeholder records (t3ver_state = 2) should never be edited. This is a fallback

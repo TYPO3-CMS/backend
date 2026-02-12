@@ -23,6 +23,7 @@ use TYPO3\CMS\Backend\Form\FormDataProviderInterface;
 use TYPO3\CMS\Backend\Form\InlineStackProcessor;
 use TYPO3\CMS\Backend\Utility\BackendUtility;
 use TYPO3\CMS\Core\Exception\SiteNotFoundException;
+use TYPO3\CMS\Core\Schema\Capability\TcaSchemaCapability;
 use TYPO3\CMS\Core\Site\SiteFinder;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 use TYPO3\CMS\Core\Utility\MathUtility;
@@ -96,8 +97,11 @@ class SiteTcaInline extends AbstractDatabaseRecordProvider implements FormDataPr
             }
             if (MathUtility::canBeInterpretedAsInteger($pid)) {
                 $pageRecord = BackendUtility::getRecord('pages', (int)$pid);
-                if (($pageRecord[$GLOBALS['TCA']['pages']['ctrl']['transOrigPointerField'] ?? null] ?? 0) > 0) {
-                    $pid = (int)$pageRecord[$GLOBALS['TCA']['pages']['ctrl']['transOrigPointerField']];
+                $pageSchema = $result['tcaSchemata']->has('pages') ? $result['tcaSchemata']->get('pages') : null;
+                if ($pageSchema !== null
+                    && $pageSchema->hasCapability(TcaSchemaCapability::Language)
+                    && ($pageRecord[$pageSchema->getCapability(TcaSchemaCapability::Language)->getTranslationOriginPointerField()->getName()] ?? 0) > 0) {
+                    $pid = (int)$pageRecord[$pageSchema->getCapability(TcaSchemaCapability::Language)->getTranslationOriginPointerField()->getName()];
                 }
             } elseif (!str_starts_with($pid, 'NEW')) {
                 throw new \RuntimeException(
@@ -188,6 +192,11 @@ class SiteTcaInline extends AbstractDatabaseRecordProvider implements FormDataPr
             'inlineTopMostParentUid' => $result['inlineTopMostParentUid'] ?: ($inlineTopMostParent['uid'] ?? null),
             'inlineTopMostParentTableName' => $result['inlineTopMostParentTableName'] ?: ($inlineTopMostParent['table'] ?? ''),
             'inlineTopMostParentFieldName' => $result['inlineTopMostParentFieldName'] ?: ($inlineTopMostParent['field'] ?? ''),
+
+            // pass through schemata as they are immutable once they are set
+            'tcaSchemata' => $result['tcaSchemata'],
+            // pass through fullTca as it is immutable once set
+            'fullTca' => $result['fullTca'],
         ];
 
         if (($parentConfig['foreign_selector'] ?? false) && ($parentConfig['appearance']['useCombination'] ?? false)) {

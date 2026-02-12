@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 /*
  * This file is part of the TYPO3 CMS project.
  *
@@ -16,24 +18,58 @@
 namespace TYPO3\CMS\Backend\Form\FormDataProvider;
 
 use TYPO3\CMS\Backend\Form\FormDataProviderInterface;
+use TYPO3\CMS\Core\Schema\TcaSchemaFactory;
 
 /**
- * Initialize processed TCA from vanilla TCA
+ * This class is not named properly but will be reworked in the future.
+ *
+ * Currently, it is necessary to set the TCA from the outside as it needs to be faked e.g., for edit site configuration.
+ * As the formengine handles inline Elements as nested call to itself the TCA and its schema needs to be hold as state.
+ *
+ * @todo: Once processedTca is refactored from its array shape remove keeping the full TCA and TCA schemata as state.
  */
 class InitializeProcessedTca implements FormDataProviderInterface
 {
+    public function __construct(private readonly TcaSchemaFactory $tcaSchemaFactory) {}
+
     /**
+     * Add full TCA as copy from vanilla TCA if not already set form the outside
+     * Fetch TCA schemata from vanilla TCA if not already set from the outside
      * Add processed TCA as copy from vanilla TCA and sanitize some details
-     *
-     * @return array
-     * @throws \UnexpectedValueException
      */
-    public function addData(array $result)
+    public function addData(array $result): array
+    {
+        $result = $this->initializeFullTca($result);
+        $result = $this->initializeTcaSchemata($result);
+        return $this->initializeProcessedTca($result);
+    }
+
+    private function initializeFullTca(array $result): array
+    {
+        if (!empty($result['fullTca'] ?? null)) {
+            return $result;
+        }
+
+        $result['fullTca'] = $GLOBALS['TCA'];
+        return $result;
+    }
+
+    private function initializeTcaSchemata(array $result): array
+    {
+        if (!empty($result['tcaSchemata'] ?? null)) {
+            return $result;
+        }
+
+        $result['tcaSchemata'] = $this->tcaSchemaFactory->all();
+        return $result;
+    }
+
+    private function initializeProcessedTca(array $result): array
     {
         if (empty($result['processedTca'])) {
             if (
-                !isset($GLOBALS['TCA'][$result['tableName']])
-                || !is_array($GLOBALS['TCA'][$result['tableName']])
+                !isset($result['fullTca'][$result['tableName']])
+                || !is_array($result['fullTca'][$result['tableName']])
             ) {
                 throw new \UnexpectedValueException(
                     'TCA for table ' . $result['tableName'] . ' not found',
@@ -41,7 +77,7 @@ class InitializeProcessedTca implements FormDataProviderInterface
                 );
             }
 
-            $result['processedTca'] = $GLOBALS['TCA'][$result['tableName']];
+            $result['processedTca'] = $result['fullTca'][$result['tableName']];
         }
 
         if (!is_array($result['processedTca']['columns'])) {
@@ -50,7 +86,6 @@ class InitializeProcessedTca implements FormDataProviderInterface
                 1438594406
             );
         }
-
         return $result;
     }
 }

@@ -21,7 +21,6 @@ use TYPO3\CMS\Core\Messaging\FlashMessage;
 use TYPO3\CMS\Core\Messaging\FlashMessageService;
 use TYPO3\CMS\Core\Resource\Exception\InvalidPathException;
 use TYPO3\CMS\Core\Resource\StorageRepository;
-use TYPO3\CMS\Core\Schema\TcaSchemaFactory;
 use TYPO3\CMS\Core\Type\ContextualFeedbackSeverity;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 use TYPO3\CMS\Core\Utility\StringUtility;
@@ -36,7 +35,6 @@ class UserSysFileStorageIsPublicElement extends AbstractFormElement
     public function __construct(
         private readonly FlashMessageService $flashMessageService,
         private readonly StorageRepository $storageRepository,
-        private readonly TcaSchemaFactory $tcaSchemaFactory,
     ) {}
 
     /**
@@ -50,7 +48,7 @@ class UserSysFileStorageIsPublicElement extends AbstractFormElement
     {
         $row = $this->data['databaseRow'];
         $parameterArray = $this->data['parameterArray'];
-        $isPublic = (bool)$this->tcaSchemaFactory->get('sys_file_storage')->getField('is_public')->getDefaultValue();
+        $isPublic = (bool)$this->data['tcaSchemata']->get('sys_file_storage')->getField('is_public')->getDefaultValue();
 
         if ($this->data['command'] === 'edit') {
             // Make sure the storage object can be retrieved which is not the case when new storage.

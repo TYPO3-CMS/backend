@@ -22,7 +22,6 @@ use TYPO3\CMS\Core\Imaging\IconSize;
 use TYPO3\CMS\Core\Localization\LanguageService;
 use TYPO3\CMS\Core\Page\JavaScriptModuleInstruction;
 use TYPO3\CMS\Core\Schema\Capability\TcaSchemaCapability;
-use TYPO3\CMS\Core\Schema\TcaSchemaFactory;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 use TYPO3\CMS\Core\Utility\MathUtility;
 
@@ -64,7 +63,6 @@ class InlineControlContainer extends AbstractContainer
         private readonly IconFactory $iconFactory,
         private readonly InlineStackProcessor $inlineStackProcessor,
         private readonly HashService $hashService,
-        private readonly TcaSchemaFactory $tcaSchemaFactory,
     ) {}
 
     /**
@@ -91,8 +89,8 @@ class InlineControlContainer extends AbstractContainer
         $foreign_table = $config['foreign_table'];
         $isReadOnly = isset($config['readOnly']) && $config['readOnly'];
         $language = 0;
-        if ($this->tcaSchemaFactory->has($table) && $this->tcaSchemaFactory->get($table)->hasCapability(TcaSchemaCapability::Language)) {
-            $languageFieldName = $this->tcaSchemaFactory->get($table)->getCapability(TcaSchemaCapability::Language)->getLanguageField()->getName();
+        if ($this->data['tcaSchemata']->has($table) && $this->data['tcaSchemata']->get($table)->hasCapability(TcaSchemaCapability::Language)) {
+            $languageFieldName = $this->data['tcaSchemata']->get($table)->getCapability(TcaSchemaCapability::Language)->getLanguageField()->getName();
             $language = isset($row[$languageFieldName][0]) ? (int)$row[$languageFieldName][0] : (int)($row[$languageFieldName] ?? 0);
         }
 
@@ -217,7 +215,11 @@ class InlineControlContainer extends AbstractContainer
         $resultArray['inlineData'] = $this->inlineData;
 
         // @todo: It might be a good idea to have something like "isLocalizedRecord" or similar set by a data provider
-        $uidOfDefaultRecord = $row[$GLOBALS['TCA'][$table]['ctrl']['transOrigPointerField'] ?? ''] ?? 0;
+        $uidOfDefaultRecord = 0;
+        if ($this->data['tcaSchemata']->has($table) && $this->data['tcaSchemata']->get($table)->hasCapability(TcaSchemaCapability::Language)) {
+            $originPointerField = $this->data['tcaSchemata']->get($table)->getCapability(TcaSchemaCapability::Language)->getTranslationOriginPointerField()->getName();
+            $uidOfDefaultRecord = $row[$originPointerField] ?? 0;
+        }
         $isLocalizedParent = $language > 0
             && ($uidOfDefaultRecord[0] ?? $uidOfDefaultRecord) > 0
             && MathUtility::canBeInterpretedAsInteger($row['uid']);
@@ -390,7 +392,7 @@ class InlineControlContainer extends AbstractContainer
                 if (!empty($conf['appearance']['newRecordLinkAddTitle'])) {
                     $title = htmlspecialchars(sprintf(
                         $languageService->sL('core.core:cm.createnew.link'),
-                        $languageService->sL($GLOBALS['TCA'][$conf['foreign_table']]['ctrl']['title'])
+                        $languageService->sL($this->data['tcaSchemata']->get($conf['foreign_table'])->getTitle()),
                     ));
                 } elseif (isset($conf['appearance']['newRecordLinkTitle']) && $conf['appearance']['newRecordLinkTitle'] !== '') {
                     $title = htmlspecialchars($languageService->sL($conf['appearance']['newRecordLinkTitle']));

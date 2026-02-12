@@ -23,7 +23,7 @@ use TYPO3\CMS\Backend\Form\FormDataProvider\TcaCategory;
 use TYPO3\CMS\Core\Database\ConnectionPool;
 use TYPO3\CMS\Core\Imaging\IconFactory;
 use TYPO3\CMS\Core\Localization\LanguageServiceFactory;
-use TYPO3\CMS\Core\Schema\TcaSchemaFactory;
+use TYPO3\CMS\Core\Schema\TcaSchemaBuilder;
 use TYPO3\CMS\Core\Site\Entity\Site;
 use TYPO3\TestingFramework\Core\Functional\FunctionalTestCase;
 
@@ -60,6 +60,7 @@ final class TcaCategoryTest extends FunctionalTestCase
             ],
         ];
 
+        $input = $this->addTcaSchemata($input);
         // We expect no change to the input data
         $expected = $input;
 
@@ -89,6 +90,7 @@ final class TcaCategoryTest extends FunctionalTestCase
             ],
         ];
 
+        $input = $this->addTcaSchemata($input);
         // We expect no change to the input data
         $expected = $input;
 
@@ -114,6 +116,7 @@ final class TcaCategoryTest extends FunctionalTestCase
                 ],
             ],
         ];
+        $input = $this->addTcaSchemata($input);
 
         $expected = $input;
         $expected['databaseRow']['categories'] = ['2'];
@@ -165,6 +168,7 @@ final class TcaCategoryTest extends FunctionalTestCase
                 ],
             ],
         ];
+        $input = $this->addTcaSchemata($input);
 
         $expected = $input;
         $expected['databaseRow']['categories'] = ['2'];
@@ -243,6 +247,7 @@ final class TcaCategoryTest extends FunctionalTestCase
             ],
             'site' => $site,
         ];
+        $input = $this->addTcaSchemata($input);
 
         $expected = $input;
         $expected['databaseRow']['categories'] = ['2'];
@@ -278,6 +283,7 @@ final class TcaCategoryTest extends FunctionalTestCase
                 ],
             ],
         ];
+        $input = $this->addTcaSchemata($input);
 
         $expected = $input;
         $expected['databaseRow']['categories'] = [
@@ -357,6 +363,7 @@ final class TcaCategoryTest extends FunctionalTestCase
             'rootline' => [],
             'site' => null,
         ];
+        $input = $this->addTcaSchemata($input);
 
         $expected = $input;
         $expected['databaseRow']['categories'] = ['31'];
@@ -374,7 +381,6 @@ final class TcaCategoryTest extends FunctionalTestCase
         $category = new TcaCategory();
         $category->injectConnectionPool($this->get(ConnectionPool::class));
         $category->injectIconFactory($this->get(IconFactory::class));
-        $category->injectTcaSchemaFactory($this->get(TcaSchemaFactory::class));
         self::assertEquals($expected, $category->addData($input));
     }
 
@@ -419,6 +425,7 @@ final class TcaCategoryTest extends FunctionalTestCase
             'rootline' => [],
             'site' => null,
         ];
+        $input = $this->addTcaSchemata($input);
 
         $expected = $input;
         $expected['databaseRow']['categories'] = [
@@ -446,7 +453,6 @@ final class TcaCategoryTest extends FunctionalTestCase
         $category = new TcaCategory();
         $category->injectConnectionPool($this->get(ConnectionPool::class));
         $category->injectIconFactory($this->get(IconFactory::class));
-        $category->injectTcaSchemaFactory($this->get(TcaSchemaFactory::class));
         self::assertEquals($expected, $category->addData($input));
     }
 
@@ -481,6 +487,7 @@ final class TcaCategoryTest extends FunctionalTestCase
             'rootline' => [],
             'site' => null,
         ];
+        $input = $this->addTcaSchemata($input);
 
         $expected = $input;
         $expected['databaseRow']['categories'] = [
@@ -508,8 +515,20 @@ final class TcaCategoryTest extends FunctionalTestCase
         $category = new TcaCategory();
         $category->injectConnectionPool($this->get(ConnectionPool::class));
         $category->injectIconFactory($this->get(IconFactory::class));
-        $category->injectTcaSchemaFactory($this->get(TcaSchemaFactory::class));
         self::assertEquals($expected, $category->addData($input));
+    }
+
+    private function addTcaSchemata(array $result): array
+    {
+        if (isset($result['tcaSchemata'])) {
+            return $result;
+        }
+        $tca = $result['fullTca'] ?? $GLOBALS['TCA'];
+        if (!isset($tca[$result['tableName']]) && isset($result['processedTca'])) {
+            $tca[$result['tableName']] = $result['processedTca'];
+        }
+        $result['tcaSchemata'] = $this->get(TcaSchemaBuilder::class)->buildFromStructure($tca);
+        return $result;
     }
 
     /**

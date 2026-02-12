@@ -19,6 +19,13 @@ namespace TYPO3\CMS\Backend\Tests\Unit\Form\FormDataProvider;
 
 use PHPUnit\Framework\Attributes\Test;
 use TYPO3\CMS\Backend\Form\FormDataProvider\InitializeProcessedTca;
+use TYPO3\CMS\Core\Cache\Frontend\PhpFrontend;
+use TYPO3\CMS\Core\Configuration\FlexForm\FlexFormTools;
+use TYPO3\CMS\Core\Schema\FieldTypeFactory;
+use TYPO3\CMS\Core\Schema\RelationMapBuilder;
+use TYPO3\CMS\Core\Schema\SchemaCollection;
+use TYPO3\CMS\Core\Schema\TcaSchemaBuilder;
+use TYPO3\CMS\Core\Schema\TcaSchemaFactory;
 use TYPO3\TestingFramework\Core\Unit\UnitTestCase;
 
 final class InitializeProcessedTcaTest extends UnitTestCase
@@ -28,7 +35,7 @@ final class InitializeProcessedTcaTest extends UnitTestCase
     protected function setUp(): void
     {
         parent::setUp();
-        $this->subject = new InitializeProcessedTca();
+        $this->subject = new InitializeProcessedTca($this->getTcaSchemaFactory());
     }
 
     #[Test]
@@ -50,11 +57,13 @@ final class InitializeProcessedTcaTest extends UnitTestCase
     {
         $input = [
             'tableName' => 'aTable',
+            'fullTca' => ['aTable' => ['columns' => ['afield' => []]]],
             'processedTca' => [
                 'columns' => [
                     'afield' => [],
                 ],
             ],
+            'tcaSchemata' => new SchemaCollection([]),
         ];
         $expected = $input;
         self::assertEquals($expected, $this->subject->addData($input));
@@ -66,6 +75,7 @@ final class InitializeProcessedTcaTest extends UnitTestCase
         $input = [
             'tableName' => 'aTable',
         ];
+        $GLOBALS['TCA'] = [];
 
         $this->expectException(\UnexpectedValueException::class);
         $this->expectExceptionCode(1437914223);
@@ -84,5 +94,19 @@ final class InitializeProcessedTcaTest extends UnitTestCase
         $this->expectExceptionCode(1437914223);
 
         $this->subject->addData($input);
+    }
+
+    private function getTcaSchemaFactory(): TcaSchemaFactory
+    {
+        $cacheMock = $this->createMock(PhpFrontend::class);
+        $cacheMock->method('has')->with(self::isString())->willReturn(false);
+        return new TcaSchemaFactory(
+            new TcaSchemaBuilder(
+                new RelationMapBuilder($this->createMock(FlexFormTools::class)),
+                new FieldTypeFactory(),
+            ),
+            '',
+            $cacheMock
+        );
     }
 }

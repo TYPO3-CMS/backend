@@ -23,6 +23,7 @@ use TYPO3\CMS\Backend\Utility\BackendUtility;
 use TYPO3\CMS\Core\Imaging\IconFactory;
 use TYPO3\CMS\Core\Imaging\IconSize;
 use TYPO3\CMS\Core\Localization\LanguageService;
+use TYPO3\CMS\Core\Schema\Capability\TcaSchemaCapability;
 use TYPO3\CMS\Core\Type\Bitmask\Permission;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 use TYPO3\CMS\Core\Utility\MathUtility;
@@ -358,10 +359,9 @@ class InlineRecordContainer extends AbstractContainer
         $isNewItem = str_starts_with($rec['uid'], 'NEW');
         $isParentReadOnly = isset($inlineConfig['readOnly']) && $inlineConfig['readOnly'];
         $isParentExisting = MathUtility::canBeInterpretedAsInteger($data['inlineParentUid']);
-        $tcaTableCtrl = $GLOBALS['TCA'][$foreignTable]['ctrl'];
-        $tcaTableCols = $GLOBALS['TCA'][$foreignTable]['columns'];
+        $tableSchema = $this->data['tcaSchemata']->get($foreignTable);
         $isPagesTable = $foreignTable === 'pages';
-        $enableManualSorting = ($tcaTableCtrl['sortby'] ?? false)
+        $enableManualSorting = ($tableSchema->hasCapability(TcaSchemaCapability::SortByField))
             || ($inlineConfig['MM'] ?? false)
             || (!($data['isOnSymmetricSide'] ?? false) && ($inlineConfig['foreign_sortby'] ?? false))
             || (($data['isOnSymmetricSide'] ?? false) && ($inlineConfig['symmetric_sortby'] ?? false));
@@ -393,9 +393,9 @@ class InlineRecordContainer extends AbstractContainer
             }
         }
         // If the table is NOT a read-only table, then show these links:
-        if (!$isParentReadOnly && !($tcaTableCtrl['readOnly'] ?? false) && !($data['isInlineDefaultLanguageRecordInLocalizedParentContext'] ?? false)) {
+        if (!$isParentReadOnly && !($tableSchema->hasCapability(TcaSchemaCapability::AccessReadOnly)) && !($data['isInlineDefaultLanguageRecordInLocalizedParentContext'] ?? false)) {
             // "New record after" link (ONLY if the records in the table are sorted by a "sortby"-row or if default values can depend on previous record):
-            if ($event->isControlEnabled('new') && ($enableManualSorting || ($tcaTableCtrl['useColumnsForDefaultValues'] ?? false))) {
+            if ($event->isControlEnabled('new') && ($enableManualSorting || (($tableSchema->getRawConfiguration()['useColumnsForDefaultValues'] ?? false)))) {
                 if ((!$isPagesTable && $calcPerms->editContentPermissionIsGranted()) || ($isPagesTable && $calcPerms->createPagePermissionIsGranted())) {
                     $cells['new'] = '
                         <button type="button" class="btn btn-default t3js-create-new-button" data-record-uid="' . htmlspecialchars($rec['uid']) . '" title="' . htmlspecialchars($languageService->sL('core.mod_web_list:new' . ($isPagesTable ? 'Page' : 'Record'))) . '"' . (!empty($inlineConfig['inline']['hideNewButton']) ? ' hidden' : '') . '>
@@ -451,12 +451,12 @@ class InlineRecordContainer extends AbstractContainer
             }
 
             // "Hide/Unhide" links:
-            $hiddenField = $tcaTableCtrl['enablecolumns']['disabled'] ?? '';
+            $hiddenField = $tableSchema->hasCapability(TcaSchemaCapability::RestrictionDisabledField) ? $tableSchema->getCapability(TcaSchemaCapability::RestrictionDisabledField)->getFieldName() : '';
             if ($event->isControlEnabled('hide')
                 && $permsEdit
                 && $hiddenField
-                && ($tcaTableCols[$hiddenField] ?? false)
-                && (!($tcaTableCols[$hiddenField]['exclude'] ?? false) || $backendUser->check('non_exclude_fields', $foreignTable . ':' . $hiddenField))
+                && ($tableSchema->hasField($hiddenField) ?? false)
+                && (!($tableSchema->getField($hiddenField)->getConfiguration()['exclude'] ?? false) || $backendUser->check('non_exclude_fields', $foreignTable . ':' . $hiddenField))
             ) {
                 if ($rec[$hiddenField]) {
                     $title = htmlspecialchars($languageService->sL('core.mod_web_list:unHide' . ($isPagesTable ? 'Page' : '')));

@@ -24,6 +24,7 @@ use TYPO3\CMS\Backend\Form\FormDataProviderInterface;
 use TYPO3\CMS\Backend\Form\InlineStackProcessor;
 use TYPO3\CMS\Core\Configuration\Processor\Placeholder\EnvPlaceholderProcessor;
 use TYPO3\CMS\Core\Exception\SiteNotFoundException;
+use TYPO3\CMS\Core\Schema\Field\FieldTypeInterface;
 use TYPO3\CMS\Core\Site\SiteFinder;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 use TYPO3\CMS\Core\Utility\MathUtility;
@@ -52,13 +53,14 @@ class TcaSiteLanguage extends AbstractDatabaseRecordProvider implements FormData
                 continue;
             }
 
-            if (!($GLOBALS['TCA'][self::FOREIGN_TABLE] ?? false)) {
+            if (!$result['tcaSchemata']->has(self::FOREIGN_TABLE)) {
                 throw new \RuntimeException('Table ' . self::FOREIGN_TABLE . ' does not exists', 1624029932);
             }
 
-            $childConfiguration = $GLOBALS['TCA'][self::FOREIGN_TABLE]['columns'][self::FOREIGN_FIELD]['config'] ?? [];
-
-            if (($childConfiguration['type'] ?? '') !== 'select') {
+            $foreignTableSchema = $result['tcaSchemata']->get(self::FOREIGN_TABLE);
+            /** @var FieldTypeInterface|null $foreignField */
+            $foreignField = $foreignTableSchema->hasField(self::FOREIGN_FIELD) ? $foreignTableSchema->getField(self::FOREIGN_FIELD) : null;
+            if ($foreignField?->getType() !== 'select') {
                 throw new \UnexpectedValueException(
                     'Table ' . $result['tableName'] . ' field ' . $fieldName . ' points to field '
                     . self::FOREIGN_FIELD . ' of table ' . self::FOREIGN_TABLE . ', but this field '
@@ -67,7 +69,7 @@ class TcaSiteLanguage extends AbstractDatabaseRecordProvider implements FormData
                 );
             }
 
-            if (!($childConfiguration['itemsProcFunc'] ?? false)) {
+            if (!($foreignField->getConfiguration()['itemsProcFunc'] ?? false)) {
                 throw new \UnexpectedValueException(
                     'Table ' . $result['tableName'] . ' field ' . $fieldName . ' points to field '
                     . self::FOREIGN_FIELD . ' of table ' . self::FOREIGN_TABLE . '. This field must define '
@@ -237,6 +239,10 @@ class TcaSiteLanguage extends AbstractDatabaseRecordProvider implements FormData
                     'inlineTopMostParentTableName' => $result['inlineTopMostParentTableName'] ?: ($inlineTopMostParent['table'] ?? ''),
                     'inlineTopMostParentFieldName' => $result['inlineTopMostParentFieldName'] ?: ($inlineTopMostParent['field'] ?? ''),
                     'inlineChildChildUid' => 0,
+                    // pass through schemata as they are immutable once they are set
+                    'tcaSchemata' => $result['tcaSchemata'],
+                    // pass through fullTca as it is immutable once set
+                    'fullTca' => $result['fullTca'],
                 ],
                 GeneralUtility::makeInstance(SiteConfigurationDataGroup::class)
             );
@@ -264,6 +270,10 @@ class TcaSiteLanguage extends AbstractDatabaseRecordProvider implements FormData
                     'inlineTopMostParentUid' => $result['inlineTopMostParentUid'] ?: ($inlineTopMostParent['uid'] ?? null),
                     'inlineTopMostParentTableName' => $result['inlineTopMostParentTableName'] ?: ($inlineTopMostParent['table'] ?? ''),
                     'inlineTopMostParentFieldName' => $result['inlineTopMostParentFieldName'] ?: ($inlineTopMostParent['field'] ?? ''),
+                    // pass through schemata as they are immutable once they are set
+                    'tcaSchemata' => $result['tcaSchemata'],
+                    // pass through fullTca as it is immutable once set
+                    'fullTca' => $result['fullTca'],
                 ],
                 GeneralUtility::makeInstance(SiteConfigurationDataGroup::class)
             );
@@ -273,6 +283,7 @@ class TcaSiteLanguage extends AbstractDatabaseRecordProvider implements FormData
     {
         $formDataGroup = GeneralUtility::makeInstance(OnTheFly::class);
         $formDataGroup->setProviderList([TcaSelectItems::class]);
+        $foreignTableSchema = $result['tcaSchemata']->get(self::FOREIGN_TABLE);
 
         // Add unique possible records, so they can be used in the selector field
         $result['processedTca']['columns'][$fieldName]['config']['uniquePossibleRecords'] = GeneralUtility::makeInstance(FormDataCompiler::class)
@@ -288,11 +299,15 @@ class TcaSiteLanguage extends AbstractDatabaseRecordProvider implements FormData
                         'ctrl' => [],
                         'columns' => [
                             self::FOREIGN_FIELD => [
-                                'config' => $GLOBALS['TCA'][self::FOREIGN_TABLE]['columns'][self::FOREIGN_FIELD]['config'],
+                                'config' => $foreignTableSchema->getField(self::FOREIGN_FIELD)->getConfiguration(),
                             ],
                         ],
                     ],
                     'inlineExpandCollapseStateArray' => $result['inlineExpandCollapseStateArray'],
+                    // pass through schemata as they are immutable once they are set
+                    'tcaSchemata' => $result['tcaSchemata'],
+                    // pass through fullTca as it is immutable once set
+                    'fullTca' => $result['fullTca'],
                 ],
                 $formDataGroup
             )['processedTca']['columns'][self::FOREIGN_FIELD]['config']['items'] ?? [];

@@ -73,8 +73,8 @@ class ListModule extends AbstractNode
             // pid configured in options - use it
             $pid = $options['pid'];
         } elseif (
-            isset($GLOBALS['TCA'][$table]['ctrl']['rootLevel'])
-            && (int)$GLOBALS['TCA'][$table]['ctrl']['rootLevel'] === 1
+            $this->data['tcaSchemata']->has($table)
+            && ($this->data['tcaSchemata']->get($table)->getRawConfiguration()['rootLevel'] ?? false) === 1
         ) {
             // Target table can only exist on root level - set 0 as pid
             $pid = 0;

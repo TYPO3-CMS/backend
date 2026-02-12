@@ -186,6 +186,11 @@ readonly class FormDataCompiler
             // TCA of table with processed fields. After processing, this array contains merged and resolved
             // array data, items were resolved, only used types are set, renderTypes are set.
             'processedTca' => [],
+            // SchemaCollection of all TCA tables.
+            'tcaSchemata' => null,
+            // Keeps the full TCA. Needed to reinitialize processedTca for inline form handling.
+            // Why not use $GLOBALS['TCA']? Because we want to get rid of it here and sometimes the TCA needs to be faked.
+            'fullTca' => null,
             // List of columns to be processed by data provider. Array value is the column name.
             'columnsToProcess' => [],
             // If set to TRUE, no wizards are calculated and rendered later

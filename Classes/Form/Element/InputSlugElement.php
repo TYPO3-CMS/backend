@@ -22,6 +22,7 @@ use TYPO3\CMS\Core\Crypto\HashService;
 use TYPO3\CMS\Core\Imaging\IconFactory;
 use TYPO3\CMS\Core\Imaging\IconSize;
 use TYPO3\CMS\Core\Page\JavaScriptModuleInstruction;
+use TYPO3\CMS\Core\Schema\Capability\TcaSchemaCapability;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 use TYPO3\CMS\Core\Utility\MathUtility;
 use TYPO3\CMS\Core\Utility\StringUtility;
@@ -72,8 +73,8 @@ class InputSlugElement extends AbstractFormElement
         $resultArray = $this->initializeResultArray();
 
         $languageId = 0;
-        if (isset($GLOBALS['TCA'][$table]['ctrl']['languageField']) && !empty($GLOBALS['TCA'][$table]['ctrl']['languageField'])) {
-            $languageField = $GLOBALS['TCA'][$table]['ctrl']['languageField'];
+        if ($this->data['tcaSchemata']->has($table) && $this->data['tcaSchemata']->get($table)->hasCapability(TcaSchemaCapability::Language)) {
+            $languageField = $this->data['tcaSchemata']->get($table)->getCapability(TcaSchemaCapability::Language)->getLanguageField()->getName();
             $languageId = (int)((is_array($row[$languageField] ?? null) ? ($row[$languageField][0] ?? 0) : $row[$languageField]) ?? 0);
         }
 

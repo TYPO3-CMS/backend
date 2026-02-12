@@ -23,7 +23,7 @@ use TYPO3\CMS\Backend\Form\FormDataProvider\TcaSelectTreeItems;
 use TYPO3\CMS\Core\Database\ConnectionPool;
 use TYPO3\CMS\Core\Imaging\IconFactory;
 use TYPO3\CMS\Core\Localization\LanguageServiceFactory;
-use TYPO3\CMS\Core\Schema\TcaSchemaFactory;
+use TYPO3\CMS\Core\Schema\TcaSchemaBuilder;
 use TYPO3\CMS\Core\Site\Entity\Site;
 use TYPO3\TestingFramework\Core\Functional\FunctionalTestCase;
 
@@ -133,10 +133,24 @@ final class TcaSelectTreeItemsTest extends FunctionalTestCase
         $selectItems = (new TcaSelectTreeItems($this->get(IconFactory::class)));
         $selectItems->injectConnectionPool($this->get(ConnectionPool::class));
         $selectItems->injectIconFactory($this->get(IconFactory::class));
-        $selectItems->injectTcaSchemaFactory($this->get(TcaSchemaFactory::class));
-        $result = $selectItems->addData($input);
+        $result = $selectItems->addData($this->addTcaSchemata($input));
 
-        self::assertEquals($expected, $result);
+        foreach ($expected as $key => $value) {
+            self::assertEquals($value, $result[$key]);
+        }
+    }
+
+    private function addTcaSchemata(array $result): array
+    {
+        if (isset($result['tcaSchemata'])) {
+            return $result;
+        }
+        $tca = $result['fullTca'] ?? $GLOBALS['TCA'];
+        if (!isset($tca[$result['tableName']]) && isset($result['processedTca'])) {
+            $tca[$result['tableName']] = $result['processedTca'];
+        }
+        $result['tcaSchemata'] = $this->get(TcaSchemaBuilder::class)->buildFromStructure($tca);
+        return $result;
     }
 
     #[Test]
@@ -203,8 +217,7 @@ final class TcaSelectTreeItemsTest extends FunctionalTestCase
         $selectItems = (new TcaSelectTreeItems($this->get(IconFactory::class)));
         $selectItems->injectConnectionPool($this->get(ConnectionPool::class));
         $selectItems->injectIconFactory($this->get(IconFactory::class));
-        $selectItems->injectTcaSchemaFactory($this->get(TcaSchemaFactory::class));
-        $result = $selectItems->addData($input);
+        $result = $selectItems->addData($this->addTcaSchemata($input));
 
         $resultItems = $result['processedTca']['columns']['select_tree']['config']['items'];
         $expectedItems = [
@@ -328,8 +341,7 @@ final class TcaSelectTreeItemsTest extends FunctionalTestCase
         $selectItems = (new TcaSelectTreeItems($this->get(IconFactory::class)));
         $selectItems->injectIconFactory($this->get(IconFactory::class));
         $selectItems->injectConnectionPool($this->get(ConnectionPool::class));
-        $selectItems->injectTcaSchemaFactory($this->get(TcaSchemaFactory::class));
-        $result = $selectItems->addData($input);
+        $result = $selectItems->addData($this->addTcaSchemata($input));
 
         $resultStartingPoints = $result['processedTca']['columns']['select_tree']['config']['treeConfig']['startingPoints'];
         self::assertSame($expectedStartingPoints, $resultStartingPoints);

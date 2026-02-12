@@ -22,7 +22,7 @@ use TYPO3\CMS\Core\Database\ConnectionPool;
 use TYPO3\CMS\Core\Database\Query\Restriction\DeletedRestriction;
 use TYPO3\CMS\Core\Database\Query\Restriction\WorkspaceRestriction;
 use TYPO3\CMS\Core\Schema\Capability\TcaSchemaCapability;
-use TYPO3\CMS\Core\Schema\TcaSchemaFactory;
+use TYPO3\CMS\Core\Schema\TcaSchema;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 
 /**
@@ -33,7 +33,6 @@ readonly class DatabasePageLanguageOverlayRows implements FormDataProviderInterf
     public function __construct(
         private Context $context,
         private ConnectionPool $connectionPool,
-        private TcaSchemaFactory $tcaSchemaFactory,
     ) {}
 
     /**
@@ -48,15 +47,14 @@ readonly class DatabasePageLanguageOverlayRows implements FormDataProviderInterf
             return $result;
         }
 
-        $result['pageLanguageOverlayRows'] = $this->getDatabaseRows((int)$result['effectivePid']);
-
+        $result['pageLanguageOverlayRows'] = $this->getDatabaseRows($result['tcaSchemata']->get('pages'), (int)$result['effectivePid']);
         return $result;
     }
 
     /**
      * Retrieve the requested overlay row from the database
      */
-    protected function getDatabaseRows(int $pid): array
+    protected function getDatabaseRows(TcaSchema $pageSchema, int $pid): array
     {
         $workspaceId = $this->context->getPropertyFromAspect('workspace', 'id');
         $queryBuilder = $this->connectionPool->getQueryBuilderForTable('pages');
@@ -69,7 +67,7 @@ readonly class DatabasePageLanguageOverlayRows implements FormDataProviderInterf
             ->select('*')
             ->from('pages')
             ->where($queryBuilder->expr()->eq(
-                $this->tcaSchemaFactory->get('pages')->getCapability(TcaSchemaCapability::Language)->getTranslationOriginPointerField()->getName(),
+                $pageSchema->getCapability(TcaSchemaCapability::Language)->getTranslationOriginPointerField()->getName(),
                 $queryBuilder->createNamedParameter($pid, Connection::PARAM_INT)
             ))
             ->executeQuery()

@@ -37,7 +37,7 @@ final class TcaTablePermission extends AbstractItemProvider implements FormDataP
                 continue;
             }
 
-            if (!isset($GLOBALS['TCA'][$table]['columns'][$fieldConfig['config']['selectFieldName'] ?? null])) {
+            if (!$result['tcaSchemata']->has($table) || !$result['tcaSchemata']->get($table)->hasField($fieldConfig['config']['selectFieldName'] ?? null)) {
                 throw new \InvalidArgumentException(
                     'renderType="tablePermission" requires option "selectFieldName" to be set to an existing column of table ' . $table,
                     1720028589

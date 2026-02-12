@@ -30,6 +30,7 @@ use TYPO3\CMS\Core\DataHandling\DataHandler;
 use TYPO3\CMS\Core\Http\JsonResponse;
 use TYPO3\CMS\Core\Messaging\FlashMessageService;
 use TYPO3\CMS\Core\Page\JavaScriptItems;
+use TYPO3\CMS\Core\Schema\TcaSchemaFactory;
 use TYPO3\CMS\Core\Type\ContextualFeedbackSeverity;
 use TYPO3\CMS\Core\Utility\ArrayUtility;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
@@ -46,6 +47,7 @@ readonly class FormInlineAjaxController extends AbstractFormEngineAjaxController
         private HashService $hashService,
         private NodeFactory $nodeFactory,
         private InlineStackProcessor $inlineStackProcessor,
+        private TcaSchemaFactory $tcaSchemaFactory
     ) {}
 
     /**
@@ -72,7 +74,7 @@ readonly class FormInlineAjaxController extends AbstractFormEngineAjaxController
         }
 
         // Parse the DOM identifier, add the levels to the structure stack
-        $inlineStructure = $this->inlineStackProcessor->getStructureFromString($domObjectId);
+        $inlineStructure = $this->inlineStackProcessor->getStructureFromString($domObjectId, $this->tcaSchemaFactory->all());
         $inlineStructure = $this->inlineStackProcessor->addAjaxConfigurationToStructure($inlineStructure, $parentConfig);
         $inlineTopMostParent = $this->inlineStackProcessor->getStructureLevelFromStructure($inlineStructure, 0);
         // Parent, this table embeds the child table
@@ -168,7 +170,7 @@ readonly class FormInlineAjaxController extends AbstractFormEngineAjaxController
         $parentConfig = $this->extractSignedParentConfigFromRequest((string)$ajaxArguments['context']);
 
         // Parse the DOM identifier, add the levels to the structure stack
-        $inlineStructure = $this->inlineStackProcessor->getStructureFromString($domObjectId);
+        $inlineStructure = $this->inlineStackProcessor->getStructureFromString($domObjectId, $this->tcaSchemaFactory->all());
         $inlineStructure = $this->inlineStackProcessor->addAjaxConfigurationToStructure($inlineStructure, $parentConfig);
         // Parent, this table embeds the child table
         $inlineParent = $this->inlineStackProcessor->getStructureLevelFromStructure($inlineStructure, -1);
@@ -231,7 +233,7 @@ readonly class FormInlineAjaxController extends AbstractFormEngineAjaxController
         $parentConfig = $this->extractSignedParentConfigFromRequest((string)$ajaxArguments['context']);
 
         // Parse the DOM identifier (string), add the levels to the structure stack (array), load the TCA config:
-        $inlineStructure = $this->inlineStackProcessor->getStructureFromString($domObjectId);
+        $inlineStructure = $this->inlineStackProcessor->getStructureFromString($domObjectId, $this->tcaSchemaFactory->all());
         $inlineStructure = $this->inlineStackProcessor->addAjaxConfigurationToStructure($inlineStructure, $parentConfig);
         $inlineFirstPid = $this->getInlineFirstPidFromDomObjectId($domObjectId);
 
@@ -382,7 +384,7 @@ readonly class FormInlineAjaxController extends AbstractFormEngineAjaxController
         [$domObjectId, $expand, $collapse] = $ajaxArguments;
 
         // Parse the DOM identifier (string), add the levels to the structure stack (array), don't load TCA config
-        $inlineStructure = $this->inlineStackProcessor->getStructureFromString($domObjectId);
+        $inlineStructure = $this->inlineStackProcessor->getStructureFromString($domObjectId, $this->tcaSchemaFactory->all());
 
         $backendUser = $this->getBackendUserAuthentication();
         // The current table - for this table we should add/import records

@@ -156,7 +156,7 @@ class TcaInlineConfiguration implements FormDataProviderInterface
         $childTableName = $result['processedTca']['columns'][$fieldName]['config']['foreign_table'];
 
         if (empty($result['processedTca']['ctrl']['languageField'])
-            || empty($GLOBALS['TCA'][$childTableName]['ctrl']['languageField'])
+            || !$result['tcaSchemata']->get($childTableName)->isLanguageAware()
         ) {
             return $result;
         }
@@ -220,9 +220,11 @@ class TcaInlineConfiguration implements FormDataProviderInterface
         }
 
         // Throw if field name in globals does not exist or is not of type select or group
-        if (!isset($GLOBALS['TCA'][$config['foreign_table']]['columns'][$fieldNameInChildConfiguration]['config']['type'])
-            || ($GLOBALS['TCA'][$config['foreign_table']]['columns'][$fieldNameInChildConfiguration]['config']['type'] !== 'select'
-                && $GLOBALS['TCA'][$config['foreign_table']]['columns'][$fieldNameInChildConfiguration]['config']['type'] !== 'group')
+        $foreignTableSchema = $result['tcaSchemata']->has($config['foreign_table']) ? $result['tcaSchemata']->get($config['foreign_table']) : null;
+        if ($foreignTableSchema === null
+            || !$foreignTableSchema->hasField($fieldNameInChildConfiguration)
+            || ($foreignTableSchema->getField($fieldNameInChildConfiguration)->getType() !== 'select'
+                && $foreignTableSchema->getField($fieldNameInChildConfiguration)->getType() !== 'group')
         ) {
             throw new \UnexpectedValueException(
                 'Table ' . $result['tableName'] . ' field ' . $fieldName . ' points in foreign_selector or foreign_unique'
@@ -233,7 +235,7 @@ class TcaInlineConfiguration implements FormDataProviderInterface
         }
 
         $selectorOrUniqueConfiguration = [
-            'config' => $GLOBALS['TCA'][$config['foreign_table']]['columns'][$fieldNameInChildConfiguration]['config'],
+            'config' => $foreignTableSchema->getField($fieldNameInChildConfiguration)->getConfiguration(),
         ];
 
         // Merge overrideChildTca of foreign_selector if given

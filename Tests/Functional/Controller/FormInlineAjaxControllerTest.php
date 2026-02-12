@@ -24,6 +24,7 @@ use TYPO3\CMS\Core\Core\SystemEnvironmentBuilder;
 use TYPO3\CMS\Core\Crypto\HashService;
 use TYPO3\CMS\Core\Http\ServerRequest;
 use TYPO3\CMS\Core\Localization\LanguageServiceFactory;
+use TYPO3\CMS\Core\Schema\TcaSchemaFactory;
 use TYPO3\CMS\Core\Tests\Functional\SiteHandling\SiteBasedTestTrait;
 use TYPO3\TestingFramework\Core\Functional\FunctionalTestCase;
 
@@ -125,6 +126,7 @@ final class FormInlineAjaxControllerTest extends FunctionalTestCase
         unset($GLOBALS['TCA']['tx_testirrecsv_offer']['ctrl']['transOrigPointerField']);
         unset($GLOBALS['TCA']['tx_testirrecsv_offer']['ctrl']['transOrigDiffSourceField']);
         unset($GLOBALS['TCA']['tx_testirrecsv_offer']['columns']['sys_language_uid']);
+        $this->get(TcaSchemaFactory::class)->rebuild($GLOBALS['TCA']);
         $parsedBody = [
             'ajax' => [
                 0 => 'data-1-tx_testirrecsv_hotel-NEW59c1062549e56282348897-offers-tx_testirrecsv_offer',

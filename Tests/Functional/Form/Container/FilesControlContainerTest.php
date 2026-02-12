@@ -27,6 +27,7 @@ use TYPO3\CMS\Core\Core\SystemEnvironmentBuilder;
 use TYPO3\CMS\Core\EventDispatcher\ListenerProvider;
 use TYPO3\CMS\Core\Http\ServerRequest;
 use TYPO3\CMS\Core\Localization\LanguageServiceFactory;
+use TYPO3\CMS\Core\Schema\SchemaCollection;
 use TYPO3\TestingFramework\Core\Functional\FunctionalTestCase;
 
 final class FilesControlContainerTest extends FunctionalTestCase
@@ -91,6 +92,7 @@ final class FilesControlContainerTest extends FunctionalTestCase
                 ],
             ],
             'returnUrl' => '',
+            'tcaSchemata' => new SchemaCollection([]),
         ]);
         $result = $subject->render();
 

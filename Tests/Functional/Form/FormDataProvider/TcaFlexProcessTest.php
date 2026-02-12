@@ -26,6 +26,7 @@ use TYPO3\CMS\Backend\Form\FormDataProvider\TcaRadioItems;
 use TYPO3\CMS\Core\Authentication\BackendUserAuthentication;
 use TYPO3\CMS\Core\Http\ServerRequest;
 use TYPO3\CMS\Core\Localization\LanguageService;
+use TYPO3\CMS\Core\Schema\TcaSchemaBuilder;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 use TYPO3\TestingFramework\Core\Functional\FunctionalTestCase;
 
@@ -124,6 +125,7 @@ final class TcaFlexProcessTest extends FunctionalTestCase
                 ],
             ],
         ];
+        $input = $this->addTcaSchemata($input);
 
         $expected = $input;
         $expected['processedTca']['columns']['aField']['config']['ds'] = [
@@ -190,6 +192,7 @@ final class TcaFlexProcessTest extends FunctionalTestCase
                 ],
             ],
         ];
+        $input = $this->addTcaSchemata($input);
 
         $expected = $input;
         $expected['processedTca']['columns']['aField']['config']['ds'] = [
@@ -271,6 +274,7 @@ final class TcaFlexProcessTest extends FunctionalTestCase
                 ],
             ],
         ];
+        $input = $this->addTcaSchemata($input);
 
         $expected = $input;
         $expected['processedTca']['columns']['aField']['config']['ds'] = [
@@ -352,6 +356,7 @@ final class TcaFlexProcessTest extends FunctionalTestCase
                 ],
             ],
         ];
+        $input = $this->addTcaSchemata($input);
 
         $expected = $input;
         $expected['processedTca']['columns']['aField']['config']['ds'] = [
@@ -433,6 +438,7 @@ final class TcaFlexProcessTest extends FunctionalTestCase
                 ],
             ],
         ];
+        $input = $this->addTcaSchemata($input);
 
         $expected = $input;
         $expected['processedTca']['columns']['aField']['config']['ds'] = [
@@ -503,6 +509,7 @@ final class TcaFlexProcessTest extends FunctionalTestCase
             ],
             'pageTsConfig' => [],
         ];
+        $input = $this->addTcaSchemata($input);
 
         $this->backendUserMock->expects($this->atLeastOnce())->method('isAdmin')->willReturn(false);
         $GLOBALS['BE_USER']->groupData['non_exclude_fields'] = '';
@@ -568,6 +575,7 @@ final class TcaFlexProcessTest extends FunctionalTestCase
             ],
             'pageTsConfig' => [],
         ];
+        $input = $this->addTcaSchemata($input);
 
         $this->backendUserMock->expects($this->atLeastOnce())->method('isAdmin')->willReturn(false);
         $GLOBALS['BE_USER']->groupData['non_exclude_fields'] = 'aTable:aField;aFlex;sDEF;aFlexField';
@@ -641,6 +649,7 @@ final class TcaFlexProcessTest extends FunctionalTestCase
             ],
             'pageTsConfig' => [],
         ];
+        $input = $this->addTcaSchemata($input);
 
         $this->backendUserMock->expects($this->atLeastOnce())->method('isAdmin')->willReturn(true);
         $GLOBALS['BE_USER']->groupData['non_exclude_fields'] = '';
@@ -727,6 +736,7 @@ final class TcaFlexProcessTest extends FunctionalTestCase
                 ],
             ],
         ];
+        $input = $this->addTcaSchemata($input);
 
         $expected = $input;
         $expected['processedTca']['columns']['aField']['config']['ds'] = [
@@ -809,6 +819,7 @@ final class TcaFlexProcessTest extends FunctionalTestCase
                 ],
             ],
         ];
+        $input = $this->addTcaSchemata($input);
 
         $GLOBALS['TYPO3_CONF_VARS']['SYS']['formEngine']['formDataGroup']['flexFormSegment'] = [
             TcaRadioItems::class => [],
@@ -891,6 +902,7 @@ final class TcaFlexProcessTest extends FunctionalTestCase
             ],
             'pageTsConfig' => [],
         ];
+        $input = $this->addTcaSchemata($input);
 
         $GLOBALS['TYPO3_CONF_VARS']['SYS']['formEngine']['formDataGroup']['flexFormSegment'] = [
             DatabaseRowDefaultValues::class => [],
@@ -991,6 +1003,7 @@ final class TcaFlexProcessTest extends FunctionalTestCase
             ],
             'pageTsConfig' => [],
         ];
+        $input = $this->addTcaSchemata($input);
 
         $GLOBALS['TYPO3_CONF_VARS']['SYS']['formEngine']['formDataGroup']['flexFormSegment'] = [
             DatabaseRowDefaultValues::class => [],
@@ -1062,6 +1075,7 @@ final class TcaFlexProcessTest extends FunctionalTestCase
             ],
             'pageTsConfig' => [],
         ];
+        $input = $this->addTcaSchemata($input);
 
         $dummyGroup = $this->createMock(FlexFormSegment::class);
         GeneralUtility::addInstance(FlexFormSegment::class, $dummyGroup);
@@ -1119,6 +1133,7 @@ final class TcaFlexProcessTest extends FunctionalTestCase
             ],
             'pageTsConfig' => [],
         ];
+        $input = $this->addTcaSchemata($input);
 
         $dummyGroupExisting = $this->createMock(FlexFormSegment::class);
         GeneralUtility::addInstance(FlexFormSegment::class, $dummyGroupExisting);
@@ -1128,5 +1143,21 @@ final class TcaFlexProcessTest extends FunctionalTestCase
         }))->willReturnArgument(0);
 
         (new TcaFlexProcess())->addData($input);
+    }
+
+    private function addTcaSchemata(array $result): array
+    {
+        $tca = $result['fullTca'] ?? $GLOBALS['TCA'];
+        if (!isset($tca[$result['tableName']]) && isset($result['processedTca'])) {
+            $tca[$result['tableName']] = $result['processedTca'];
+        }
+        if (!isset($result['fullTca'])) {
+            $result['fullTca'] = $tca;
+        }
+        if (isset($result['tcaSchemata'])) {
+            return $result;
+        }
+        $result['tcaSchemata'] = $this->get(TcaSchemaBuilder::class)->buildFromStructure($tca);
+        return $result;
     }
 }

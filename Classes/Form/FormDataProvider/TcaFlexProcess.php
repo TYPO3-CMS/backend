@@ -377,6 +377,10 @@ class TcaFlexProcess implements FormDataProviderInterface
                                         'selectTreeCompileItems' => $result['selectTreeCompileItems'],
                                         'flexParentDatabaseRow' => $result['databaseRow'],
                                         'effectivePid' => $result['effectivePid'],
+                                        // pass through schemata as they are immutable once they are set
+                                        'tcaSchemata' => $result['tcaSchemata'],
+                                        // pass through fullTca as it is immutable once set
+                                        'fullTca' => $result['fullTca'],
                                     ];
 
                                     if (!empty($newColumns)) {
@@ -452,6 +456,10 @@ class TcaFlexProcess implements FormDataProviderInterface
                 // Whether to compile TCA tree items - inherit from parent
                 'selectTreeCompileItems' => $result['selectTreeCompileItems'],
                 'effectivePid' => $result['effectivePid'],
+                // pass through schemata as they are immutable once they are set
+                'tcaSchemata' => $result['tcaSchemata'],
+                // pass through fullTca as it is immutable once set
+                'fullTca' => $result['fullTca'],
             ];
 
             if (!empty($tcaNewColumns)) {
@@ -533,6 +541,10 @@ class TcaFlexProcess implements FormDataProviderInterface
                 'selectTreeCompileItems' => $result['selectTreeCompileItems'],
                 'flexParentDatabaseRow' => $result['databaseRow'],
                 'effectivePid' => $result['effectivePid'],
+                // pass through schemata as they are immutable once they are set
+                'tcaSchemata' => $result['tcaSchemata'],
+                // pass through fullTca as it is immutable once set
+                'fullTca' => $result['fullTca'],
             ];
             $flexSegmentResult = $formDataCompiler->compile($inputToFlexFormSegment, GeneralUtility::makeInstance(FlexFormSegment::class));
 

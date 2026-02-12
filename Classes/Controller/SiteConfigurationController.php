@@ -50,6 +50,7 @@ use TYPO3\CMS\Core\Imaging\IconSize;
 use TYPO3\CMS\Core\Localization\LanguageService;
 use TYPO3\CMS\Core\Messaging\FlashMessage;
 use TYPO3\CMS\Core\Messaging\FlashMessageService;
+use TYPO3\CMS\Core\Schema\TcaSchemaBuilder;
 use TYPO3\CMS\Core\Settings\Category;
 use TYPO3\CMS\Core\Settings\SettingDefinition;
 use TYPO3\CMS\Core\Settings\SettingsTypeRegistry;
@@ -93,7 +94,9 @@ readonly class SiteConfigurationController
         private SiteSettingsService $siteSettingsService,
         private FlashMessageService $flashMessageService,
         private ConnectionPool $connectionPool,
+        private TcaSchemaBuilder $tcaSchemaBuilder,
         private EnvPlaceholderProcessor $envPlaceholderProcessor,
+        private SiteTcaConfiguration $siteTcaConfiguration,
     ) {}
 
     /**
@@ -223,10 +226,7 @@ readonly class SiteConfigurationController
         // which is used later by FormEngine (implicit behavior)
         $allSites = $this->siteFinder->getAllSites(false);
 
-        // Put site and friends TCA into global TCA
-        // @todo: We might be able to get rid of that later
-        $GLOBALS['TCA'] = array_merge($GLOBALS['TCA'], GeneralUtility::makeInstance(SiteTcaConfiguration::class)->getTca());
-
+        $fullTca = array_merge($GLOBALS['TCA'], $this->siteTcaConfiguration->getTca());
         $pageUid = (int)($request->getQueryParams()['pageUid'] ?? 0);
         $siteIdentifier = $request->getQueryParams()['site'] ?? null;
 
@@ -260,6 +260,8 @@ readonly class SiteConfigurationController
                 'siteIdentifier' => $isNewConfig ? '' : $siteIdentifier,
             ],
             'defaultValues' => $defaultValues,
+            'tcaSchemata' => $this->tcaSchemaBuilder->buildFromStructure($fullTca),
+            'fullTca' => $fullTca,
         ];
         $formData = $this->formDataCompiler->compile($formDataCompilerInput, GeneralUtility::makeInstance(SiteConfigurationDataGroup::class));
         $formData['renderType'] = 'formWrapContainer';
@@ -299,12 +301,6 @@ readonly class SiteConfigurationController
         foreach ($allSites as $site) {
             $mappingRootPageToSite[$site->getRootPageId()] = $site;
         }
-
-        // Put site and friends TCA into global TCA
-        // @todo We might be able to get rid of that later
-        $GLOBALS['TCA'] = array_merge($GLOBALS['TCA'], GeneralUtility::makeInstance(SiteTcaConfiguration::class)->getTca());
-
-        $siteTca = GeneralUtility::makeInstance(SiteTcaConfiguration::class)->getTca();
 
         $parsedBody = $request->getParsedBody();
         $returnUrl = $this->resolveReturnUrl($request);
@@ -350,8 +346,9 @@ readonly class SiteConfigurationController
             }
         }
 
+        $siteTca = $this->siteTcaConfiguration->getTca();
         // Validate site identifier and do not store or further process it
-        $siteIdentifier = $this->validateAndProcessIdentifier($isNewConfiguration, $siteIdentifier, $pageId, $allSites, $mappingRootPageToSite);
+        $siteIdentifier = $this->validateAndProcessIdentifier($isNewConfiguration, $siteIdentifier, $pageId, $allSites, $mappingRootPageToSite, $siteTca);
         unset($sysSiteRow['identifier']);
 
         try {
@@ -369,7 +366,7 @@ readonly class SiteConfigurationController
                     case 'datetime':
                     case 'color':
                     case 'text':
-                        $fieldValue = $this->validateAndProcessValue('site', $fieldName, $fieldValue);
+                        $fieldValue = $this->validateAndProcessValue('site', $fieldName, $fieldValue, $siteTca);
                         $newSysSiteData[$fieldName] = $fieldValue;
                         break;
 
@@ -548,13 +545,14 @@ readonly class SiteConfigurationController
      * @param int $rootPageId Page uid this identifier is bound to
      * @param array<non-empty-string, Site> $allSites All sites loaded without `settings.yaml`.
      * @param array<int, Site> $mappingRootPageToSite Identifier site mapping as lookup. Not loaded `settings.yaml`.
+     * @param array $siteTca TCA for site
      * @return mixed Verified / modified value
      */
-    protected function validateAndProcessIdentifier(bool $isNew, string $identifier, int $rootPageId, array $allSites, array $mappingRootPageToSite)
+    protected function validateAndProcessIdentifier(bool $isNew, string $identifier, int $rootPageId, array $allSites, array $mappingRootPageToSite, array $siteTca)
     {
         $languageService = $this->getLanguageService();
         // Normal "eval" processing of field first
-        $identifier = $this->validateAndProcessValue('site', 'identifier', $identifier);
+        $identifier = $this->validateAndProcessValue('site', 'identifier', $identifier, $siteTca);
         if ($isNew) {
             // Verify no other site with this identifier exists. If so, find a new unique name as
             // identifier and show a flash message the identifier has been adapted
@@ -607,14 +605,15 @@ readonly class SiteConfigurationController
      * @param string $tableName Table name
      * @param string $fieldName Field name
      * @param mixed $fieldValue Incoming value from FormEngine
+     * @param array $siteTca TCA for site
      * @return mixed Verified / modified value
      * @throws SiteValidationErrorException
      * @throws \RuntimeException
      */
-    protected function validateAndProcessValue(string $tableName, string $fieldName, $fieldValue)
+    protected function validateAndProcessValue(string $tableName, string $fieldName, $fieldValue, array $siteTca)
     {
         $languageService = $this->getLanguageService();
-        $fieldConfig = $GLOBALS['TCA'][$tableName]['columns'][$fieldName]['config'];
+        $fieldConfig = $siteTca[$tableName]['columns'][$fieldName]['config'];
         $handledEvals = [];
 
         if (!$this->validateValueForRequired($fieldConfig, $fieldValue)) {

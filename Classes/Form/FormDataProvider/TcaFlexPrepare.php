@@ -24,7 +24,6 @@ use TYPO3\CMS\Core\Configuration\FlexForm\Exception\InvalidTcaException;
 use TYPO3\CMS\Core\Configuration\FlexForm\Exception\InvalidTcaSchemaException;
 use TYPO3\CMS\Core\Configuration\FlexForm\FlexFormTools;
 use TYPO3\CMS\Core\Schema\Exception\UndefinedSchemaException;
-use TYPO3\CMS\Core\Schema\TcaSchemaFactory;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 
 /**
@@ -36,7 +35,6 @@ readonly class TcaFlexPrepare implements FormDataProviderInterface
 {
     public function __construct(
         private FlexFormTools $flexFormTools,
-        private TcaSchemaFactory $tcaSchemaFactory,
     ) {}
 
     /**
@@ -72,7 +70,7 @@ readonly class TcaFlexPrepare implements FormDataProviderInterface
                 // since the references value might be a file path and a couple of events exist for flex
                 // form resolving, we nevertheless need to call getDataStructureIdentifier() and
                 // parseDataStructureByIdentifier() here.
-                $schema = $this->tcaSchemaFactory->get($result['tableName']);
+                $schema = $result['tcaSchemata']->get($result['tableName']);
                 $dataStructureIdentifier = $this->flexFormTools->getDataStructureIdentifier(
                     $result['processedTca']['columns'][$fieldName],
                     $result['tableName'],
@@ -92,7 +90,7 @@ readonly class TcaFlexPrepare implements FormDataProviderInterface
         } else {
             // Resolve data structure base on given dataStructureIdentifier
             try {
-                $dataStructureArray = $this->flexFormTools->parseDataStructureByIdentifier($result['processedTca']['columns'][$fieldName]['config']['dataStructureIdentifier'], $this->tcaSchemaFactory->get($result['tableName']));
+                $dataStructureArray = $this->flexFormTools->parseDataStructureByIdentifier($result['processedTca']['columns'][$fieldName]['config']['dataStructureIdentifier'], $result['tcaSchemata']->get($result['tableName']));
             } catch (InvalidDataStructureException|InvalidIdentifierException|InvalidTcaSchemaException|UndefinedSchemaException) {
                 // Skip the data structure if it is invalid
             }

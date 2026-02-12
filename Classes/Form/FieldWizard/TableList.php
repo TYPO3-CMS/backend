@@ -61,7 +61,8 @@ class TableList extends AbstractNode
                 $allowedTablesHtml[] =  htmlspecialchars($label);
                 $allowedTablesHtml[] = '</span>';
             } else {
-                $label = $languageService->sL($GLOBALS['TCA'][$tableName]['ctrl']['title'] ?? '');
+                $tableSchema = $this->data['tcaSchemata']->has($tableName) ? $this->data['tcaSchemata']->get($tableName) : null;
+                $label = $languageService->sL($tableSchema?->getTitle() ?? '');
                 $icon = $this->iconFactory->getIconForRecord($tableName, [], IconSize::SMALL)->render();
                 if ((bool)($config['fieldControl']['elementBrowser']['disabled'] ?? false)) {
                     $allowedTablesHtml[] = '<span class="tablelist-item-nolink">';

@@ -18,6 +18,7 @@ declare(strict_types=1);
 namespace TYPO3\CMS\Backend\Form;
 
 use TYPO3\CMS\Backend\Form\Utility\FormEngineUtility;
+use TYPO3\CMS\Core\Schema\SchemaCollection;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 
 /**
@@ -68,8 +69,9 @@ readonly class InlineStackProcessor
      * - 'unstable': Containing partly filled data (e.g. only table and possibly field)
      *
      * @param string $domObjectId The DOM object-id
+     * @param SchemaCollection $schemaCollection The TCA schemata collection
      */
-    public function getStructureFromString(string $domObjectId): array
+    public function getStructureFromString(string $domObjectId, SchemaCollection $schemaCollection): array
     {
         $structure = [];
         $unstable = [];
@@ -86,11 +88,15 @@ readonly class InlineStackProcessor
             $partsCnt = count($parts);
             for ($i = 0; $i < $partsCnt; $i++) {
                 if ($i > 0 && $i % 3 == 0) {
-                    // Load the TCA configuration of the table field and store it in the stack
-                    // @todo: This TCA loading here must fall - config sub-array shouldn't exist at all!
-                    $unstable['config'] = $GLOBALS['TCA'][$unstable['table']]['columns'][$unstable['field']]['config'] ?? [];
+                    // Store the TCA configuration of the table field in the stack
+                    $unstable['config'] = [];
+                    if ($schemaCollection->has($unstable['table'])) {
+                        $tableSchema = $schemaCollection->get($unstable['table']);
+                        if ($tableSchema->hasField($unstable['field'])) {
+                            $unstable['config'] = $tableSchema->getField($unstable['field'])->getConfiguration();
+                        }
+                    }
                     // Fetch TSconfig:
-                    // @todo: aaargs ;)
                     $TSconfig = FormEngineUtility::getTSconfigForTableRow($unstable['table'], ['uid' => $unstable['uid'], 'pid' => $inlineFirstPid], $unstable['field']);
                     // Override TCA field config by TSconfig:
                     if (!isset($TSconfig['disabled']) || !$TSconfig['disabled']) {

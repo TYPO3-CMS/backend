@@ -20,6 +20,11 @@ namespace TYPO3\CMS\Backend\Tests\Unit\Form\FormDataProvider;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Test;
 use TYPO3\CMS\Backend\Form\FormDataProvider\TcaTablePermission;
+use TYPO3\CMS\Core\Configuration\FlexForm\FlexFormTools;
+use TYPO3\CMS\Core\Schema\FieldTypeFactory;
+use TYPO3\CMS\Core\Schema\RelationMapBuilder;
+use TYPO3\CMS\Core\Schema\SchemaCollection;
+use TYPO3\CMS\Core\Schema\TcaSchemaBuilder;
 use TYPO3\TestingFramework\Core\Unit\UnitTestCase;
 
 final class TcaTablePermissionTest extends UnitTestCase
@@ -47,6 +52,7 @@ final class TcaTablePermissionTest extends UnitTestCase
                     ],
                 ],
             ],
+            'tcaSchemata' => new SchemaCollection([]),
         ]);
     }
 
@@ -198,7 +204,18 @@ final class TcaTablePermissionTest extends UnitTestCase
     #[Test]
     public function addDataDoesHandleTablePermissionsRecords(array $input, array $expected): void
     {
-        $GLOBALS['TCA']['aTable']['columns']['bField'] = [];
+        $GLOBALS['TCA']['aTable']['columns']['bField'] = ['config' => ['type' => 'passthrough']];
+        $input['tcaSchemata'] = $this->getSchemaCollection($GLOBALS['TCA']);
+        $expected['tcaSchemata'] = $input['tcaSchemata'];
         self::assertSame($expected, (new TcaTablePermission())->addData($input));
+    }
+
+    private function getSchemaCollection(array $tca): SchemaCollection
+    {
+        $tcaSchemaFactory = new TcaSchemaBuilder(
+            new RelationMapBuilder($this->createMock(FlexFormTools::class)),
+            new FieldTypeFactory()
+        );
+        return $tcaSchemaFactory->buildFromStructure($tca);
     }
 }

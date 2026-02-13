@@ -37,7 +37,10 @@ use TYPO3\CMS\Backend\Form\Exception\NoFieldsToRenderException;
 use TYPO3\CMS\Backend\Form\FormAction;
 use TYPO3\CMS\Backend\Form\FormDataCompiler;
 use TYPO3\CMS\Backend\Form\FormDataGroup\TcaDatabaseRecord;
-use TYPO3\CMS\Backend\Form\FormResultCompiler;
+use TYPO3\CMS\Backend\Form\FormResult;
+use TYPO3\CMS\Backend\Form\FormResultCollection;
+use TYPO3\CMS\Backend\Form\FormResultFactory;
+use TYPO3\CMS\Backend\Form\FormResultHandler;
 use TYPO3\CMS\Backend\Form\NodeFactory;
 use TYPO3\CMS\Backend\Module\ModuleInterface;
 use TYPO3\CMS\Backend\Module\ModuleProvider;
@@ -176,8 +179,6 @@ class EditDocumentController
      */
     protected int $numberOfErrors = 0;
 
-    protected FormResultCompiler $formResultCompiler;
-
     protected ?ModuleInterface $module = null;
 
     public function __construct(
@@ -193,6 +194,8 @@ class EditDocumentController
         protected readonly ModuleProvider $moduleProvider,
         private readonly FormDataCompiler $formDataCompiler,
         private readonly NodeFactory $nodeFactory,
+        private readonly FormResultFactory $formResultFactory,
+        private readonly FormResultHandler $formResultHandler,
         protected TcaSchemaFactory $tcaSchemaFactory,
         protected readonly OpenDocumentRepository $openDocumentRepository,
         protected readonly LocalizationRepository $localizationRepository,
@@ -291,22 +294,21 @@ class EditDocumentController
         $this->setModuleContext($view);
         $this->pageRenderer->addInlineLanguageLabelFile('EXT:backend/Resources/Private/Language/locallang_alt_doc.xlf');
         $this->pageRenderer->addInlineSetting('ShowItem', 'moduleUrl', (string)$this->uriBuilder->buildUriFromRoute('show_item'));
-        $this->formResultCompiler = GeneralUtility::makeInstance(FormResultCompiler::class);
 
         // Generate the URL to the current request with modified GET parameters
         // This is used in various places to "return to" in the form and for buttons etc.
         $currentEditingUrl = $this->uriBuilder->buildUriFromRoute('record_edit', $queryParamsForGeneratingCurrentUrl);
 
         // Creating the editing form, wrap it with buttons, document selector etc.
-        $editForm = $this->makeEditForm($request, $view, $currentEditingUrl);
-        if ($editForm) {
+        $formResults = $this->makeEditForm($request, $view, $currentEditingUrl);
+        if (count($formResults) > 0) {
             $this->firstEl = $this->elementsData !== [] ? reset($this->elementsData) : null;
             $lastEl = $this->elementsData !== [] ? end($this->elementsData) : null;
             // Contains an array with key/value pairs of GET parameters needed to reach the
             // current document displayed - used in the 'open documents' toolbar.
             $storeArray = $this->compileStoreData($request, $queryParamsForGeneratingCurrentUrl);
             $this->storeCurrentDocumentInOpenDocuments($storeArray);
-            $this->formResultCompiler->addCssFiles();
+            $this->formResultHandler->addAssets($formResults);
             // Put together the various elements (buttons, selectors, form) into a table
             $body .= '
             <form
@@ -316,12 +318,12 @@ class EditDocumentController
                 name="editform"
                 id="EditDocumentController"
             >
-            ' . $editForm . '
+            ' . $formResults->getHtml() . '
             <input type="hidden" name="returnUrl" value="' . htmlspecialchars($this->retUrl) . '" />
             <input type="hidden" name="popViewId" value="' . htmlspecialchars((string)$lastEl?->viewId) . '" />
             <input type="hidden" name="closeDoc" value="0" />
             <input type="hidden" name="returnNewPageId" value="' . ($this->returnNewPageId ? 1 : 0) . '" />';
-            $body .= $this->formResultCompiler->printNeededJSFunctions();
+            $body .= implode(LF, $formResults->getHiddenFieldsHtml());
             $body .= '</form>';
         }
 
@@ -834,13 +836,12 @@ class EditDocumentController
     /**
      * Creates the editing form with FormEngine, based on the input from GPvars.
      *
-     * @return string HTML form elements wrapped in tables
+     * @return FormResultCollection Form result objects
      */
-    protected function makeEditForm(ServerRequestInterface $request, ModuleTemplate $view, UriInterface $currentRequestUrl): string
+    protected function makeEditForm(ServerRequestInterface $request, ModuleTemplate $view, UriInterface $currentRequestUrl): FormResultCollection
     {
         // Initialize variables
-        $editForm = '';
-        $beUser = $this->getBackendUser();
+        $formResults = new FormResultCollection();
         // Traverse the GPvar edit array tables
         foreach ($this->editconf as $table => $conf) {
             // Traverse the keys/comments of each table (keys can be a comma list of uids)
@@ -909,43 +910,35 @@ class EditDocumentController
                     $formData['renderType'] = 'outerWrapContainer';
                     $formResult = $this->nodeFactory->create($formData)->render();
 
-                    $html = $formResult['html'];
-
-                    $formResult['html'] = '';
-
-                    // @todo: Put all the stuff into FormEngine as final "compiler" class
-                    // @todo: This is done here for now to not rewrite addCssFiles()
-                    // @todo: and printNeededJSFunctions() now
-                    $this->formResultCompiler->mergeResult($formResult);
-
                     // Seems the pid is set as hidden field (again) at end?!
                     if ($command === 'new') {
-                        // @todo: looks ugly
-                        $html .= LF
-                            . '<input type="hidden"'
+                        $formResult['html'] .= '<input type="hidden"'
                             . ' name="data[' . htmlspecialchars($table) . '][' . htmlspecialchars($el->uid) . '][pid]"'
                             . ' value="' . $el->pid . '" />';
                     }
 
-                    $editForm .= $html;
+                    $formResult = $this->formResultFactory->create($formResult);
+                    $formResults->add($formResult);
                 } catch (NoFieldsToRenderException $e) {
                     $this->numberOfErrors++;
-                    $editForm .= $this->getInfobox(
-                        $this->getLanguageService()->sL('LLL:EXT:backend/Resources/Private/Language/locallang_alt_doc.xlf:noFieldsEditForm.message'),
-                        $this->getLanguageService()->sL('LLL:EXT:backend/Resources/Private/Language/locallang_alt_doc.xlf:noFieldsEditForm'),
-                    );
+                    $formResults->add(new FormResult(
+                        $this->getInfobox(
+                            $this->getLanguageService()->sL('LLL:EXT:backend/Resources/Private/Language/locallang_alt_doc.xlf:noFieldsEditForm.message'),
+                            $this->getLanguageService()->sL('LLL:EXT:backend/Resources/Private/Language/locallang_alt_doc.xlf:noFieldsEditForm'),
+                        )
+                    ));
                 } catch (AccessDeniedException $e) {
                     $this->numberOfErrors++;
 
                     $message = $e->getMessage();
                     $title = $this->getLanguageService()->sL('LLL:EXT:core/Resources/Private/Language/locallang_core.xlf:labels.noEditPermission');
-                    $editForm .= $this->getInfobox($message, $title);
+                    $formResults->add(new FormResult($this->getInfobox($message, $title)));
                 } catch (DatabaseRecordException | DatabaseRecordWorkspaceDeletePlaceholderException $e) {
-                    $editForm .= $this->getInfobox($e->getMessage());
+                    $formResults->add(new FormResult($this->getInfobox($e->getMessage())));
                 }
             }
         }
-        return $editForm;
+        return $formResults;
     }
 
     /**

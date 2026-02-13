@@ -25,7 +25,8 @@ use TYPO3\CMS\Backend\Dto\Settings\EditableSetting;
 use TYPO3\CMS\Backend\Exception\SiteValidationErrorException;
 use TYPO3\CMS\Backend\Form\FormDataCompiler;
 use TYPO3\CMS\Backend\Form\FormDataGroup\SiteConfigurationDataGroup;
-use TYPO3\CMS\Backend\Form\FormResultCompiler;
+use TYPO3\CMS\Backend\Form\FormResultFactory;
+use TYPO3\CMS\Backend\Form\FormResultHandler;
 use TYPO3\CMS\Backend\Form\NodeFactory;
 use TYPO3\CMS\Backend\Routing\UriBuilder;
 use TYPO3\CMS\Backend\Template\Components\ButtonBar;
@@ -80,6 +81,8 @@ readonly class SiteConfigurationController
         protected UriBuilder $uriBuilder,
         protected ModuleTemplateFactory $moduleTemplateFactory,
         private FormDataCompiler $formDataCompiler,
+        private FormResultFactory $formResultFactory,
+        private FormResultHandler $formResultHandler,
         private SiteConfiguration $siteConfiguration,
         private SiteWriter $siteWriter,
         private NodeFactory $nodeFactory,
@@ -259,18 +262,16 @@ readonly class SiteConfigurationController
         $formData = $this->formDataCompiler->compile($formDataCompilerInput, GeneralUtility::makeInstance(SiteConfigurationDataGroup::class));
         $formData['renderType'] = 'outerWrapContainer';
         $formResult = $this->nodeFactory->create($formData)->render();
-        // Needed to be set for 'onChange="reload"' and reload on type change to work
-        $formResultCompiler = GeneralUtility::makeInstance(FormResultCompiler::class);
-        $formResultCompiler->mergeResult($formResult);
-        $formResultCompiler->addCssFiles();
+        $formResult = $this->formResultFactory->create($formResult);
+        $this->formResultHandler->addAssets($formResult);
 
         $view = $this->moduleTemplateFactory->create($request);
         $view->assignMultiple([
             // Always add rootPageId as additional field to have a reference for new records
             'rootPageId' => $isNewConfig ? $pageUid : $allSites[$siteIdentifier]->getRootPageId(),
             'returnUrl' => $returnUrl,
-            'formEngineHtml' => $formResult['html'],
-            'formEngineFooter' => $formResultCompiler->printNeededJSFunctions(),
+            'formEngineHtml' => $formResult->html,
+            'formEngineFooter' => implode(LF, $formResult->hiddenFieldsHtml),
         ]);
         $this->configureEditViewDocHeader($view, $siteIdentifier);
         $view->getDocHeaderComponent()->setPageBreadcrumb($pageRecord);

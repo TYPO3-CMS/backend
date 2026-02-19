@@ -258,7 +258,7 @@ class EditDocumentController
         $queryParamsForGeneratingCurrentUrl = $queryParams;
         $queryParamsForGeneratingCurrentUrl['edit'] = $this->editconf;
         $queryParamsForGeneratingCurrentUrl['returnUrl'] = $this->retUrl;
-        if ($requestAction->shouldProcessData() && $requestAction->doSave()) {
+        if ($requestAction->shouldProcessData()) {
             // Unset default values since we don't need them anymore.
             unset($queryParamsForGeneratingCurrentUrl['defVals']);
         }
@@ -321,7 +321,6 @@ class EditDocumentController
             <input type="hidden" name="returnUrl" value="' . htmlspecialchars($this->retUrl) . '" />
             <input type="hidden" name="popViewId" value="' . htmlspecialchars((string)$lastEl?->viewId) . '" />
             <input type="hidden" name="closeDoc" value="0" />
-            <input type="hidden" name="doSave" value="0" />
             <input type="hidden" name="returnNewPageId" value="' . ($this->returnNewPageId ? 1 : 0) . '" />';
             $body .= $this->formResultCompiler->printNeededJSFunctions();
             $body .= '</form>';
@@ -546,7 +545,7 @@ class EditDocumentController
         }
 
         // Perform the saving operation with DataHandler:
-        if ($requestAction->doSave()) {
+        if ($requestAction->shouldProcessData()) {
             $dataHandler->process_datamap();
             $dataHandler->process_cmdmap();
 
@@ -653,7 +652,7 @@ class EditDocumentController
         }
 
         // Explicitly require a save operation
-        if ($requestAction->doSave()) {
+        if ($requestAction->shouldProcessData()) {
             $erroneousRecords = $dataHandler->printLogErrorMessages();
             $messages = [];
             $table = (string)key($this->editconf);
@@ -914,7 +913,6 @@ class EditDocumentController
                     $html = $formResult['html'];
 
                     $formResult['html'] = '';
-                    $formResult['doSaveFieldName'] = 'doSave';
 
                     // @todo: Put all the stuff into FormEngine as final "compiler" class
                     // @todo: This is done here for now to not rewrite addCssFiles()

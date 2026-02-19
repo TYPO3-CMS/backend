@@ -225,7 +225,7 @@ final class EditDocumentControllerAsUserTest extends FunctionalTestCase
                     ], $additionalData),
                 ],
             ],
-            'doSave' => true,
+            '_savedok' => '1',
         ];
     }
 

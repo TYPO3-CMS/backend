@@ -48,16 +48,6 @@ final readonly class FormAction
     }
 
     /**
-     * If true, the processing of incoming data will be performed as if a save-button is pressed.
-     * Used in the forms as a hidden field which can be set through
-     * JavaScript if the form is somehow submitted by JavaScript.
-     */
-    public function doSave(): bool
-    {
-        return ($this->parsedBody['doSave'] ?? false) && $this->isPostRequest;
-    }
-
-    /**
      * Is true when
      *  - the incoming data should be persisted
      *  - and the form should be shown for editing
@@ -115,7 +105,7 @@ final readonly class FormAction
         if (!$this->isPostRequest) {
             return false;
         }
-        return $this->doSave() || $this->savedok() || $this->saveandclosedok() || $this->savedokview() || $this->savedoknew() || $this->duplicatedoc();
+        return $this->savedok() || $this->saveandclosedok() || $this->savedokview() || $this->savedoknew() || $this->duplicatedoc();
     }
 
     public function shouldHandleDocumentClosing(): bool

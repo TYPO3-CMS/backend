@@ -38,13 +38,6 @@ class FormResultCompiler
     protected array $hiddenFieldAccum = [];
 
     /**
-     * Can be set to point to a field name in the form which will be set to '1' when the form
-     * is submitted with a *save* button. This way the recipient script can determine that
-     * the form was submitted for save and not "close" for example.
-     */
-    protected string $doSaveFieldName = '';
-
-    /**
      * Data array from IRRE pushed to frontend as json array
      */
     protected array $inlineData = [];
@@ -74,7 +67,6 @@ class FormResultCompiler
      */
     public function mergeResult(array $resultArray): void
     {
-        $this->doSaveFieldName = $resultArray['doSaveFieldName'] ?? '';
         foreach ($resultArray['javaScriptModules'] ?? [] as $module) {
             if (!$module instanceof JavaScriptModuleInstruction) {
                 throw new \LogicException(
@@ -141,8 +133,7 @@ class FormResultCompiler
         $this->javaScriptModules[] = JavaScriptModuleInstruction::create('@typo3/backend/form-engine.js')
                 ->invoke(
                     'initialize',
-                    (string)$uriBuilder->buildUriFromRoute('wizard_element_browser'),
-                    $this->doSaveFieldName
+                    (string)$uriBuilder->buildUriFromRoute('wizard_element_browser')
                 );
 
         foreach ($this->javaScriptModules as $module) {

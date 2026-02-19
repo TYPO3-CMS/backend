@@ -475,8 +475,7 @@ final class TcaSelectItemsTest extends FunctionalTestCase
     {
         // @todo Remove when folders and relative paths have been implemented in SystemResourceFactory.
         self::markTestSkipped('Folders and relative paths not implemented yet.');
-        // @phpstan-ignore-next-line
-        $directoryRelative = 'typo3temp/assets/' . StringUtility::getUniqueId('test-') . '/';
+        $directoryRelative = 'typo3temp/assets/' . StringUtility::getUniqueId('test-') . '/'; // @phpstan-ignore deadCode.unreachable (preserved for future implementation)
         $directory = Environment::getPublicPath() . '/' . $directoryRelative;
         $input = [
             'tableName' => 'aTable',
@@ -688,8 +687,7 @@ final class TcaSelectItemsTest extends FunctionalTestCase
     {
         // @todo Remove when folders and relative paths have been implemented in SystemResourceFactory.
         self::markTestSkipped('Folders and relative paths not implemented yet.');
-        // @phpstan-ignore-next-line
-        $directoryRelative = '_assets/' . StringUtility::getUniqueId('test-') . '/';
+        $directoryRelative = '_assets/' . StringUtility::getUniqueId('test-') . '/'; // @phpstan-ignore deadCode.unreachable (preserved for future implementation)
         $directory = Environment::getPublicPath() . '/' . $directoryRelative;
         $input = [
             'tableName' => 'aTable',

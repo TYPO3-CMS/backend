@@ -154,7 +154,7 @@ class SingleFieldContainer extends AbstractContainer
             'foreign_selector' => '',
             'foreign_field' => '',
         ];
-        if (!empty($this->data['inlineStructure']['stable'] ?? [])) {
+        if (($this->data['inlineStructure']['stable'] ?? []) !== []) {
             $searchArray = [
                 '%OR' => [
                     'config' => [

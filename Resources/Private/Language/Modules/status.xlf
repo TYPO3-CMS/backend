@@ -13,10 +13,7 @@
     </unit>
     <unit id="description">
       <segment>
-        <source>The Status module provides an overview of site- and page-level
-information. Depending on installed extensions and user permissions,
-it may include additional sections offering details that help assess
-the state and structure of individual sites or pages.</source>
+        <source>Review site and page information to assess the state and structure of your installation. Additional sections may be available depending on installed extensions and user permissions.</source>
       </segment>
     </unit>
   </file>

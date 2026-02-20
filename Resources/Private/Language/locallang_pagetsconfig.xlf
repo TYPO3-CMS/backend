@@ -57,7 +57,7 @@
       <trans-unit id="module.pagetsconfig_active.panel.header.conditions">
         <source>Conditions</source>
       </trans-unit>
-      <trans-unit id="module.pagetsconfig_active.panel.header.numberOfSearchMatches">
+      <trans-unit id="module.pagetsconfig_active.panel.header.numberOfSearchMatches" x-unused-since="14.2">
         <source>%s search match(es)</source>
       </trans-unit>
       <trans-unit id="module.pagetsconfig_active.panel.info.conditionActiveCount.multiple">

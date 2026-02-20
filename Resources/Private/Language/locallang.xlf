@@ -276,6 +276,9 @@
       <trans-unit id="viewport.navigation.hide">
         <source>Hide navigation</source>
       </trans-unit>
+      <trans-unit id="collapse_state_search.numberOfSearchMatches">
+        <source>{count, plural, =0 {no matches} =1 {one match} other {# matches}}</source>
+      </trans-unit>
     </body>
   </file>
 </xliff>

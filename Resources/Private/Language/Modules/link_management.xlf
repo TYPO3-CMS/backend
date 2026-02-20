@@ -10,7 +10,7 @@
         <source>Manage redirects and QR Codes</source>
       </trans-unit>
       <trans-unit id="description">
-        <source>Create, edit and delete redirect and generated QR Codes.</source>
+        <source>Manage redirects and QR codes to navigation and access points.</source>
       </trans-unit>
     </body>
   </file>

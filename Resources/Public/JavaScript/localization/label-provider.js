@@ -10,4 +10,4 @@
  *
  * The TYPO3 project - inspiring people to share!
  */
-class i{constructor(e){this.labels=e}get(e,...n){if(!(e in this.labels))throw new Error("Label is not defined: "+String(e));let s=0;return this.labels[e].replace(/%[sdf]/g,t=>{const r=n[s++];switch(t){case"%s":return String(r);case"%d":return String(typeof r=="number"?r:parseInt(String(r),10));case"%f":return String(typeof r=="number"?r:parseFloat(r).toFixed(2));default:return t}})}}export{i as LabelProvider};
+class i{constructor(r){this.labels=r}get(r,t){if(!(r in this.labels))throw new Error("Label is not defined: "+String(r));const n=this.labels[r];return t===void 0?n:this.sprintf(n,t)}sprintf(r,t){let n=0;return r.replace(/%[sdf]/g,s=>{const e=t[n++];switch(s){case"%s":return String(e);case"%d":return String(typeof e=="number"?e:parseInt(String(e),10));case"%f":return String(typeof e=="number"?e:parseFloat(e).toFixed(2));default:return s}})}}export{i as LabelProvider};

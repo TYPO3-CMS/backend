@@ -52,6 +52,7 @@ final class DateConfigurationFactory
             timezone: date_default_timezone_get(),
             formats: new DateFormats(
                 date: $dateFormat,
+                time: $timeFormat,
                 datetime: $dateFormat . ' ' . $timeFormat,
             ),
         );

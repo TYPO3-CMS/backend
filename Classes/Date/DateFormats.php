@@ -24,6 +24,7 @@ final readonly class DateFormats implements \JsonSerializable
 {
     public function __construct(
         public string $date,
+        public string $time,
         public string $datetime,
     ) {}
 
@@ -34,6 +35,7 @@ final readonly class DateFormats implements \JsonSerializable
     {
         return [
             'date' => $this->date,
+            'time' => $this->time,
             'datetime' => $this->datetime,
         ];
     }

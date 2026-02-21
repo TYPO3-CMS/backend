@@ -203,7 +203,6 @@ class ShortcutButton implements ButtonInterface, PositionInterface
         // Clipboard Button
         if ($this->copyUrlToClipboard) {
             $pageRenderer->loadJavaScriptModule('@typo3/backend/copy-to-clipboard.js');
-            $pageRenderer->addInlineLanguageLabelFile('EXT:backend/Resources/Private/Language/locallang_copytoclipboard.xlf');
             $clipboardItem = $componentFactory->createDropDownItem();
             $clipboardItem->setTag('typo3-copy-to-clipboard');
             $clipboardItem->setLabel($this->getLanguageService()->sL('LLL:EXT:core/Resources/Private/Language/locallang_core.xlf:labels.copyCurrentUrl'));

@@ -290,7 +290,6 @@ class EditDocumentController
         // Begin to show the edit form
         $this->setModuleContext($view);
         $this->pageRenderer->addInlineLanguageLabelFile('EXT:backend/Resources/Private/Language/locallang_alt_doc.xlf');
-        $this->pageRenderer->addInlineLanguageLabelFile('EXT:backend/Resources/Private/Language/Wizards/localization.xlf');
         $this->pageRenderer->addInlineSetting('ShowItem', 'moduleUrl', (string)$this->uriBuilder->buildUriFromRoute('show_item'));
         $this->formResultCompiler = GeneralUtility::makeInstance(FormResultCompiler::class);
 

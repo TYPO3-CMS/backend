@@ -10,4 +10,4 @@
  *
  * The TYPO3 project - inspiring people to share!
  */
-import{ScaffoldContentArea as t}from"@typo3/backend/enum/viewport/scaffold-identifier.js";import"@typo3/backend/element/progress-bar-element.js";class e{static{this.el=null}static start(){(!this.el||!this.el.isConnected)&&(this.el=document.createElement("typo3-backend-progress-bar"),t.getContentContainer()?.appendChild(this.el)),this.el.start()}static finish(){this.el&&(this.el.done(),this.el=null)}}export{e as default};
+import{ScaffoldContentArea as t}from"@typo3/backend/enum/viewport/scaffold-identifier.js";import"@typo3/backend/element/progress-bar-element.js";class e{static{this.el=null}static start(){(!this.el||!this.el.isConnected)&&(this.el=document.createElement("typo3-backend-progress-bar"),t.getContentContainer()?.appendChild(this.el)),this.el.start(!0)}static async finish(){this.el&&(await this.el.done(),this.el.isRunning()||(this.el=null))}}export{e as default};

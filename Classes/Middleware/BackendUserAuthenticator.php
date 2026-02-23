@@ -34,7 +34,7 @@ use TYPO3\CMS\Core\Http\HtmlResponse;
 use TYPO3\CMS\Core\Http\RedirectResponse;
 use TYPO3\CMS\Core\Http\Response;
 use TYPO3\CMS\Core\Localization\LanguageServiceFactory;
-use TYPO3\CMS\Core\RateLimiter\RateLimiterFactory;
+use TYPO3\CMS\Core\RateLimiter\RateLimiterFactoryInterface;
 use TYPO3\CMS\Core\RateLimiter\RequestRateLimitedException;
 use TYPO3\CMS\Core\Session\UserSessionManager;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
@@ -71,12 +71,12 @@ class BackendUserAuthenticator extends \TYPO3\CMS\Core\Middleware\BackendUserAut
     ];
 
     private LanguageServiceFactory $languageServiceFactory;
-    private RateLimiterFactory $rateLimiterFactory;
+    private RateLimiterFactoryInterface $rateLimiterFactory;
 
     public function __construct(
         Context $context,
         LanguageServiceFactory $languageServiceFactory,
-        RateLimiterFactory $rateLimiterFactory
+        RateLimiterFactoryInterface $rateLimiterFactory
     ) {
         parent::__construct($context);
         $this->languageServiceFactory = $languageServiceFactory;
@@ -242,7 +242,7 @@ class BackendUserAuthenticator extends \TYPO3\CMS\Core\Middleware\BackendUserAut
         if (!$user->isActiveLogin($request)) {
             return null;
         }
-        $loginRateLimiter = $this->rateLimiterFactory->createLoginRateLimiter($user, $request);
+        $loginRateLimiter = $this->rateLimiterFactory->createLoginRateLimiter($request, $user->loginType);
         $limit = $loginRateLimiter->consume();
         if (!$limit->isAccepted()) {
             $this->logger->debug('Login request has been rate limited for IP address {ipAddress}', ['ipAddress' => $request->getAttribute('normalizedParams')->getRemoteAddress()]);

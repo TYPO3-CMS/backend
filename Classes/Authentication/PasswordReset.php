@@ -25,7 +25,6 @@ use Psr\Http\Message\UriInterface;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\DependencyInjection\Attribute\Autoconfigure;
 use Symfony\Component\Mime\Address;
-use Symfony\Component\RateLimiter\RateLimiterFactory;
 use TYPO3\CMS\Backend\Authentication\Event\PasswordHasBeenResetEvent;
 use TYPO3\CMS\Backend\Routing\UriBuilder;
 use TYPO3\CMS\Core\Context\Context;
@@ -48,6 +47,7 @@ use TYPO3\CMS\Core\PasswordPolicy\Event\EnrichPasswordValidationContextDataEvent
 use TYPO3\CMS\Core\PasswordPolicy\PasswordPolicyAction;
 use TYPO3\CMS\Core\PasswordPolicy\PasswordPolicyValidator;
 use TYPO3\CMS\Core\PasswordPolicy\Validator\Dto\ContextData;
+use TYPO3\CMS\Core\RateLimiter\RateLimiterFactoryInterface;
 use TYPO3\CMS\Core\Session\SessionManager;
 use TYPO3\CMS\Core\SysLog\Action\Login as SystemLogLoginAction;
 use TYPO3\CMS\Core\SysLog\Error as SystemLogErrorClassification;
@@ -79,7 +79,7 @@ readonly class PasswordReset
         private PasswordHashFactory $passwordHashFactory,
         private UriBuilder $uriBuilder,
         private SessionManager $sessionManager,
-        private RateLimiterFactory $rateLimiterFactory,
+        private RateLimiterFactoryInterface $rateLimiterFactory,
     ) {}
 
     /**

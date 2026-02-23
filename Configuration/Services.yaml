@@ -67,14 +67,13 @@ services:
       - !tagged_iterator backend.toolbar.item
 
   backendPasswordRecovery.rateLimiterFactory:
-    class: Symfony\Component\RateLimiter\RateLimiterFactory
+    class: TYPO3\CMS\Core\RateLimiter\RateLimiterFactory
     arguments:
       $config:
         id: 'backend-password-recovery'
         policy: 'sliding_window'
         limit: 3
         interval: '30 minutes'
-      $storage: '@TYPO3\CMS\Core\RateLimiter\Storage\CachingFrameworkStorage'
 
   TYPO3\CMS\Backend\Authentication\PasswordReset:
     arguments:

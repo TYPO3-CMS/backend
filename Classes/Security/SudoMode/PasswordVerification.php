@@ -17,7 +17,7 @@ declare(strict_types=1);
 
 namespace TYPO3\CMS\Backend\Security\SudoMode;
 
-use TYPO3\CMS\Core\Authentication\AuthenticationService;
+use TYPO3\CMS\Core\Authentication\AbstractAuthenticationService;
 use TYPO3\CMS\Core\Authentication\BackendUserAuthentication;
 use TYPO3\CMS\Core\Crypto\PasswordHashing\InvalidPasswordHashException;
 use TYPO3\CMS\Core\Crypto\PasswordHashing\PasswordHashFactory;
@@ -83,8 +83,14 @@ class PasswordVerification
         $authInfo = $backendUser->getAuthInfoArray($fakeRequest);
 
         $authenticated = false;
-        /** @var AuthenticationService $service or any other service (sic!) */
+        /** @var AbstractAuthenticationService $service or any other service (sic!) */
         foreach ($this->getAuthServices($backendUser, $loginData, $authInfo) as $service) {
+            if (!method_exists($service, 'authUser')) {
+                // The abstract does not cover this method, but the actual implementations do.
+                // Happy PHPStan, happy life (or so).
+                continue;
+            }
+
             $ret = $service->authUser($backendUser->user);
             if ($ret <= 0) {
                 return false;
@@ -109,7 +115,7 @@ class PasswordVerification
         $serviceChain = [];
         $subType = 'authUserBE';
         while ($service = GeneralUtility::makeInstanceService('auth', $subType, $serviceChain)) {
-            if (!$service instanceof AuthenticationService) {
+            if (!$service instanceof AbstractAuthenticationService) {
                 continue;
             }
             $serviceChain[] = $service->getServiceKey();

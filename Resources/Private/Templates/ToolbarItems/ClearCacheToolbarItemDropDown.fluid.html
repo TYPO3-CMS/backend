@@ -3,7 +3,7 @@
 <ul class="dropdown-list">
     <f:for each="{cacheActions}" as="cacheAction">
         <li>
-            <a href="{cacheAction.href}" class="dropdown-item t3js-toolbar-cache-flush-action" aria-describedby="{cacheAction.id}-description">
+            <button type="button" data-endpoint="{cacheAction.endpoint}" class="dropdown-item t3js-toolbar-cache-flush-action" aria-describedby="{cacheAction.id}-description">
                 <span class="dropdown-item-columns">
                     <span class="dropdown-item-column dropdown-item-column-icon {f:if(condition: cacheAction.severity, then: 'text-{cacheAction.severity}')}">
                         <core:icon identifier="{cacheAction.iconIdentifier}" size="small" />
@@ -13,7 +13,7 @@
                         <small class="text-variant" aria-hidden="true">{f:translate(key: '{f:if(condition: cacheAction.description, then: cacheAction.description, else: cacheAction.title)}')}</small>
                     </span>
                 </span>
-            </a>
+            </button>
             <span id="{cacheAction.id}-description" class="visually-hidden">{f:translate(key: '{f:if(condition: cacheAction.description, then: cacheAction.description, else: cacheAction.title)}')}</span>
         </li>
     </f:for>

@@ -161,7 +161,7 @@ class PageProvider extends RecordProvider
             'callbackAction' => 'openHistoryPopUp',
         ],
         'clearCache' => [
-            'label' => 'LLL:EXT:core/Resources/Private/Language/locallang_core.xlf:labels.clear_cache',
+            'label' => 'core.cache:page.label',
             'iconIdentifier' => 'actions-system-cache-clear',
             'callbackAction' => 'clearCache',
         ],

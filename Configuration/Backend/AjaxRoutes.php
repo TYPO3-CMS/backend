@@ -261,6 +261,23 @@ return [
         'target' => Controller\BookmarkController::class . '::reorderGroupsAction',
     ],
 
+    // Flush caches from the clear cache toolbar item
+    'clearcache_group_pages' => [
+        'path' => '/cache/group/pages/flush',
+        'methods' => ['POST'],
+        'target' => Controller\ClearCacheController::class . '::flushCacheGroupPagesAction',
+    ],
+    'clearcache_group_all' => [
+        'path' => '/cache/group/all/flush',
+        'methods' => ['POST'],
+        'target' => Controller\ClearCacheController::class . '::flushCacheGroupAllAction',
+    ],
+    'clearcache_page' => [
+        'path' => '/cache/page/flush',
+        'methods' => ['POST'],
+        'target' => Controller\ClearCacheController::class . '::flushCachePageAction',
+    ],
+
     // Render systeminformation toolbar item
     'systeminformation_render' => [
         'path' => '/system-information/render',
@@ -438,12 +455,6 @@ return [
     'show_columns_selector' => [
         'path' => '/show/columns/selector',
         'target' => \TYPO3\CMS\Backend\Controller\ColumnSelectorController::class . '::showColumnsSelectorAction',
-    ],
-
-    // Clear page cache in records module
-    'records_clearpagecache' => [
-        'path' => '/records/clearpagecache',
-        'target' => \TYPO3\CMS\Backend\Controller\ClearPageCacheController::class . '::mainAction',
     ],
 
     // Record download in records module

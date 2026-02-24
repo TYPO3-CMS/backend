@@ -445,11 +445,14 @@ class PageLayoutController
         }
 
         // Cache
-        $clearCacheButton = $this->componentFactory->createLinkButton()
-            ->setHref('#')
-            ->setDataAttributes(['id' => $this->pageContext->pageRecord['uid'] ?? 0])
+        $clearCacheButton = $this->componentFactory->createGenericButton()
+            ->setTag('button')
+            ->setLabel($languageService->sL('core.cache:page.label'))
             ->setClasses('t3js-clear-page-cache')
-            ->setTitle($languageService->sL('LLL:EXT:core/Resources/Private/Language/locallang_core.xlf:labels.clear_cache'))
+            ->setAttributes([
+                'type' => 'button',
+                'data-id' => (string)($this->pageContext->pageRecord['uid'] ?? 0),
+            ])
             ->setIcon($this->iconFactory->getIcon('actions-system-cache-clear', IconSize::SMALL));
         $view->addButtonToButtonBar($clearCacheButton, ButtonBar::BUTTON_POSITION_RIGHT, 1);
 

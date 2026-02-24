@@ -504,11 +504,11 @@ class RecordListController
         }
         // Cache
         if ($this->pageContext->pageId) {
-            $clearCacheButton = $this->componentFactory->createLinkButton()
-                ->setHref('#')
-                ->setDataAttributes(['id' => $this->pageContext->pageId])
+            $clearCacheButton = $this->componentFactory->createGenericButton()
+                ->setTag('button')
+                ->setLabel($lang->sL('core.cache:page.label'))
                 ->setClasses('t3js-clear-page-cache')
-                ->setTitle($lang->sL('LLL:EXT:core/Resources/Private/Language/locallang_core.xlf:labels.clear_cache'))
+                ->setAttributes(['type' => 'button', 'data-id' => (string)$this->pageContext->pageId])
                 ->setIcon($this->iconFactory->getIcon('actions-system-cache-clear', IconSize::SMALL));
             $view->addButtonToButtonBar($clearCacheButton, ButtonBar::BUTTON_POSITION_RIGHT);
         }

@@ -23,6 +23,7 @@ use Psr\Http\Message\ServerRequestInterface;
 use TYPO3\CMS\Backend\Attribute\AsController;
 use TYPO3\CMS\Backend\Backend\Bookmark\BookmarkService;
 use TYPO3\CMS\Backend\Controller\Event\AfterBackendPageRenderEvent;
+use TYPO3\CMS\Backend\Controller\Event\BeforeBackendPageRenderEvent;
 use TYPO3\CMS\Backend\Date\DateConfigurationFactory;
 use TYPO3\CMS\Backend\Module\ModuleInterface;
 use TYPO3\CMS\Backend\Module\ModuleProvider;
@@ -180,6 +181,7 @@ class BackendController
             'sitenameFirstInBackendTitle' => ($backendUser->uc['backendTitleFormat'] ?? '') === 'sitenameFirst',
             'sidebar' => $sidebar->render(),
         ]);
+        $this->eventDispatcher->dispatch(new BeforeBackendPageRenderEvent($view, $javaScriptRenderer, $pageRenderer));
         $content = $view->render('Backend/Main');
         $content = $this->eventDispatcher->dispatch(new AfterBackendPageRenderEvent($content, $view))->getContent();
         $pageRenderer->addBodyContent('<body>' . $content);

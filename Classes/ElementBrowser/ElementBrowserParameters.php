@@ -238,8 +238,8 @@ final readonly class ElementBrowserParameters implements \JsonSerializable
         $parts = explode('[', $this->fieldReference);
         if (count($parts) >= 4) {
             // parts[1] = "table]", parts[3] = "field]"
-            $result['tableName'] = rtrim($parts[1] ?? '', ']');
-            $result['fieldName'] = rtrim($parts[3] ?? '', ']');
+            $result['tableName'] = rtrim($parts[1], ']');
+            $result['fieldName'] = rtrim($parts[3], ']');
         }
 
         return $result;

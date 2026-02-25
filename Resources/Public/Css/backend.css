@@ -2577,6 +2577,12 @@ td .table-fit{margin-bottom:0}
 .list-group-flush .list-group-item:first-child{border-top:0}
 .list-group-flush .list-group-item:last-child{border-bottom:0}
 .upload-file-picker{bottom:0;height:1px;inset-inline-end:0;position:fixed;visibility:hidden;width:1px}
+.activity{display:grid;gap:0 .5rem;grid-template-areas:"icon title time";grid-template-columns:[icon] -webkit-max-content [content-start] minmax(0,1fr) [content-end time] -webkit-max-content;grid-template-columns:[icon] max-content [content-start] minmax(0,1fr) [content-end time] max-content;max-width:100%;min-width:0;width:100%}
+.activity>*{grid-column:content-start/content-end}
+.activity-icon{grid-area:icon;grid-column:unset!important}
+.activity-title{grid-area:title;grid-column:unset!important}
+.activity-time{grid-area:time;grid-column:unset!important;opacity:.75}
+.activity-source,.activity-time{font-size:var(--typo3-font-size-small)}
 
 /*!
  * Cropper v$VERSION

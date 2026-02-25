@@ -25,10 +25,9 @@ use TYPO3\CMS\Backend\Attribute\AsController;
 use TYPO3\CMS\Backend\Breadcrumb\BreadcrumbFactory;
 use TYPO3\CMS\Backend\Configuration\TranslationConfigurationProvider;
 use TYPO3\CMS\Backend\Controller\Event\AfterFormEnginePageInitializedEvent;
+use TYPO3\CMS\Backend\Controller\Event\AfterRecordOpenedEvent;
 use TYPO3\CMS\Backend\Controller\Event\BeforeFormEnginePageInitializedEvent;
-use TYPO3\CMS\Backend\Domain\Model\OpenDocument;
 use TYPO3\CMS\Backend\Domain\Repository\Localization\LocalizationRepository;
-use TYPO3\CMS\Backend\Domain\Repository\OpenDocumentRepository;
 use TYPO3\CMS\Backend\Dto\FormElementData;
 use TYPO3\CMS\Backend\Form\Exception\AccessDeniedException;
 use TYPO3\CMS\Backend\Form\Exception\DatabaseRecordException;
@@ -197,7 +196,6 @@ class EditDocumentController
         private readonly FormResultFactory $formResultFactory,
         private readonly FormResultHandler $formResultHandler,
         protected TcaSchemaFactory $tcaSchemaFactory,
-        protected readonly OpenDocumentRepository $openDocumentRepository,
         protected readonly LocalizationRepository $localizationRepository,
     ) {}
 
@@ -237,7 +235,6 @@ class EditDocumentController
         // Close document if a request for closing the document has been sent
         $requestAction = FormAction::createFromRequest($request);
         if ($requestAction->shouldHandleDocumentClosing()) {
-            $this->markOpenDocumentsAsRecentInSesssion();
             if ($response = $this->closeAndPossiblyRedirectAction($requestAction)) {
                 return $response;
             }
@@ -304,10 +301,8 @@ class EditDocumentController
         if (count($formResults) > 0) {
             $this->firstEl = $this->elementsData !== [] ? reset($this->elementsData) : null;
             $lastEl = $this->elementsData !== [] ? end($this->elementsData) : null;
-            // Contains an array with key/value pairs of GET parameters needed to reach the
-            // current document displayed - used in the 'open documents' toolbar.
-            $storeArray = $this->compileStoreData($request, $queryParamsForGeneratingCurrentUrl);
-            $this->storeCurrentDocumentInOpenDocuments($storeArray);
+            // Dispatch event for extensions to track open documents
+            $this->openCurrentDocuments();
             $this->formResultHandler->addAssets($formResults);
             // Put together the various elements (buttons, selectors, form) into a table
             $body .= '
@@ -385,39 +380,6 @@ class EditDocumentController
         }
         // Change $this->editconf if versioning applies to any of the records
         return $this->fixWSversioningInEditConf($newConfiguration);
-    }
-
-    /**
-     * Store all currently edited records as open documents.
-     *
-     * Creates one document entry per record being edited.
-     */
-    protected function storeCurrentDocumentInOpenDocuments(array $storeArray): void
-    {
-        if ($this->elementsData === []) {
-            return;
-        }
-        foreach ($this->elementsData as $element) {
-            $recordUid = (string)$element->uid;
-
-            // Create OpenDocument object for this record
-            $document = new OpenDocument(
-                table: $element->table,
-                // Ensure to only have one "new" entry in the list
-                uid: str_starts_with($recordUid, 'NEW') ? 'NEW' : $recordUid,
-                title: $element->title,
-                parameters: $storeArray,
-                pid: $element->pid,
-                returnUrl: $this->returnUrl,
-            );
-
-            // Store to session (updates if already exists)
-            $this->openDocumentRepository->addOrUpdateOpenDocument($document, $this->getBackendUser());
-        }
-
-        // Update signal for UI
-        $openDocuments = $this->openDocumentRepository->findOpenDocumentsForUser($this->getBackendUser());
-        BackendUtility::setUpdateSignal('OpendocsController::updateNumber', count($openDocuments));
     }
 
     protected function setModuleContext(ModuleTemplate $view): void
@@ -622,7 +584,6 @@ class EditDocumentController
 
         // If a document is saved and a new one is created right after.
         if ($requestAction->savedoknew()) {
-            $this->markOpenDocumentsAsRecentInSesssion();
             // Find the current table
             reset($this->editconf);
             $nTable = (string)key($this->editconf);
@@ -713,7 +674,6 @@ class EditDocumentController
 
         // If a document should be duplicated.
         if ($requestAction->duplicatedoc()) {
-            $this->markOpenDocumentsAsRecentInSesssion();
             // Find current table
             reset($this->editconf);
             $nTable = (string)key($this->editconf);
@@ -1974,23 +1934,25 @@ class EditDocumentController
     }
 
     /**
-     * Close the current document(s).
+     * Close the currently open document(s) by dispatching the appropriate event.
+     * This is called when the user explicitly closes, or when transitioning to a new/duplicated record.
      */
-    protected function markOpenDocumentsAsRecentInSesssion(): void
+    /**
+     * Notify extensions that document(s) have been opened for editing.
+     * Dispatches one event per record being opened.
+     */
+    protected function openCurrentDocuments(): void
     {
-        foreach ($this->editconf as $table => $records) {
-            foreach ($records as $uid => $action) {
-                if ($action === 'new') {
-                    $this->openDocumentRepository->closeDocument($table, 'NEW', $this->getBackendUser());
-                } else {
-                    $this->openDocumentRepository->closeDocument($table, (string)$uid, $this->getBackendUser());
-                }
-            }
+        // Dispatch one event per record
+        foreach ($this->elementsData as $element) {
+            $this->eventDispatcher->dispatch(
+                new AfterRecordOpenedEvent(
+                    table: $element->table,
+                    uid: $element->uid,
+                    record: $element->record,
+                )
+            );
         }
-
-        // Update signal for UI
-        $openDocuments = $this->openDocumentRepository->findOpenDocumentsForUser($this->getBackendUser());
-        BackendUtility::setUpdateSignal('OpendocsController::updateNumber', count($openDocuments));
     }
 
     /**

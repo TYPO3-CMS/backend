@@ -400,7 +400,7 @@ final class TcaRecordTitleTest extends UnitTestCase
                 'isInlineChild' => false,
                 'databaseRow' => [
                     'uid' => '1',
-                    'aField' => DateTimeFactory::createFomDatabaseValueAndTCAConfig($fieldValue, $fieldConfig),
+                    'aField' => DateTimeFactory::createFromDatabaseValueAndTCAConfig($fieldValue, $fieldConfig),
                 ],
                 'processedTca' => [
                     'ctrl' => [

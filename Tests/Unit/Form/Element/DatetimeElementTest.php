@@ -102,7 +102,7 @@ final class DatetimeElementTest extends UnitTestCase
                     'config' => $config,
                 ],
                 'itemFormElName' => 'myItemFormElName',
-                'itemFormElValue' => DateTimeFactory::createFomDatabaseValueAndTCAConfig($input, $config),
+                'itemFormElValue' => DateTimeFactory::createFromDatabaseValueAndTCAConfig($input, $config),
             ],
         ];
         $iconFactoryMock = $this->createMock(IconFactory::class);
@@ -182,7 +182,7 @@ final class DatetimeElementTest extends UnitTestCase
                     'config' => $config,
                 ],
                 'itemFormElName' => 'myItemFormElName',
-                'itemFormElValue' => DateTimeFactory::createFomDatabaseValueAndTCAConfig($input, $config),
+                'itemFormElValue' => DateTimeFactory::createFromDatabaseValueAndTCAConfig($input, $config),
             ],
         ];
         $iconFactoryMock = $this->createMock(IconFactory::class);
@@ -261,7 +261,7 @@ final class DatetimeElementTest extends UnitTestCase
                     'config' => $config,
                 ],
                 'itemFormElName' => 'myItemFormElName',
-                'itemFormElValue' => DateTimeFactory::createFomDatabaseValueAndTCAConfig($input, $config),
+                'itemFormElValue' => DateTimeFactory::createFromDatabaseValueAndTCAConfig($input, $config),
             ],
         ];
         $iconFactoryMock = $this->createMock(IconFactory::class);

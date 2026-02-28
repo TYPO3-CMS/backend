@@ -31,7 +31,7 @@ class DatabaseRowDateTimeFields implements FormDataProviderInterface
                 continue;
             }
             try {
-                $result['databaseRow'][$column] = DateTimeFactory::createFomDatabaseValueAndTCAConfig(
+                $result['databaseRow'][$column] = DateTimeFactory::createFromDatabaseValueAndTCAConfig(
                     $result['databaseRow'][$column] ?? null,
                     $columnConfig['config'] ?? [],
                 );

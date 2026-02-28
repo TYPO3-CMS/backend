@@ -1725,7 +1725,7 @@ class BackendUtility
                     if ($value instanceof \DateTimeInterface) {
                         $datetime = $value;
                     } else {
-                        $datetime = DateTimeFactory::createFomDatabaseValueAndTCAConfig($value, $theColConf);
+                        $datetime = DateTimeFactory::createFromDatabaseValueAndTCAConfig($value, $theColConf);
                     }
                     $format = DateTimeFactory::getFormatFromTCAConfig($theColConf);
                 } catch (\InvalidArgumentException) {

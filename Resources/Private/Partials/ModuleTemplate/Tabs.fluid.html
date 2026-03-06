@@ -4,16 +4,15 @@
 >
 
 <div role="tabpanel">
-    <ul class="nav nav-tabs form-section-tabs t3js-tabs" role="tablist" id="tabs-{id}" data-store-last-tab="{storeLastActiveTab}">
+    <ul class="nav nav-tabs" role="tablist" id="tabs-{id}" data-store-last-tab="{storeLastActiveTab}">
         <f:for each="{items}" as="item" iteration="iteration">
             <f:if condition="{item.content}">
-                <li role="presentation" class="t3js-tabmenu-item nav-item">
+                <li role="presentation" class="nav-item">
                     <button
                         type="button"
                         class="nav-link {f:if(condition: '{iteration.cycle} == {defaultTabIndex}', then: ' active')}"
                         title="{item.linkTitle}"
-                        data-bs-toggle="tab"
-                        data-bs-target="#{id}-{iteration.cycle}"
+                        data-typo3-tab="#{id}-{iteration.cycle}"
                         aria-controls="{id}-{iteration.cycle}"
                         role="tab"
                     >

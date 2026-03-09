@@ -27,6 +27,7 @@ use TYPO3\CMS\Core\Cache\Frontend\FrontendInterface;
 use TYPO3\CMS\Core\Core\RequestId;
 use TYPO3\CMS\Core\Security\ContentSecurityPolicy\Configuration\Behavior;
 use TYPO3\CMS\Core\Security\ContentSecurityPolicy\Configuration\DispositionConfiguration;
+use TYPO3\CMS\Core\Security\ContentSecurityPolicy\DirectiveHashCollection;
 use TYPO3\CMS\Core\Security\ContentSecurityPolicy\Disposition;
 use TYPO3\CMS\Core\Security\ContentSecurityPolicy\Middleware\PolicyBag;
 use TYPO3\CMS\Core\Security\ContentSecurityPolicy\Middleware\ResponseService;
@@ -48,6 +49,7 @@ final readonly class ContentSecurityPolicyHeaders implements MiddlewareInterface
         private FrontendInterface $cache,
         private PolicyProvider $policyProvider,
         private ResponseService $responseService,
+        private DirectiveHashCollection $directiveHashCollection,
     ) {}
 
     public function process(ServerRequestInterface $request, RequestHandlerInterface $handler): ResponseInterface
@@ -56,7 +58,6 @@ final readonly class ContentSecurityPolicyHeaders implements MiddlewareInterface
         $nonce = $this->requestId->nonce;
         $request = $request->withAttribute('nonce', $nonce);
         $response = $handler->handle($request);
-        $behavior = new Behavior();
         $disposition = Disposition::enforce;
         $dispositionMap = new Map();
         $dispositionMap[$disposition] = new DispositionConfiguration(
@@ -64,7 +65,7 @@ final readonly class ContentSecurityPolicyHeaders implements MiddlewareInterface
             true,
             $GLOBALS['TYPO3_CONF_VARS'][$scope->type->abbreviate()]['contentSecurityPolicyReportingUrl'],
         );
-        $policyBag = new PolicyBag($scope, $dispositionMap, $behavior, $nonce);
+        $policyBag = new PolicyBag($scope, $dispositionMap, new Behavior(), $nonce, $this->directiveHashCollection);
 
         if ($response->hasHeader('Content-Security-Policy') || $response->hasHeader('Content-Security-Policy-Report-Only')) {
             $this->logger->info('Content-Security-Policy not enforced due to existence of custom header', [
@@ -78,12 +79,12 @@ final readonly class ContentSecurityPolicyHeaders implements MiddlewareInterface
         if ($policy->isEmpty()) {
             return $response;
         }
-        if ($behavior->useNonce === false) {
+        if ($policyBag->behavior->useNonce === false) {
             $response = $this->responseService->dropNonceFromHtmlResponse($response, $nonce);
         }
         return $response->withHeader(
             $disposition->getHttpHeaderName(),
-            $policy->compile($this->requestId->nonce, $behavior, $this->cache)
+            $policy->compile($policyBag, $this->cache)
         );
     }
 }

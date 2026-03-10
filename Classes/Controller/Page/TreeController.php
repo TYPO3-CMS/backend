@@ -25,6 +25,16 @@ use TYPO3\CMS\Backend\Controller\Event\AfterPageTreeItemsPreparedEvent;
 use TYPO3\CMS\Backend\Dto\Tree\Label\Label;
 use TYPO3\CMS\Backend\Dto\Tree\PageTreeItem;
 use TYPO3\CMS\Backend\Dto\Tree\TreeItem;
+use TYPO3\CMS\Backend\Form\FormDataCompiler;
+use TYPO3\CMS\Backend\Form\FormDataGroup\OnTheFly;
+use TYPO3\CMS\Backend\Form\FormDataProvider\DatabaseEffectivePid;
+use TYPO3\CMS\Backend\Form\FormDataProvider\DatabaseParentPageRow;
+use TYPO3\CMS\Backend\Form\FormDataProvider\DatabaseRowInitializeNew;
+use TYPO3\CMS\Backend\Form\FormDataProvider\DatabaseUniqueUidNewRow;
+use TYPO3\CMS\Backend\Form\FormDataProvider\InitializeProcessedTca;
+use TYPO3\CMS\Backend\Form\FormDataProvider\PageTsConfig;
+use TYPO3\CMS\Backend\Form\FormDataProvider\TcaSelectItems;
+use TYPO3\CMS\Backend\Form\FormDataProvider\UserTsConfig;
 use TYPO3\CMS\Backend\Routing\UriBuilder;
 use TYPO3\CMS\Backend\Tree\Repository\PageTreeRepository;
 use TYPO3\CMS\Backend\Utility\BackendUtility;
@@ -107,6 +117,7 @@ class TreeController
         protected readonly SiteFinder $siteFinder,
         protected readonly PageDoktypeRegistry $pageDoktypeRegistry,
         protected readonly TcaSchemaFactory $tcaSchemaFactory,
+        protected readonly FormDataCompiler $formDataCompiler,
     ) {}
 
     protected function initializeConfiguration(ServerRequestInterface $request)
@@ -139,7 +150,7 @@ class TreeController
     /**
      * Returns page tree configuration in JSON
      */
-    public function fetchConfigurationAction(): ResponseInterface
+    public function fetchConfigurationAction(ServerRequestInterface $request): ResponseInterface
     {
         $backendUser = $this->getBackendUser();
         $userTsConfig = $backendUser->getTSConfig();
@@ -166,7 +177,7 @@ class TreeController
 
         $configuration = [
             'allowDragMove' => $this->isDragMoveAllowed(),
-            'doktypes' => $this->getDokTypes(),
+            'doktypes' => $this->getDokTypes($request),
             'displayDeleteConfirmation' => $backendUser->jsConfirmation(JsConfirmation::DELETE),
             'temporaryMountPoint' => $this->getMountPointPath((int)($backendUser->uc['pageTree_temporaryMountPoint'] ?? 0)),
             'showIcons' => true,
@@ -207,24 +218,39 @@ class TreeController
 
     /**
      * Returns the list of doktypes to display in page tree toolbar drag area
-     *
-     * Note: The list can be filtered by the user TypoScript
-     * option "options.pageTree.doktypesToShowInNewPageDragArea".
      */
-    protected function getDokTypes(): array
+    protected function getDokTypes(ServerRequestInterface $request): array
+    {
+        $backendUser = $this->getBackendUser();
+        $doktypesToShowInNewPageDragArea = (string)($backendUser->getTSConfig()['options.']['pageTree.']['doktypesToShowInNewPageDragArea'] ?? '');
+        if ($doktypesToShowInNewPageDragArea !== '' && $doktypesToShowInNewPageDragArea !== '1,6,4,7,3,254,199') {
+            trigger_error(
+                'User TSConfig option "options.pageTree.doktypesToShowInNewPageDragArea" has been deprecated in TYPO3 v14.2 and will be removed in v15.0. '
+                . 'Available doktypes are now automatically determined based on the users group permissions.',
+                E_USER_DEPRECATED
+            );
+            return $this->getDokTypesByTsConfig($doktypesToShowInNewPageDragArea);
+        }
+
+        return $this->getDokTypesByFormDataCompiler($request);
+    }
+
+    /**
+     * @deprecated since v14.2, will be removed in v15.0.
+     */
+    protected function getDokTypesByTsConfig(string $doktypesToShowInNewPageDragArea): array
     {
         $backendUser = $this->getBackendUser();
         $doktypeLabelMap = [];
         foreach ($this->pageDoktypeRegistry->getAllDoktypes() as $selectionItem) {
             $doktypeLabelMap[$selectionItem->getValue()] = $selectionItem->getLabel();
         }
-        $doktypes = GeneralUtility::intExplode(',', (string)($backendUser->getTSConfig()['options.']['pageTree.']['doktypesToShowInNewPageDragArea'] ?? ''), true);
+        $doktypes = GeneralUtility::intExplode(',', $doktypesToShowInNewPageDragArea, true);
         $doktypes = array_unique($doktypes);
         $output = [];
         $allowedDoktypes = GeneralUtility::intExplode(',', (string)($backendUser->groupData['pagetypes_select'] ?? ''), true);
         $isAdmin = $backendUser->isAdmin();
-        // Early return if backend user may not create any doktype
-        if (!$isAdmin && empty($allowedDoktypes)) {
+        if (!$isAdmin && $allowedDoktypes === []) {
             return $output;
         }
         foreach ($doktypes as $doktype) {
@@ -239,6 +265,51 @@ class TreeController
             ];
         }
         return $output;
+    }
+
+    protected function getDokTypesByFormDataCompiler(ServerRequestInterface $request): array
+    {
+        $formDataGroup = GeneralUtility::makeInstance(OnTheFly::class);
+        // Skip DatabaseUserPermissionCheck::class to return doktypes even if the user cannot create pages at root level
+        $formDataGroup->setProviderList([
+            InitializeProcessedTca::class,
+            DatabaseParentPageRow::class,
+            DatabaseEffectivePid::class,
+            UserTsConfig::class,
+            PageTsConfig::class,
+            DatabaseRowInitializeNew::class,
+            DatabaseUniqueUidNewRow::class,
+            TcaSelectItems::class,
+        ]);
+
+        try {
+            $doktypes = $this->formDataCompiler
+                ->compile(
+                    [
+                        'command' => 'new',
+                        'request' => $request,
+                        'tableName' => 'pages',
+                        'vanillaUid' => 0,
+                    ],
+                    $formDataGroup
+                )['processedTca']['columns']['doktype']['config']['items'] ?? [];
+        } catch (\Exception) {
+            return [];
+        }
+
+        return array_values(
+            array_map(
+                static fn(array $doktype) => [
+                    'nodeType' => $doktype['value'],
+                    'icon' => $doktype['icon'] ?? '',
+                    'title' => $doktype['label'] ?? '',
+                ],
+                array_filter(
+                    $doktypes,
+                    static fn(array $doktype) => ($doktype['value'] ?? '') !== '--div--' && ($doktype['value'] ?? '') !== ''
+                )
+            )
+        );
     }
 
     /**

@@ -2862,11 +2862,14 @@ typo3-backend-form-selecttree-toolbar{display:block}
 .tree-toolbar{background-color:var(--tree-bg);color:var(--tree-color)}
 .tree-toolbar__menu{border-bottom:var(--tree-toolbar-border-width) solid var(--tree-toolbar-border-color);gap:var(--tree-toolbar-spacing-x);min-height:calc(var(--tree-toolbar-bar-height) + var(--tree-toolbar-border-width))}
 .tree-toolbar__menu,.tree-toolbar__submenu{display:flex;padding:var(--tree-toolbar-padding);position:relative}
-.tree-toolbar__submenu{align-items:center;box-shadow:var(--tree-toolbar-box-shadow);min-height:var(--tree-toolbar-bar-height);z-index:1}
-.tree-toolbar__submenu .btn{-webkit-margin-start:auto;margin-inline-start:auto}
+.tree-toolbar__submenu{align-items:center;box-shadow:var(--tree-toolbar-box-shadow);flex-wrap:wrap;min-height:var(--tree-toolbar-bar-height);z-index:1}
+.tree-toolbar__submenu-toggle{align-self:flex-start;flex-shrink:0;margin-left:auto}
+.tree-toolbar__submenu-items{display:flex;flex:1;flex-wrap:wrap;max-height:var(--tree-toolbar-element-height);overflow:hidden;row-gap:calc(var(--tree-toolbar-padding-y)/2)}
+.tree-toolbar__submenu-items--expanded{max-height:none}
+.tree-toolbar__submenu-items button{margin-right:var(--tree-toolbar-padding-x)}
 .tree-toolbar__buttons{align-items:center;box-shadow:var(--tree-toolbar-box-shadow);display:flex;gap:var(--tree-toolbar-spacing-x);min-height:var(--tree-toolbar-bar-height);padding:var(--tree-toolbar-padding);position:relative;z-index:1}
 .tree-toolbar__search{flex-grow:1}
-.tree-toolbar__menuitem{align-items:center;background:0 0;border:1px solid transparent;border-radius:var(--typo3-input-border-radius);color:inherit;display:inline-flex;font-size:var(--typo3-font-size-small);justify-content:center;outline-offset:0;padding:.25rem}
+.tree-toolbar__menuitem{align-items:center;background:0 0;border:1px solid transparent;border-radius:var(--typo3-input-border-radius);color:inherit;display:inline-flex;font-size:var(--typo3-font-size-small);justify-content:center;min-height:var(--tree-toolbar-element-height);outline-offset:0;padding:.25rem}
 .tree-toolbar__drag-node{cursor:move}
 .element-browser{contain:strict;display:flex;flex-flow:column nowrap;height:100dvh;width:100%}
 .element-browser .h3,.element-browser h3{font-size:1.2em}

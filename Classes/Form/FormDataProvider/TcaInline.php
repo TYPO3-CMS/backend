@@ -402,8 +402,10 @@ class TcaInline extends AbstractDatabaseRecordProvider implements FormDataProvid
      */
     protected function compileChildChild(array $child, array $parentConfig)
     {
-        // foreign_selector on intermediate is probably type=select, so data provider of this table resolved that to the uid already
-        $childChildUid = $child['databaseRow'][$parentConfig['foreign_selector']][0];
+        // foreign_selector on intermediate is type=select (resolved to array of uids)
+        // or type=group (resolved to array of associative arrays with 'table', 'uid', etc.)
+        $childChildValue = $child['databaseRow'][$parentConfig['foreign_selector']][0];
+        $childChildUid = is_array($childChildValue) ? $childChildValue['uid'] : $childChildValue;
         $formDataCompiler = GeneralUtility::makeInstance(FormDataCompiler::class);
 
         $formDataCompilerInput = [

@@ -3036,6 +3036,7 @@ typo3-backend-wizard .wizard-actions{border-top:var(--wizard-border-width) solid
 .modal-body typo3-backend-wizard{--wizard-padding:var(--typo3-modal-padding);--wizard-progress-bg:var(--typo3-modal-header-bg);--wizard-progress-color:var(--typo3-modal-header-color);--wizard-border-radius:0;--wizard-box-shadow:none;bottom:0;left:0;position:absolute;right:0;top:0}
 .modal-body typo3-backend-wizard .wizard{border:none;bottom:0;left:0;position:absolute;right:0;top:0}
 .modal-body typo3-backend-wizard .wizard-progress{padding-top:0}
+.recordidentity,.recordidentity-type{align-items:center;display:inline-flex;gap:.25rem}
 @keyframes record-pulse{
 0%,to{opacity:1}
 50%{opacity:.4}}
@@ -3564,7 +3565,6 @@ textarea.formengine-textarea{resize:none}
 .modal-body:has(.sticky-form-actions){padding-top:0}
 .multi-record-selection-actions-wrapper{margin:.5rem 0;min-height:calc(var(--typo3-input-sm-padding-y)*2 + var(--typo3-input-border-width)*2 + var(--typo3-input-font-size)*var(--typo3-input-line-height))}
 .contextual-record-edit{--contextual-record-edit-bg:var(--typo3-surface-base);--contextual-record-edit-border-color:color-mix(in srgb,var(--contextual-record-edit-bg),var(--typo3-text-color-base) 15%);--contextual-record-edit-success-color:var(--typo3-state-success-color);--contextual-record-edit-success-bg:var(--typo3-state-success-bg)}
-.contextual-record-edit .h1,.contextual-record-edit .typo3-TCEforms>.text-end,.contextual-record-edit h1,.contextual-record-edit typo3-backend-editable-page-title{display:none}
 .contextual-record-edit .form-section:not(.form-section .form-section){--typo3-form-section-bg:transparent;--typo3-form-section-radius:0;--typo3-form-section-padding-x:0;--typo3-form-section-padding-y:1.5rem;border-left:0;border-right:0;border-top:0}
 .contextual-record-edit .form-section:not(.form-section .form-section):last-child{border-bottom:0}
 .contextual-record-edit .form-section:not(.form-section .form-section)+.contextual-record-edit .form-section:not(.form-section .form-section){margin-top:0}

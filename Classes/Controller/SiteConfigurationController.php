@@ -262,8 +262,11 @@ readonly class SiteConfigurationController
             'defaultValues' => $defaultValues,
         ];
         $formData = $this->formDataCompiler->compile($formDataCompilerInput, GeneralUtility::makeInstance(SiteConfigurationDataGroup::class));
-        $formData['renderType'] = 'outerWrapContainer';
+        $formData['renderType'] = 'formWrapContainer';
         $formResult = $this->nodeFactory->create($formData)->render();
+        $languageService = $this->getLanguageService();
+        $documentTitle = $this->resolveDocumentTitle($languageService, $isNewConfig, $siteIdentifier);
+        $formResult['html'] = '<h1>' . htmlspecialchars($documentTitle) . '</h1>' . $formResult['html'];
         $formResult = $this->formResultFactory->create($formResult);
         $this->formResultHandler->addAssets($formResult);
 
@@ -276,12 +279,9 @@ readonly class SiteConfigurationController
             // @deprecated since v14.2, will be removed in v15. Kept for BC with third-party FormEngine elements.
             'formEngineFooter' => implode(LF, $formResult->hiddenFieldsHtml),
         ]);
-        $this->configureEditViewDocHeader($view, $siteIdentifier);
+        $this->configureEditViewDocHeader($view, $siteIdentifier, $documentTitle);
         $view->getDocHeaderComponent()->setPageBreadcrumb($pageRecord);
-        $view->setTitle(
-            $this->getLanguageService()->translate('title', 'backend.modules.site_configuration'),
-            $siteIdentifier ?? ''
-        );
+        $view->setTitle($documentTitle);
         return $view->renderResponse('SiteConfiguration/Edit');
     }
 
@@ -820,7 +820,7 @@ readonly class SiteConfigurationController
     /**
      * Create document header buttons of "edit" action
      */
-    protected function configureEditViewDocHeader(ModuleTemplate $view, ?string $siteIdentifier): void
+    protected function configureEditViewDocHeader(ModuleTemplate $view, ?string $siteIdentifier, string $documentTitle = ''): void
     {
         $lang = $this->getLanguageService();
         $closeButton = $this->componentFactory->createCloseButton('#')
@@ -844,9 +844,21 @@ readonly class SiteConfigurationController
         // Set shortcut context - reload button is added automatically
         $view->getDocHeaderComponent()->setShortcutContext(
             'site_configuration.edit',
-            sprintf($this->getLanguageService()->sL('LLL:EXT:backend/Resources/Private/Language/locallang_siteconfiguration.xlf:labels.edit'), $siteIdentifier),
-            ['site' => $siteIdentifier]
+            $documentTitle,
+            ['site' => $siteIdentifier],
         );
+    }
+
+    /**
+     * Resolves the document title used for the browser tab and shortcut.
+     */
+    protected function resolveDocumentTitle(LanguageService $languageService, bool $isNewConfig, ?string $siteIdentifier): string
+    {
+        $typeLabel = $languageService->sL('backend.siteconfiguration:edit.typeLabel');
+        if ($isNewConfig) {
+            return $languageService->sL('backend.siteconfiguration:edit.createNewSite');
+        }
+        return implode(' · ', array_filter([$siteIdentifier, $typeLabel]));
     }
 
     /**

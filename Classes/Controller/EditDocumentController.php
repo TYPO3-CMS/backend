@@ -206,7 +206,6 @@ class EditDocumentController
     {
         $view = $this->moduleTemplateFactory->create($request);
         $view->setUiBlock(true);
-        $view->setTitle($this->getShortcutTitle($request));
         $body = '';
 
         // Unlock all locked records
@@ -352,15 +351,18 @@ class EditDocumentController
         $perms_clause = $this->getBackendUser()->getPagePermsClause(Permission::PAGE_SHOW);
         $this->pageinfo = BackendUtility::readPageAccess($this->firstEl?->viewId, $perms_clause) ?: [];
 
+        $documentTitle = $this->resolveDocumentTitle($this->getLanguageService());
+
         // Setting up the buttons, markers for doc header and navigation component state
         $this->createBreadcrumb($view);
-        $this->getButtons($view, $request, $this->firstEl, $currentEditingUrl);
+        $this->getButtons($view, $request, $this->firstEl, $currentEditingUrl, $documentTitle);
 
         // Create language switch options if the record is already persisted, and it is a single record to edit
         if ($this->isSingleRecordView() && $this->firstEl?->isSavedRecord()) {
             $this->languageSwitch($view, $this->firstEl);
         }
 
+        $view->setTitle($documentTitle);
         $view->assign('bodyHtml', $body);
 
         return $view->renderResponse('Form/EditDocument');
@@ -882,8 +884,22 @@ class EditDocumentController
                         }
                     }
 
-                    $formData['renderType'] = 'outerWrapContainer';
+                    $formData['renderType'] = 'formWrapContainer';
                     $formResult = $this->nodeFactory->create($formData)->render();
+
+                    if ($command === 'new') {
+                        $tableTitle = htmlspecialchars($this->resolveTypeLabel($table, $formData['databaseRow']));
+                        $formHeading = $this->getLanguageService()->sL('core.core:labels.createNew') . ' ' . $tableTitle;
+                        $formResult['html'] = '<h1>' . $formHeading . '</h1>' . $formResult['html'];
+                    } else {
+                        $recordTitle = htmlspecialchars(
+                            trim($formData['recordTitle']) !== ''
+                            ? $formData['recordTitle']
+                            : '[' . $this->getLanguageService()->sL('core.core:labels.no_title') . ']'
+                        );
+                        $recordIdentity = $this->getRecordIdentityHtml($table, $formData['databaseRow']);
+                        $formResult['html'] = '<h1>' . $recordTitle . '</h1>' . $recordIdentity . $formResult['html'];
+                    }
 
                     // Seems the pid is set as hidden field (again) at end?!
                     if ($command === 'new') {
@@ -937,7 +953,7 @@ class EditDocumentController
     /**
      * Create the panel of buttons for submitting the form or otherwise perform operations.
      */
-    protected function getButtons(ModuleTemplate $view, ServerRequestInterface $request, ?FormElementData $mainFormElement, UriInterface $currentEditingUrl): void
+    protected function getButtons(ModuleTemplate $view, ServerRequestInterface $request, ?FormElementData $mainFormElement, UriInterface $currentEditingUrl, string $documentTitle): void
     {
         if ($mainFormElement !== null) {
             $record = $mainFormElement->record;
@@ -995,7 +1011,7 @@ class EditDocumentController
 
         $this->registerInfoButtonToButtonBar($view, ButtonBar::BUTTON_POSITION_RIGHT, 2);
         $this->registerOpenInNewWindowButtonToButtonBar($view, ButtonBar::BUTTON_POSITION_RIGHT, 3, $request);
-        $this->registerShortcutButtonToButtonBar($view, $request);
+        $this->registerShortcutButtonToButtonBar($view, $request, $documentTitle);
     }
 
     /**
@@ -1373,7 +1389,7 @@ class EditDocumentController
     /**
      * Register the shortcut button to the button bar
      */
-    protected function registerShortcutButtonToButtonBar(ModuleTemplate $view, ServerRequestInterface $request): void
+    protected function registerShortcutButtonToButtonBar(ModuleTemplate $view, ServerRequestInterface $request, string $documentTitle): void
     {
         if ($this->returnUrl === $this->getCloseUrl($request)) {
             return;
@@ -1381,7 +1397,7 @@ class EditDocumentController
         $arguments = $this->getUrlQueryParamsForCurrentRequest($request);
         $view->getDocHeaderComponent()->setShortcutContext(
             'record_edit',
-            $this->getShortcutTitle($request),
+            $documentTitle,
             $arguments
         );
     }
@@ -1971,102 +1987,93 @@ class EditDocumentController
     }
 
     /**
-     * Returns the shortcut title for the current element
+     * Resolves the document title used for the browser tab and shortcut.
+     *
+     * Examples:
+     *   - No form:            "Edit form could not be loaded"
+     *   - New record:          "Create new {table}"
+     *   - Single record:       "{record title} · {table} · #{uid}"
+     *   - Record with subtype: "{record title} · {subtype} · #{uid}"
+     *   - Multiple records:    "Edit multiple · {table} · N records"
      */
-    protected function getShortcutTitle(ServerRequestInterface $request): string
+    protected function resolveDocumentTitle(LanguageService $languageService): string
     {
-        $queryParameters = $request->getQueryParams();
+        $firstEl = $this->elementsData[0] ?? null;
+        if ($firstEl === null) {
+            return $languageService->sL('backend.alt_doc:noEditForm');
+        }
+
+        $typeLabel = htmlspecialchars($this->resolveTypeLabel($firstEl->table, $firstEl->record));
+
+        if ($firstEl->command === 'new') {
+            return $languageService->sL('core.core:labels.createNew') . ' ' . $typeLabel;
+        }
+
+        $recordCount = count($this->elementsData);
+        if ($recordCount > 1) {
+            return implode(' · ', [
+                $languageService->sL('core.core:labels.editMultiple'),
+                $typeLabel,
+                $languageService->translate('labels.records', 'core.core', ['count' => $recordCount]),
+            ]);
+        }
+
+        $recordTitle = trim($firstEl->title) !== ''
+            ? htmlspecialchars($firstEl->title)
+            : '[' . htmlspecialchars($languageService->sL('core.core:labels.no_title')) . ']';
+
+        return implode(' · ', array_filter([$recordTitle, $typeLabel, '#' . $firstEl->uid]));
+    }
+
+    /**
+     * Returns an HTML snippet showing the record type icon, table title and uid.
+     */
+    protected function getRecordIdentityHtml(string $table, array $row): string
+    {
+        $icon = $this->iconFactory->getIconForRecord($table, $row, IconSize::SMALL)->render();
+        $tableTitle = $this->resolveTypeLabel($table, $row);
+        $uid = (string)($row['uid'] ?? '');
+
+        $recordType = '<span class="recordidentity-type">' . $icon . htmlspecialchars($tableTitle) . '</span>';
+
+        $debugInfo = $this->getBackendUser()->shallDisplayDebugInformation() ? $table . ':' : '';
+        $recordIdentity = sprintf(
+            '<small class="recordidentity-id" title="%s">[%s%s]</small>',
+            htmlspecialchars($this->getLanguageService()->sL('core.core:labels.uid') . ' ' . $uid),
+            htmlspecialchars($debugInfo),
+            htmlspecialchars($uid),
+        );
+
+        return '<div class="recordidentity mb-3">' . $recordType . $recordIdentity . '</div>';
+    }
+
+    /**
+     * Resolves a human-readable type label for a given table and record.
+     */
+    protected function resolveTypeLabel(string $table, array $record): string
+    {
         $languageService = $this->getLanguageService();
-        $defaultTitle = $languageService->sL('LLL:EXT:core/Resources/Private/Language/locallang_core.xlf:labels.edit');
+        $schema = $this->tcaSchemaFactory->has($table)
+            ? $this->tcaSchemaFactory->get($table)
+            : null;
+        $typeLabel = $schema !== null
+            ? $schema->getTitle($languageService->sL(...))
+            : $table;
 
-        if (!is_array($queryParameters['edit'] ?? false)) {
-            return $defaultTitle;
+        if ($schema !== null && $schema->supportsSubSchema()) {
+            $fieldName = $schema->getSubSchemaTypeInformation()->getFieldName();
+            $rawTypeValue = $record[$fieldName] ?? '';
+            $typeValue = is_array($rawTypeValue) ? (string)($rawTypeValue[0] ?? '') : (string)$rawTypeValue;
+            $label = $languageService->sL(BackendUtility::getLabelFromItemlist($table, $fieldName, $typeValue, $record));
+            if ($label === '' && $typeValue !== '' && $schema->hasSubSchema($typeValue)) {
+                $label = $schema->getSubSchema($typeValue)->getTitle($languageService->sL(...));
+            }
+            if ($label !== '') {
+                $typeLabel = $label;
+            }
         }
 
-        // @todo There may be a more efficient way in using FormEngine FormData.
-        // @todo Therefore, the button initialization however has to take place at a later stage.
-
-        $table = (string)key($queryParameters['edit']);
-        $schema = $this->tcaSchemaFactory->has($table) ? $this->tcaSchemaFactory->get($table) : null;
-        $tableTitle = $schema?->getTitle($languageService->sL(...)) ?: $table;
-        $identifier = (string)key($queryParameters['edit'][$table]);
-        $action = (string)($queryParameters['edit'][$table][$identifier] ?? '');
-
-        if ($action === 'new') {
-            if ($table === 'pages') {
-                return sprintf(
-                    $languageService->sL('LLL:EXT:core/Resources/Private/Language/locallang_core.xlf:labels.createNewPage'),
-                    $tableTitle
-                );
-            }
-
-            $identifier = (int)$identifier;
-            if ($identifier === 0) {
-                return sprintf(
-                    $languageService->sL('LLL:EXT:core/Resources/Private/Language/locallang_core.xlf:labels.createNewRecordRootLevel'),
-                    $tableTitle
-                );
-            }
-
-            $pageRecord = null;
-            if ($identifier < 0) {
-                $parentRecord = BackendUtility::getRecord($table, abs($identifier));
-                if ($parentRecord['pid'] ?? false) {
-                    $pageRecord = BackendUtility::getRecord('pages', (int)($parentRecord['pid']), 'title');
-                }
-            } else {
-                $pageRecord = BackendUtility::getRecord('pages', $identifier, 'title');
-            }
-
-            if ($pageRecord !== null) {
-                $pageTitle = BackendUtility::getRecordTitle('pages', $pageRecord);
-                if ($pageTitle !== '') {
-                    return sprintf(
-                        $languageService->sL('LLL:EXT:core/Resources/Private/Language/locallang_core.xlf:labels.createNewRecord'),
-                        $tableTitle,
-                        $pageTitle
-                    );
-                }
-            }
-
-            return $languageService->sL('LLL:EXT:core/Resources/Private/Language/locallang_core.xlf:labels.createNew') . ' ' . $tableTitle;
-        }
-
-        if ($action === 'edit') {
-            if ($multiple = str_contains($identifier, ',')) {
-                // Multiple records are given, use the first one for further evaluation of e.g. the parent page
-                $recordId = (int)(GeneralUtility::trimExplode(',', $identifier, true)[0] ?? 0);
-            } else {
-                $recordId = (int)$identifier;
-            }
-            $record = BackendUtility::getRecord($table, $recordId) ?? [];
-            $recordTitle = BackendUtility::getRecordTitle($table, $record);
-            if ($table === 'pages') {
-                return $multiple
-                    ? $languageService->sL('LLL:EXT:core/Resources/Private/Language/locallang_core.xlf:labels.editMultiplePages')
-                    : sprintf($languageService->sL('LLL:EXT:core/Resources/Private/Language/locallang_core.xlf:labels.editPage'), $tableTitle, $recordTitle);
-            }
-            if (!isset($record['pid'])) {
-                return $defaultTitle;
-            }
-            $pageId = (int)$record['pid'];
-            if ($pageId === 0) {
-                return $multiple
-                    ? sprintf($languageService->sL('LLL:EXT:core/Resources/Private/Language/locallang_core.xlf:labels.editMultipleRecordsRootLevel'), $tableTitle)
-                    : sprintf($languageService->sL('LLL:EXT:core/Resources/Private/Language/locallang_core.xlf:labels.editRecordRootLevel'), $tableTitle, $recordTitle);
-            }
-            $pageRow = BackendUtility::getRecord('pages', $pageId) ?? [];
-            $pageTitle = BackendUtility::getRecordTitle('pages', $pageRow);
-            if ($multiple) {
-                return sprintf($languageService->sL('LLL:EXT:core/Resources/Private/Language/locallang_core.xlf:labels.editMultipleRecords'), $tableTitle, $pageTitle);
-            }
-            if ($recordTitle !== '') {
-                return sprintf($languageService->sL('LLL:EXT:core/Resources/Private/Language/locallang_core.xlf:labels.editRecord'), $tableTitle, $recordTitle, $pageTitle);
-            }
-            return sprintf($languageService->sL('LLL:EXT:core/Resources/Private/Language/locallang_core.xlf:labels.editRecordNoTitle'), $tableTitle, $pageTitle);
-        }
-
-        return $defaultTitle;
+        return $typeLabel;
     }
 
     protected function resolveDefaultReturnUrl(): string

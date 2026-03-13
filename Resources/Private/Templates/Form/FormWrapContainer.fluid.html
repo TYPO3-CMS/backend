@@ -1,0 +1,23 @@
+<html
+    xmlns:f="http://typo3.org/ns/TYPO3/CMS/Fluid/ViewHelpers"
+    data-namespace-typo3-fluid="true"
+>
+
+<f:if condition="{recordDescription}">
+    <f:be.infobox title="{f:translate(key:'LLL:EXT:core/Resources/Private/Language/locallang_core.xlf:labels.recordInformation')}">
+        {recordDescription -> f:format.nl2br()}
+    </f:be.infobox>
+</f:if>
+<f:if condition="{recordReadonly}">
+    <f:be.infobox title="{f:translate(key:'LLL:EXT:core/Resources/Private/Language/locallang_core.xlf:labels.recordInformation')}">
+        {f:translate(key:'LLL:EXT:core/Resources/Private/Language/locallang_core.xlf:labels.recordReadonly')}
+    </f:be.infobox>
+</f:if>
+
+<div class="typo3-TCEforms{f:if(condition:isNewRecord, then:' is-new')}">
+    <f:format.raw>{fieldInformationHtml}</f:format.raw>
+    <f:format.raw>{fieldWizardHtml}</f:format.raw>
+    <f:format.raw>{childHtml}</f:format.raw>
+</div>
+
+</html>

@@ -177,18 +177,10 @@ readonly class ContextualRecordEditController
 
         // Template variables
         $view->assign('bodyHtml', $body);
-        $tableTitle = '';
-        if ($firstEl !== null && $this->tcaSchemaFactory->has($firstEl->table)) {
-            $tableTitle = $this->getLanguageService()->sL(
-                $this->tcaSchemaFactory->get($firstEl->table)->getRawConfiguration()['title'] ?? ''
-            );
-        }
-        $recordTitle = $firstEl !== null ? $firstEl->title : '';
-        $view->assign('recordTitle', sprintf(
-            $this->getLanguageService()->sL('LLL:EXT:core/Resources/Private/Language/locallang_core.xlf:labels.editPage'),
-            $tableTitle,
-            $recordTitle
-        ));
+        $recordTitle = $firstEl !== null && trim($firstEl->title) !== ''
+            ? $firstEl->title
+            : '[' . $this->getLanguageService()->sL('core.core:labels.no_title') . ']';
+        $view->assign('recordTitle', $recordTitle);
 
         // Full edit URL points to the standard EditDocumentController
         $fullEditParams = [
@@ -362,7 +354,7 @@ readonly class ContextualRecordEditController
                 }
             }
 
-            $formData['renderType'] = 'outerWrapContainer';
+            $formData['renderType'] = 'formWrapContainer';
             $formResult = $this->nodeFactory->create($formData)->render();
             $formResult = $this->formResultFactory->create($formResult);
             $formResults = new FormResultCollection();

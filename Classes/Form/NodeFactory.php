@@ -62,6 +62,7 @@ class NodeFactory
         'siteLanguage' => Container\SiteLanguageContainer::class,
         'listOfFieldsContainer' => Container\ListOfFieldsContainer::class,
         'noTabsContainer' => Container\NoTabsContainer::class,
+        'formWrapContainer' => Container\FormWrapContainer::class,
         'outerWrapContainer' => Container\OuterWrapContainer::class,
         'paletteAndSingleContainer' => Container\PaletteAndSingleContainer::class,
         'singleFieldContainer' => Container\SingleFieldContainer::class,

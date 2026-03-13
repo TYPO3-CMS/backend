@@ -27,6 +27,8 @@ use TYPO3\CMS\Core\Localization\LanguageService;
  * It wraps the title and a footer around the main html.
  * It either calls a FullRecordContainer or ListOfFieldsContainer to render
  * a full record or only some fields from a full record.
+ *
+ * @deprecated since v14.2, will be removed in v15. Use FormWrapContainer instead.
  */
 class OuterWrapContainer extends AbstractContainer
 {
@@ -41,6 +43,11 @@ class OuterWrapContainer extends AbstractContainer
      */
     public function render(): array
     {
+        trigger_error(
+            'OuterWrapContainer has been deprecated in v14.2 and will be removed in v15. Use FormWrapContainer instead.',
+            E_USER_DEPRECATED
+        );
+
         $languageService = $this->getLanguageService();
         $backendUser = $this->getBackendUserAuthentication();
 
@@ -147,5 +154,4 @@ class OuterWrapContainer extends AbstractContainer
     {
         return $GLOBALS['LANG'];
     }
-
 }

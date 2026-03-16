@@ -47,7 +47,6 @@ use TYPO3\CMS\Core\Schema\Capability\TcaSchemaCapability;
 use TYPO3\CMS\Core\Schema\TcaSchema;
 use TYPO3\CMS\Core\Schema\TcaSchemaFactory;
 use TYPO3\CMS\Core\SystemResource\Publishing\SystemResourcePublisherInterface;
-use TYPO3\CMS\Core\SystemResource\SystemResourceFactory;
 use TYPO3\CMS\Core\Type\Bitmask\Permission;
 use TYPO3\CMS\Core\Utility\ExtensionManagementUtility;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
@@ -99,7 +98,6 @@ class NewRecordController
         protected readonly ModuleTemplateFactory $moduleTemplateFactory,
         protected readonly TcaSchemaFactory $tcaSchemaFactory,
         protected readonly EventDispatcherInterface $eventDispatcher,
-        protected readonly SystemResourceFactory $resourceFactory,
         protected readonly SystemResourcePublisherInterface $resourcePublisher,
     ) {}
 
@@ -445,8 +443,7 @@ class NewRecordController
                             }
                             $extensionIcon = $package->getResources()->getPackageIcon();
                             if ($extensionIcon !== null) {
-                                $iconResource = $this->resourceFactory->createPublicResource($extensionIcon);
-                                $iconFile[$groupName] = '<img src="' . htmlspecialchars((string)$this->resourcePublisher->generateUri($iconResource, $this->request)) . '" width="16" height="16" alt="' . $groupTitle . '" />';
+                                $iconFile[$groupName] = '<img src="' . $this->resourcePublisher->generateUri($extensionIcon, $this->request) . '" width="16" height="16" alt="' . $groupTitle . '" />';
                             }
                             if (!empty($groupTitle)) {
                                 $groupTitles[$groupName] = $groupTitle;

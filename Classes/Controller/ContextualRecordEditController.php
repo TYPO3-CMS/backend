@@ -289,13 +289,14 @@ readonly class ContextualRecordEditController
 
         $dataHandler = GeneralUtility::makeInstance(DataHandler::class);
         $dataHandler->setControl($parsedBody['control'] ?? []);
-        $dataHandler->start($dataMap, []);
+        $dataHandler->start($dataMap, $parsedBody['cmd'] ?? []);
 
         if (is_array($parsedBody['mirror'] ?? null)) {
             $dataHandler->setMirror($parsedBody['mirror']);
         }
 
         $dataHandler->process_datamap();
+        $dataHandler->process_cmdmap();
 
         // Signal page tree refresh if needed
         if ($dataHandler->pagetreeNeedsRefresh

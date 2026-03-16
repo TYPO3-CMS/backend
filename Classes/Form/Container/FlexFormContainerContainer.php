@@ -79,23 +79,23 @@ class FlexFormContainerContainer extends AbstractContainer
 
         $resultArray = $this->initializeResultArray();
 
-        $flexFormDomContainerId = sprintf('flexform-container-%s', $flexFormContainerIdentifier);
-        $parentSectionContainer = sprintf('flexform-section-container-%s-%s', $this->data['fieldName'], $this->data['flexFormFieldName']);
+        $parentSectionContainer = sprintf('flexform-section-container-%s-%s-%s-%s', $this->data['flexFormSheetName'], $this->data['fieldName'], $this->data['flexFormFieldName'], md5($this->data['elementBaseName']));
+        $flexFormDomContainerId = sprintf('%s-%s', $parentSectionContainer, $flexFormContainerIdentifier);
         $containerAttributes = [
-            'class' => 'form-irre-object panel panel-default panel-condensed t3js-flex-section',
+            'class' => 'panel panel-default t3js-flex-section',
             'data-parent' => $parentSectionContainer,
             'data-flexform-container-id' => $flexFormContainerIdentifier,
         ];
 
         $panelHeaderAttributes = [
             'class' => 'panel-heading',
-            'data-bs-toggle' => 'flexform-inline',
-            'data-bs-target' => '#' . $flexFormDomContainerId,
         ];
 
         $toggleAttributes = [
-            'class' => 'form-irre-header-cell form-irre-header-button',
+            'class' => 'panel-button collapsed',
             'type' => 'button',
+            'data-bs-toggle' => 'collapse',
+            'data-bs-target' => '#' . $flexFormDomContainerId,
             'aria-controls' => $flexFormDomContainerId,
             'aria-expanded' => 'false',
         ];
@@ -103,17 +103,15 @@ class FlexFormContainerContainer extends AbstractContainer
         $html = [];
         $html[] = '<div ' . GeneralUtility::implodeAttributes($containerAttributes, true) . '>';
         $html[] =    '<div ' . GeneralUtility::implodeAttributes($panelHeaderAttributes, true) . '>';
-        $html[] =        '<div class="form-irre-header collapsed">';
-        $html[] =            '<div class="form-irre-header-cell form-irre-header-icon">';
-        $html[] =                '<span class="caret"></span>';
-        $html[] =            '</div>';
+        $html[] =        '<div class="panel-heading-row">';
         $html[] =            '<button ' . GeneralUtility::implodeAttributes($toggleAttributes, true) . '>';
-        $html[] =                '<div class="form-irre-header-cell form-irre-header-body">';
-        $html[] =                    htmlspecialchars($containerTitle);
+        $html[] =                '<span class="caret"></span>';
+        $html[] =                '<div class="panel-title">';
         $html[] =                    '<output class="content-preview"></output>';
+        $html[] =                    '<span class="panel-meta">' . htmlspecialchars($containerTitle) . '</span>';
         $html[] =                '</div>';
         $html[] =            '</button>';
-        $html[] =            '<div class="form-irre-header-cell form-irre-header-control t3js-formengine-irre-control">';
+        $html[] =            '<div class="panel-actions t3js-formengine-irre-control">';
         $html[] =                '<div class="btn-group btn-group-sm">';
         $html[] =                    implode(LF, $moveAndDeleteContent);
         $html[] =                '</div>';
@@ -121,7 +119,9 @@ class FlexFormContainerContainer extends AbstractContainer
         $html[] =        '</div>';
         $html[] =    '</div>';
         $html[] =    '<div id="' . htmlspecialchars($flexFormDomContainerId) . '" class="panel-collapse collapse t3js-flex-section-content">';
-        $html[] =        $containerContentResult['html'];
+        $html[] =        '<div class="panel-body">';
+        $html[] =            $containerContentResult['html'];
+        $html[] =        '</div>';
         $html[] =    '</div>';
         $html[] =    '<input class="t3js-flex-control-action" type="hidden" name="' . htmlspecialchars($actionFieldName) . '" value="" />';
         $html[] = '</div>';

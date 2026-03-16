@@ -126,8 +126,6 @@ class InlineRecordContainer extends AbstractContainer
                         . '[' . htmlspecialchars($hiddenField) . ']" value="' . htmlspecialchars($record[$hiddenField]) . '" />';
                 }
             }
-            // If this record should be shown collapsed
-            $classes[] = $data['isInlineChildExpanded'] ? 'panel-visible' : 'panel-collapsed';
         }
         $hiddenFieldHtml = implode(LF, $resultArray['additionalHiddenFields'] ?? []);
 
@@ -164,7 +162,7 @@ class InlineRecordContainer extends AbstractContainer
             $hashedObjectId = 'hash-' . md5($objectId);
             $containerAttributes = [
                 'id' => $objectId . '_div',
-                'class' => 'form-irre-object panel panel-default panel-condensed ' . trim(implode(' ', $classes)),
+                'class' => 'form-irre-object panel panel-default ' . trim(implode(' ', $classes)),
                 'data-object-uid' => $record['uid'] ?? 0,
                 'data-object-id' => $objectId,
                 'data-object-id-hash' => $hashedObjectId,
@@ -176,20 +174,16 @@ class InlineRecordContainer extends AbstractContainer
                 'data-placeholder-record' => $data['isInlineDefaultLanguageRecordInLocalizedParentContext'] ? '1' : '0',
             ];
 
-            $ariaExpanded = ($data['isInlineChildExpanded'] ?? false) ? 'true' : 'false';
+            $isExpanded = $data['isInlineChildExpanded'] ?? false;
             $ariaControls = htmlspecialchars($objectId . '_fields', ENT_QUOTES | ENT_HTML5);
-            $ariaAttributesString = 'aria-expanded="' . $ariaExpanded . '" aria-controls="' . $ariaControls . '"';
             $html = '
                 <div ' . GeneralUtility::implodeAttributes($containerAttributes, true) . '>
-                    <div class="panel-heading" data-bs-toggle="formengine-inline" id="' . htmlspecialchars($hashedObjectId, ENT_QUOTES | ENT_HTML5) . '_header" data-expandSingle="' . (($inlineConfig['appearance']['expandSingle'] ?? false) ? 1 : 0) . '">
-                        <div class="form-irre-header">
-                            <div class="form-irre-header-cell form-irre-header-icon">
-                                <span class="caret"></span>
-                            </div>
-                            ' . $this->renderForeignRecordHeader($data, $ariaAttributesString) . '
+                    <div class="panel-heading">
+                        <div class="panel-heading-row">
+                            ' . $this->renderForeignRecordHeader($data, $isExpanded, $ariaControls) . '
                         </div>
                     </div>
-                    <div class="panel-collapse" id="' . $ariaControls . '">' . $html . $hiddenFieldHtml . $combinationHtml . '</div>
+                    <div class="panel-collapse collapse' . ($isExpanded ? ' show' : '') . '" id="' . $ariaControls . '">' . $html . $hiddenFieldHtml . $combinationHtml . '</div>
                 </div>';
         }
 
@@ -287,10 +281,11 @@ class InlineRecordContainer extends AbstractContainer
      * Later on the command-icons are inserted here.
      *
      * @param array $data Current data
-     * @param string $ariaAttributesString HTML aria attributes for the collapse button
+     * @param bool $isExpanded Whether the record is currently expanded
+     * @param string $ariaControls The ID of the collapse target element
      * @return string The HTML code of the header
      */
-    protected function renderForeignRecordHeader(array $data, string $ariaAttributesString): string
+    protected function renderForeignRecordHeader(array $data, bool $isExpanded, string $ariaControls): string
     {
         $record = $data['databaseRow'];
         $recordTitle = $data['recordTitle'];
@@ -300,7 +295,7 @@ class InlineRecordContainer extends AbstractContainer
         if (!empty($recordTitle)) {
             // The user function may return HTML, therefore we can't escape it
             if (empty($data['processedTca']['ctrl']['formattedLabel_userFunc'])) {
-                $recordTitle = BackendUtility::getRecordTitlePrep($recordTitle);
+                $recordTitle = htmlspecialchars($recordTitle);
             }
         } else {
             $recordTitle = '<em>[' . htmlspecialchars($this->getLanguageService()->sL('core.core:labels.no_title')) . ']</em>';
@@ -311,18 +306,21 @@ class InlineRecordContainer extends AbstractContainer
         if (empty($data['processedTca']['ctrl']['formattedLabel_userFunc'])
             && $this->getBackendUserAuthentication()->shallDisplayDebugInformation()
         ) {
-            $recordTitle .= ' <code>[' . htmlspecialchars($foreignTable) . ']</code>';
+            $recordTitle .= ' <span class="panel-meta"><code>[' . htmlspecialchars($foreignTable) . ']</code></span>';
         }
 
         $objectId = htmlspecialchars($domObjectId . '-' . $foreignTable . '-' . ($record['uid'] ?? 0));
         return '
-            <button class="form-irre-header-cell form-irre-header-button" ' . $ariaAttributesString . '>
-                <div class="form-irre-header-icon" id="' . $objectId . '_iconcontainer">
+            <button class="panel-button' . ($isExpanded ? '' : ' collapsed') . '" type="button"
+                    data-bs-toggle="collapse" data-bs-target="#' . $ariaControls . '"
+                    aria-expanded="' . ($isExpanded ? 'true' : 'false') . '" aria-controls="' . $ariaControls . '">
+                <span class="caret"></span>
+                <div class="panel-icon" id="' . $objectId . '_iconcontainer">
                     ' . $this->iconFactory->getIconForRecord($foreignTable, $record, IconSize::SMALL)->setTitle(BackendUtility::getRecordIconAltText($record, $foreignTable, false))->render() . '
                 </div>
-                <div class="form-irre-header-body"><span id="' . $objectId . '_label">' . $recordTitle . '</span></div>
+                <div class="panel-title"><span id="' . $objectId . '_label">' . $recordTitle . '</span></div>
             </button>
-            <div class="form-irre-header-cell form-irre-header-control t3js-formengine-irre-control">
+            <div class="panel-actions t3js-formengine-irre-control">
                 ' . $this->renderForeignRecordHeaderControl($data) . '
             </div>';
     }

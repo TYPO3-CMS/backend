@@ -127,7 +127,7 @@ class FlexFormSectionContainer extends AbstractContainer
         $html[] =                 htmlspecialchars($sectionTitle);
         $html[] =           '</legend>';
         $html[] =           '<div class="form-group">';
-        $html[] =               '<button class="btn btn-default t3-form-flexsection-toggle" type="button" title="' . $toggleAll . '" data-expand-all="false">';
+        $html[] =               '<button class="btn btn-default t3-form-flexsection-toggle" type="button" title="' . $toggleAll . '">';
         $html[] =                   $this->iconFactory->getIcon('actions-move-right', IconSize::SMALL)->render() . $toggleAll;
         $html[] =               '</button>';
         $html[] =           '</div>';

@@ -11,8 +11,8 @@
         </f:for>
         <f:if condition="{allowedFileExtensions}">
             <f:then>
-                <div class="form-text">
-                    <f:translate key="LLL:EXT:core/Resources/Private/Language/locallang_core.xlf:cm.allowedFileExtensions"/><br>
+                <div class="form-text mt-2">
+                    <f:translate key="LLL:EXT:core/Resources/Private/Language/locallang_core.xlf:cm.allowedFileExtensions"/>
                     <ul class="badge-list">
                         <f:for each="{allowedFileExtensions}" as="allowedFileExtension">
                             <li><span class="badge badge-secondary">{allowedFileExtension}</span></li>
@@ -21,8 +21,8 @@
                 </div>
             </f:then>
             <f:else if="{disallowedFileExtensions}">
-                <div class="form-text">
-                    <f:translate key="LLL:EXT:core/Resources/Private/Language/locallang_core.xlf:cm.disallowedFileExtensions"/><br>
+                <div class="form-text mt-2">
+                    <f:translate key="LLL:EXT:core/Resources/Private/Language/locallang_core.xlf:cm.disallowedFileExtensions"/>
                     <ul class="badge-list">
                         <f:for each="{disallowedFileExtensions}" as="disallowedFileExtension">
                             <li><span class="badge badge-danger">{disallowedFileExtension}</span></li>

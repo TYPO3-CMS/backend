@@ -153,6 +153,12 @@
       <trans-unit id="page_id">
         <source>Page ID</source>
       </trans-unit>
+      <trans-unit id="download">
+        <source>Force download</source>
+      </trans-unit>
+      <trans-unit id="download.customFilename">
+        <source>Custom filename</source>
+      </trans-unit>
       <trans-unit id="displayThumbs">
         <source>Display thumbnails</source>
       </trans-unit>

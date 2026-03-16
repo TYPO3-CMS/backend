@@ -511,6 +511,16 @@ abstract class AbstractLinkBrowserController
                     value="' . htmlspecialchars($this->linkAttributeValues['rel'] ?? '') . '" />
             </div>';
 
+        $fieldRenderingDefinitions['download'] = '
+            <!-- Selecting download for link: -->
+            <div class="element-browser-form-group">
+                <typo3-backend-link-browser-download
+                    value="' . htmlspecialchars($this->linkAttributeValues['download'] ?? '') . '"
+                    label-download="' . htmlspecialchars($lang->sL('LLL:EXT:backend/Resources/Private/Language/locallang_browse_links.xlf:download')) . '"
+                    label-filename="' . htmlspecialchars($lang->sL('LLL:EXT:backend/Resources/Private/Language/locallang_browse_links.xlf:download.customFilename')) . '"
+                ></typo3-backend-link-browser-download>
+            </div>';
+
         return $fieldRenderingDefinitions;
     }
 

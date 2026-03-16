@@ -256,9 +256,9 @@ class InlineControlContainer extends AbstractContainer
             }
         }
 
-        // Define how to show the "Create new record" button - if there are more than maxitems, hide it
+        // Hide the "Create new record" button if there are more than maxitems or the field is read-only
         if ($isReadOnly || $numberOfFullLocalizedChildren >= ($config['maxitems'] ?? 0) || ($uniqueMax > 0 && $numberOfFullLocalizedChildren >= $uniqueMax)) {
-            $config['inline']['inlineNewButtonStyle'] = 'display: none;';
+            $config['inline']['hideNewButton'] = true;
         }
 
         // Render the "new record" level button:
@@ -285,7 +285,7 @@ class InlineControlContainer extends AbstractContainer
         $html .= '<typo3-formengine-container-inline ' . GeneralUtility::implodeAttributes($formGroupAttributes, true) . '>';
 
         // Add the level buttons before all child records:
-        if (in_array($config['appearance']['levelLinksPosition'] ?? null, ['both', 'top'], true)) {
+        if (in_array($config['appearance']['levelLinksPosition'], ['both', 'top'], true)) {
             $html .= '<div class="form-group t3js-formengine-validation-marker t3js-inline-controls">' . $newRecordButton . $localizationButtons . '</div>';
         }
 
@@ -330,7 +330,7 @@ class InlineControlContainer extends AbstractContainer
         $html .= $fieldWizardHtml;
 
         // Add the level buttons after all child records:
-        if (!$isReadOnly && in_array($config['appearance']['levelLinksPosition'] ?? false, ['both', 'bottom'], true)) {
+        if (in_array($config['appearance']['levelLinksPosition'], ['both', 'bottom'], true)) {
             $html .= '<div class="form-group t3js-formengine-validation-marker t3js-inline-controls">' . $newRecordButton . $localizationButtons . '</div>';
         }
         if (is_array($config['customControls'] ?? false)) {
@@ -394,8 +394,8 @@ class InlineControlContainer extends AbstractContainer
                 $icon = 'actions-plus';
                 $attributes['class'] = 'btn btn-default t3js-create-new-button';
                 $attributes['data-type'] = 'newRecord';
-                if (!empty($conf['inline']['inlineNewButtonStyle'])) {
-                    $attributes['style'] = $conf['inline']['inlineNewButtonStyle'];
+                if (!empty($conf['inline']['hideNewButton'])) {
+                    $attributes['hidden'] = 'hidden';
                 }
                 if (!empty($conf['appearance']['newRecordLinkAddTitle'])) {
                     $title = htmlspecialchars(sprintf(
@@ -447,10 +447,6 @@ class InlineControlContainer extends AbstractContainer
         $elementBrowserEnabled = (bool)($inlineConfiguration['appearance']['elementBrowserEnabled'] ?? true);
         // Remove any white-spaces from the allowed extension lists
         $allowed = GeneralUtility::trimExplode(',', (string)($groupFieldConfiguration['allowed'] ?? ''), true);
-        $buttonStyle = '';
-        if (isset($inlineConfiguration['inline']['inlineNewRelationButtonStyle'])) {
-            $buttonStyle = ' style="' . $inlineConfiguration['inline']['inlineNewRelationButtonStyle'] . '"';
-        }
         $item = '';
         if ($elementBrowserEnabled) {
             if (!empty($inlineConfiguration['appearance']['createNewRelationLinkTitle'])) {
@@ -462,7 +458,7 @@ class InlineControlContainer extends AbstractContainer
                 <button type="button" class="btn btn-default t3js-element-browser" data-mode="db"
                     data-allowed-types="' . htmlspecialchars(implode(',', $allowed)) . '"
                     data-irre-object-id="' . htmlspecialchars($objectPrefix) . '"
-                    ' . $buttonStyle . ' title="' . $createNewRelationText . '">
+                    title="' . $createNewRelationText . '">
                     ' . $this->iconFactory->getIcon('actions-insert-record', IconSize::SMALL)->render() . '
                     ' . $createNewRelationText . '
                 </button>';

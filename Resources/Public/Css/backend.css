@@ -3575,15 +3575,12 @@ textarea.formengine-textarea{resize:none}
 .contextual-record-edit .nav-tabs-overflow .dropdown-item-danger{background-color:var(--contextual-record-edit-danger-bg);color:var(--contextual-record-edit-danger-color)}
 .contextual-record-edit .form-section{--typo3-form-section-bg:transparent;--typo3-form-section-radius:0;--typo3-form-section-padding-x:0;border-left:0;border-right:0;border-top:0}
 .contextual-record-edit .form-section:last-child{border-bottom:0}
-.contextual-record-edit .form-section typo3-formengine-container-files .form-group,.contextual-record-edit .form-section typo3-formengine-container-files .panel-group{margin-bottom:0}
 .contextual-record-edit .form-section .form-section{--typo3-form-section-bg:var(--typo3-surface-container-low);--typo3-form-section-radius:var(--typo3-component-border-radius);--typo3-form-section-padding-x:1rem;border-left:var(--typo3-form-section-border-width) solid var(--typo3-form-section-border-color);border-right:var(--typo3-form-section-border-width) solid var(--typo3-form-section-border-color);border-top:var(--typo3-form-section-border-width) solid var(--typo3-form-section-border-color)}
 .contextual-record-edit .form-section+.form-section{margin-top:0}
 .contextual-record-edit .form-section-headline{border:0;padding-bottom:0}
 .contextual-record-edit .form-label{font-size:.8125rem;margin-bottom:.125rem}
 .contextual-record-edit .tab-content>.tab-pane{padding-top:.75rem}
 .contextual-record-edit .form-section-tabs{--typo3-nav-tabs-bg:transparent}
-.contextual-record-edit typo3-formengine-container-files .form-text{margin-bottom:1rem;margin-top:1rem}
-.contextual-record-edit typo3-formengine-container-files .form-text .badge-list{margin-top:.5rem}
 .contextual-record-edit-header{align-items:center;background:var(--contextual-record-edit-bg);border-bottom:1px solid var(--contextual-record-edit-border-color);display:flex;gap:.75rem;overflow:hidden;padding:.5rem 1rem;position:-webkit-sticky;position:sticky;top:0;z-index:10}
 .contextual-record-edit-title-group{align-items:center;display:flex;flex:1;gap:.25rem;min-width:0}
 .contextual-record-edit-title{font-size:.875rem;font-weight:700;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}

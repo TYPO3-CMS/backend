@@ -141,7 +141,7 @@ class FileReferenceContainer extends AbstractContainer
             $classes[] = 'panel-hidden';
         }
         if ($isNewRecord) {
-            $classes[] = 'isNewFileReference';
+            $classes[] = 'inlineIsNewRecord';
         }
 
         // The hashed object id needs a non-numeric prefix, the value is used as ID selector in JavaScript
@@ -162,7 +162,7 @@ class FileReferenceContainer extends AbstractContainer
         $ariaControls = htmlspecialchars($objectId . '_fields', ENT_QUOTES | ENT_HTML5);
         $resultArray['html'] = '
             <div ' . GeneralUtility::implodeAttributes($containerAttributes, true) . '>
-                <div class="panel-heading" data-bs-toggle="formengine-file" id="' . htmlspecialchars($hashedObjectId, ENT_QUOTES | ENT_HTML5) . '_header" data-expandSingle="' . (($this->data['inlineParentConfig']['appearance']['expandSingle'] ?? false) ? 1 : 0) . '">
+                <div class="panel-heading" data-bs-toggle="formengine-inline" id="' . htmlspecialchars($hashedObjectId, ENT_QUOTES | ENT_HTML5) . '_header" data-expandSingle="' . (($this->data['inlineParentConfig']['appearance']['expandSingle'] ?? false) ? 1 : 0) . '">
                     <div class="form-irre-header">
                         <div class="form-irre-header-cell form-irre-header-icon">
                             <span class="caret"></span>
@@ -278,7 +278,7 @@ class FileReferenceContainer extends AbstractContainer
                 </div>
                 ' . $headerImage . '
             </button>
-            <div class="form-irre-header-cell form-irre-header-control t3js-formengine-file-header-control">
+            <div class="form-irre-header-cell form-irre-header-control t3js-formengine-irre-control">
                 ' . $this->renderFileReferenceHeaderControl() . '
             </div>';
     }
@@ -397,7 +397,7 @@ class FileReferenceContainer extends AbstractContainer
                     $recordInfo .= ' [' . $this->data['tableName'] . ':' . $this->data['vanillaUid'] . ']';
                 }
                 $controls['delete'] = '
-                    <button type="button" class="btn btn-default t3js-editform-delete-file-reference" data-record-info="' . htmlspecialchars(trim($recordInfo)) . '" title="' . htmlspecialchars($languageService->sL('LLL:EXT:core/Resources/Private/Language/locallang_mod_web_list.xlf:delete')) . '">
+                    <button type="button" class="btn btn-default t3js-editform-delete-inline-record" data-record-info="' . htmlspecialchars(trim($recordInfo)) . '" title="' . htmlspecialchars($languageService->sL('LLL:EXT:core/Resources/Private/Language/locallang_mod_web_list.xlf:delete')) . '">
                         ' . $this->iconFactory->getIcon('actions-edit-delete', IconSize::SMALL)->render() . '
                     </button>';
             }

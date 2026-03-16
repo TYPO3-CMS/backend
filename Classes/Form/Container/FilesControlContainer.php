@@ -233,16 +233,15 @@ class FilesControlContainer extends AbstractContainer
         $view->assignMultiple([
             'formFieldIdentifier' => $formFieldIdentifier,
             'formFieldName' => $formFieldName,
-            'formGroupAttributes' => GeneralUtility::implodeAttributes([
-                'class' => 'form-group',
+            'webComponentAttributes' => GeneralUtility::implodeAttributes([
                 'id' => $formFieldIdentifier,
-                'data-uid' => (string)$row['uid'],
-                'data-local-table' => (string)$top['table'],
-                'data-local-field' => (string)$top['field'],
-                'data-foreign-table' => self::FILE_REFERENCE_TABLE,
+                'data-type' => 'file',
                 'data-object-group' => $formFieldIdentifier . '-' . self::FILE_REFERENCE_TABLE,
                 'data-form-field' => $formFieldName,
-                'data-appearance' => (string)json_encode($config['appearance'] ?? ''),
+                'data-expand-single' => (bool)($config['appearance']['expandSingle'] ?? false) ? 'true' : 'false',
+                'data-sortable' => (bool)($config['appearance']['useSortable'] ?? false) ? 'true' : 'false',
+                'data-min' => (int)($config['minitems'] ?? 0),
+                'data-max' => (int)($config['maxitems'] ?? 0),
             ], true),
             'fieldInformation' => $fieldInformationResult['html'],
             'fieldWizard' => $fieldWizardResult['html'],
@@ -296,7 +295,7 @@ class FilesControlContainer extends AbstractContainer
         $resultArray['javaScriptModules'] = array_merge(
             $resultArray['javaScriptModules'],
             $this->javaScriptModules,
-            [JavaScriptModuleInstruction::create('@typo3/backend/form-engine/container/files-control-container.js')]
+            [JavaScriptModuleInstruction::create('@typo3/backend/form-engine/container/inline-control-container.js')]
         );
 
         $resultArray['html'] = $this->wrapWithFieldsetAndLegend($view->render('Form/FilesControlContainer'));
@@ -325,7 +324,7 @@ class FilesControlContainer extends AbstractContainer
             $attributes = [
                 'type' => 'button',
                 'class' => 'btn btn-default t3js-element-browser',
-                'style' => !($inlineConfiguration['inline']['showCreateNewRelationButton'] ?? true) ? 'display: none;' : '',
+                'hidden' => !($inlineConfiguration['inline']['showCreateNewRelationButton'] ?? true) ? 'hidden' : null,
                 'title' => $buttonText,
                 'data-mode' => 'file',
                 'data-allowed-types' => implode(',', $fileExtensionFilter->getAllowedFileExtensions() ?? []),
@@ -334,9 +333,9 @@ class FilesControlContainer extends AbstractContainer
             ];
             $controls[] = '
                 <button ' . GeneralUtility::implodeAttributes($attributes, true) . '>
-				    ' . $this->iconFactory->getIcon('actions-insert-record', IconSize::SMALL)->render() . '
-				    ' . htmlspecialchars($buttonText) . '
-			    </button>';
+                    ' . $this->iconFactory->getIcon('actions-insert-record', IconSize::SMALL)->render() . '
+                    ' . htmlspecialchars($buttonText) . '
+                </button>';
         }
 
         $onlineMediaAllowed = [];
@@ -372,7 +371,7 @@ class FilesControlContainer extends AbstractContainer
                         'type' => 'button',
                         'class' => 'btn btn-default t3js-drag-uploader',
                         'title' => $buttonText,
-                        'style' => !($inlineConfiguration['inline']['showCreateNewRelationButton'] ?? true) ? 'display: none;' : '',
+                        'hidden' => !($inlineConfiguration['inline']['showCreateNewRelationButton'] ?? true) ? 'hidden' : null,
                         'data-dropzone-target' => '#' . StringUtility::escapeCssSelector($currentStructureDomObjectIdPrefix),
                         'data-insert-dropzone-before' => '1',
                         'data-file-irre-object' => $objectPrefix,
@@ -383,7 +382,7 @@ class FilesControlContainer extends AbstractContainer
                     ];
                     $controls[] = '
                         <button ' . GeneralUtility::implodeAttributes($attributes, true) . '>
-					        ' . $this->iconFactory->getIcon('actions-upload', IconSize::SMALL)->render() . '
+                            ' . $this->iconFactory->getIcon('actions-upload', IconSize::SMALL)->render() . '
                             ' . htmlspecialchars($buttonText) . '
                         </button>';
 
@@ -400,7 +399,7 @@ class FilesControlContainer extends AbstractContainer
                         'type' => 'button',
                         'class' => 'btn btn-default t3js-online-media-add-btn',
                         'title' => $buttonText,
-                        'style' => !($inlineConfiguration['inline']['showOnlineMediaAddButtonStyle'] ?? true) ? 'display: none;' : '',
+                        'hidden' => !($inlineConfiguration['inline']['showOnlineMediaAddButtonStyle'] ?? true) ? 'hidden' : null,
                         'data-target-folder' => $folder->getCombinedIdentifier(),
                         'data-file-irre-object' => $objectPrefix,
                         'data-online-media-allowed' => implode(',', $onlineMediaAllowed),
@@ -412,8 +411,8 @@ class FilesControlContainer extends AbstractContainer
                     // @todo Should be implemented as web component
                     $controls[] = '
                         <button ' . GeneralUtility::implodeAttributes($attributes, true) . '>
-							' . $this->iconFactory->getIcon('actions-online-media-add', IconSize::SMALL)->render() . '
-							' . htmlspecialchars($buttonText) . '
+                            ' . $this->iconFactory->getIcon('actions-online-media-add', IconSize::SMALL)->render() . '
+                            ' . htmlspecialchars($buttonText) . '
                         </button>';
 
                     $this->javaScriptModules[] = JavaScriptModuleInstruction::create('@typo3/backend/online-media.js');

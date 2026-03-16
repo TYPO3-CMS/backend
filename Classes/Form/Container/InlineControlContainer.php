@@ -275,6 +275,7 @@ class InlineControlContainer extends AbstractContainer
         // Wrap all inline fields of a record with a custom element (container)
         $formGroupAttributes = [
             'id' => $nameObject,
+            'data-type' => 'record',
             'data-object-group' => $nameObject . '-' . $foreign_table,
             'data-form-field' => $nameForm,
             'data-expand-single' => (bool)($config['appearance']['expandSingle'] ?? false) ? 'true' : 'false',

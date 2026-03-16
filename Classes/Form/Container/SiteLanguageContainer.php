@@ -161,16 +161,15 @@ class SiteLanguageContainer extends AbstractContainer
         $view->assignMultiple([
             'nameObject' => $nameObject,
             'nameForm' => $nameForm,
-            'formGroupAttributes' => GeneralUtility::implodeAttributes([
-                'class' => 'form-group',
+            'webComponentAttributes' => GeneralUtility::implodeAttributes([
                 'id' => $nameObject,
-                'data-uid' => (string)$row['uid'],
-                'data-local-table' => (string)$top['table'],
-                'data-local-field' => (string)$top['field'],
-                'data-foreign-table' => self::FOREIGN_TABLE,
+                'data-type' => 'language',
                 'data-object-group' => $nameObject . '-' . self::FOREIGN_TABLE,
                 'data-form-field' => $nameForm,
-                'data-appearance' => (string)json_encode($config['appearance'] ?? ''),
+                'data-expand-single' => (bool)($config['appearance']['expandSingle'] ?? false) ? 'true' : 'false',
+                'data-sortable' => 'false',
+                'data-min' => (int)($config['minitems'] ?? 0),
+                'data-max' => (int)($config['maxitems'] ?? 0),
             ], true),
             'fieldInformation' => $fieldInformationResult['html'],
             'selectorConfiguration' => [
@@ -195,7 +194,7 @@ class SiteLanguageContainer extends AbstractContainer
         ]);
 
         $resultArray['html'] = $this->wrapWithFieldsetAndLegend($view->render('Form/SiteLanguageContainer'));
-        $resultArray['javaScriptModules'][] = JavaScriptModuleInstruction::create('@typo3/backend/form-engine/container/site-language-container.js');
+        $resultArray['javaScriptModules'][] = JavaScriptModuleInstruction::create('@typo3/backend/form-engine/container/inline-control-container.js');
 
         return $resultArray;
     }

@@ -18,8 +18,7 @@ namespace TYPO3\CMS\Backend\Form\Container;
 /**
  * Handle a record that has no tabs.
  *
- * This container is called by FullRecordContainer and just wraps the output
- * of PaletteAndSingleContainer in some HTML.
+ * This container is called by FullRecordContainer.
  */
 class NoTabsContainer extends AbstractContainer
 {
@@ -32,8 +31,6 @@ class NoTabsContainer extends AbstractContainer
     {
         $options = $this->data;
         $options['renderType'] = 'paletteAndSingleContainer';
-        $resultArray = $this->nodeFactory->create($options)->render();
-        $resultArray['html'] = '<div class="tab-content">' . $resultArray['html'] . '</div>';
-        return $resultArray;
+        return $this->nodeFactory->create($options)->render();
     }
 }

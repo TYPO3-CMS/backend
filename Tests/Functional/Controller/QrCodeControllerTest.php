@@ -77,10 +77,10 @@ final class QrCodeControllerTest extends FunctionalTestCase
         $response = $this->subject->downloadAction($request);
 
         self::assertEquals(200, $response->getStatusCode());
-        self::assertEquals(8459, $response->getHeader('content-length')[0]);
+        self::assertEquals(8360, $response->getHeader('content-length')[0]);
         self::assertSame('image/png', $response->getHeader('content-type')[0]);
         self::assertSame(
-            'attachment; filename="qrcode-256px-d83a703bfb0e98e2f2f9b0dbd9a2633bb4fe4ea9.png"',
+            'attachment; filename="qrcode-256px-d9ea1595d7849f8fcaca8f0e9e04d8132c2ac32a.png"',
             $response->getHeader('content-disposition')[0]
         );
     }

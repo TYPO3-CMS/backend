@@ -857,6 +857,7 @@ readonly class SiteConfigurationController
         $languageService = $this->getLanguageService();
         $viewModeButton = $this->componentFactory->createDropDownButton()
             ->setLabel($languageService->sL('LLL:EXT:core/Resources/Private/Language/locallang_core.xlf:labels.view'))
+            ->setIcon($this->iconFactory->getIcon('actions-cog'))
             ->setShowLabelText(true);
 
         $viewModeButton->addItem(

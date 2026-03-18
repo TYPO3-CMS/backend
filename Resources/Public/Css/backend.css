@@ -2302,6 +2302,7 @@ body>.module{min-height:100dvh}
 .module-docheader-column{align-items:center;display:flex;max-width:100%;min-height:var(--module-docheader-column-height)}
 .module-docheader-column:not(:has(>*)){display:none}
 .module-docheader-column:has(typo3-backend-content-navigation-toggle[hidden]){display:none}
+.module-docheader-column:last-child:not(:first-child){-webkit-margin-start:auto;margin-inline-start:auto}
 .module-docheader-column-grow{flex-grow:1}
 .module-docheader-container{display:flex;flex-wrap:wrap;gap:var(--module-docheader-spacing)}
 .module-docheader .dropdown-menu{max-height:calc(100dvh - var(--module-docheader-height))}

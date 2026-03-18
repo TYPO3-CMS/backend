@@ -32,17 +32,6 @@ use TYPO3\CMS\Core\Utility\StringUtility;
 class SelectMultipleSideBySideElement extends AbstractFormElement
 {
     /**
-     * Default field information enabled for this element.
-     *
-     * @var array
-     */
-    protected $defaultFieldInformation = [
-        'tcaDescription' => [
-            'renderType' => 'tcaDescription',
-        ],
-    ];
-
-    /**
      * Default field controls for this element.
      *
      * @var array

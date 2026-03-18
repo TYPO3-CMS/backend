@@ -33,17 +33,6 @@ use TYPO3\CMS\Core\Utility\StringUtility;
  */
 class UserSysFileStorageIsPublicElement extends AbstractFormElement
 {
-    /**
-     * Default field information enabled for this element.
-     *
-     * @var array
-     */
-    protected $defaultFieldInformation = [
-        'tcaDescription' => [
-            'renderType' => 'tcaDescription',
-        ],
-    ];
-
     public function __construct(
         private readonly FlashMessageService $flashMessageService,
         private readonly StorageRepository $storageRepository,

@@ -60,12 +60,6 @@ class FilesControlContainer extends AbstractContainer
      */
     protected array $javaScriptModules = [];
 
-    protected $defaultFieldInformation = [
-        'tcaDescription' => [
-            'renderType' => 'tcaDescription',
-        ],
-    ];
-
     protected $defaultFieldWizard = [
         'localizationStateSelector' => [
             'renderType' => 'localizationStateSelector',

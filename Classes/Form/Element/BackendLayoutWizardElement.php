@@ -37,17 +37,6 @@ use TYPO3\CMS\Core\Utility\GeneralUtility;
  */
 class BackendLayoutWizardElement extends AbstractFormElement
 {
-    /**
-     * Default field information enabled for this element.
-     *
-     * @var array
-     */
-    protected $defaultFieldInformation = [
-        'tcaDescription' => [
-            'renderType' => 'tcaDescription',
-        ],
-    ];
-
     protected array $rows = [];
     protected int $colCount = 0;
     protected int $rowCount = 0;

@@ -52,17 +52,6 @@ class InlineControlContainer extends AbstractContainer
     protected $javaScriptModules = [];
 
     /**
-     * Default field information enabled for this element.
-     *
-     * @var array
-     */
-    protected $defaultFieldInformation = [
-        'tcaDescription' => [
-            'renderType' => 'tcaDescription',
-        ],
-    ];
-
-    /**
      * @var array Default wizards
      */
     protected $defaultFieldWizard = [

@@ -32,15 +32,6 @@ class CategoryElement extends AbstractFormElement
     /**
      * @var array
      */
-    protected $defaultFieldInformation = [
-        'tcaDescription' => [
-            'renderType' => 'tcaDescription',
-        ],
-    ];
-
-    /**
-     * @var array
-     */
     protected $defaultFieldWizard = [
         'localizationStateSelector' => [
             'renderType' => 'localizationStateSelector',

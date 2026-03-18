@@ -34,17 +34,6 @@ class TextTableElement extends AbstractFormElement
     protected int $numNewRows = 1;
 
     /**
-     * Default field information enabled for this element.
-     *
-     * @var array
-     */
-    protected $defaultFieldInformation = [
-        'tcaDescription' => [
-            'renderType' => 'tcaDescription',
-        ],
-    ];
-
-    /**
      * Default field wizards enabled for this element.
      *
      * @var array

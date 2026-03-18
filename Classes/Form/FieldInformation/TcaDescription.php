@@ -18,12 +18,14 @@ declare(strict_types=1);
 namespace TYPO3\CMS\Backend\Form\FieldInformation;
 
 use TYPO3\CMS\Backend\Form\AbstractNode;
-use TYPO3\CMS\Core\Localization\LanguageService;
 
 /**
  * Render localized ['columns']['theField']['description'] text as default
  * field information node. This is typically displayed in elements below the
  * element label and the field content.
+ *
+ * @deprecated since v14.2, will be removed in v15. Description is now rendered next to the label
+ *             by AbstractFormElement::renderDescription() and AbstractContainer::wrapWithFieldsetAndLegend().
  */
 class TcaDescription extends AbstractNode
 {
@@ -34,18 +36,11 @@ class TcaDescription extends AbstractNode
      */
     public function render(): array
     {
-        $resultArray = $this->initializeResultArray();
-        if (!empty($this->data['parameterArray']['fieldConf']['description'])) {
-            $fieldInformationText = $this->getLanguageService()->sL($this->data['parameterArray']['fieldConf']['description']);
-            if (trim($fieldInformationText) !== '') {
-                $resultArray['html'] = '<div class="form-description">' . nl2br(htmlspecialchars($fieldInformationText)) . '</div>';
-            }
-        }
-        return $resultArray;
-    }
-
-    protected function getLanguageService(): LanguageService
-    {
-        return $GLOBALS['LANG'];
+        trigger_error(
+            'TcaDescription renderType has been deprecated in v14.2 and will be removed in v15.'
+            . ' Field descriptions are now rendered next to the label automatically.',
+            E_USER_DEPRECATED
+        );
+        return $this->initializeResultArray();
     }
 }

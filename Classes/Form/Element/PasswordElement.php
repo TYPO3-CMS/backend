@@ -30,17 +30,6 @@ use TYPO3\CMS\Core\Utility\StringUtility;
 class PasswordElement extends AbstractFormElement
 {
     /**
-     * Default field information enabled for this element.
-     *
-     * @var array
-     */
-    protected $defaultFieldInformation = [
-        'tcaDescription' => [
-            'renderType' => 'tcaDescription',
-        ],
-    ];
-
-    /**
      * This will render a single-line password form field, possibly with various control/validation features
      *
      * @return array As defined in initializeResultArray() of AbstractNode

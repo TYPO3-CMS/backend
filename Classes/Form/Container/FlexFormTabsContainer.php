@@ -27,17 +27,6 @@ use TYPO3\CMS\Core\Page\JavaScriptModuleInstruction;
 class FlexFormTabsContainer extends AbstractContainer
 {
     /**
-     * Default field information enabled for this element.
-     *
-     * @var array
-     */
-    protected $defaultFieldInformation = [
-        'tcaDescription' => [
-            'renderType' => 'tcaDescription',
-        ],
-    ];
-
-    /**
      * Entry method
      *
      * @return array As defined in initializeResultArray() of AbstractNode
@@ -93,7 +82,7 @@ class FlexFormTabsContainer extends AbstractContainer
         }
 
         $fieldInformationResult = $this->renderFieldInformation();
-        $resultArray['html'] = '<div>' . $fieldInformationResult['html'] . '</div>';
+        $resultArray['html'] = $fieldInformationResult['html'];
         $resultArray = $this->mergeChildReturnIntoExistingResult($resultArray, $fieldInformationResult, false);
 
         $resultArray['html'] .= $this->renderTabMenu($tabElements, $domIdPrefix);

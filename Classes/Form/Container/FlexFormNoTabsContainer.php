@@ -25,17 +25,6 @@ namespace TYPO3\CMS\Backend\Form\Container;
 class FlexFormNoTabsContainer extends AbstractContainer
 {
     /**
-     * Default field information enabled for this element.
-     *
-     * @var array
-     */
-    protected $defaultFieldInformation = [
-        'tcaDescription' => [
-            'renderType' => 'tcaDescription',
-        ],
-    ];
-
-    /**
      * Entry method
      *
      * @return array As defined in initializeResultArray() of AbstractNode
@@ -69,7 +58,7 @@ class FlexFormNoTabsContainer extends AbstractContainer
         $resultArray = $this->initializeResultArray();
 
         $fieldInformationResult = $this->renderFieldInformation();
-        $resultArray['html'] = '<div>' . $fieldInformationResult['html'] . '</div>';
+        $resultArray['html'] = $fieldInformationResult['html'];
         $resultArray = $this->mergeChildReturnIntoExistingResult($resultArray, $fieldInformationResult, false);
 
         $options['renderType'] = 'flexFormElementContainer';

@@ -35,17 +35,6 @@ class SiteLanguageContainer extends AbstractContainer
 
     protected array $inlineData;
 
-    /**
-     * Default field information enabled for this element.
-     *
-     * @var array
-     */
-    protected $defaultFieldInformation = [
-        'tcaDescription' => [
-            'renderType' => 'tcaDescription',
-        ],
-    ];
-
     public function __construct(
         private readonly InlineStackProcessor $inlineStackProcessor,
         private readonly SiteLanguagePresets $siteLanguagePresets,

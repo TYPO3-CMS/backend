@@ -33,17 +33,6 @@ use TYPO3\CMS\Core\Utility\StringUtility;
 class JsonElement extends AbstractFormElement
 {
     /**
-     * Default field information enabled for this element.
-     *
-     * @var array
-     */
-    protected $defaultFieldInformation = [
-        'tcaDescription' => [
-            'renderType' => 'tcaDescription',
-        ],
-    ];
-
-    /**
      * Default field wizards enabled for this element.
      *
      * @var array

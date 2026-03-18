@@ -29,17 +29,6 @@ class NoneElement extends AbstractFormElement
     protected $minimumInputWidth = 5;
 
     /**
-     * Default field information enabled for this element.
-     *
-     * @var array
-     */
-    protected $defaultFieldInformation = [
-        'tcaDescription' => [
-            'renderType' => 'tcaDescription',
-        ],
-    ];
-
-    /**
      * This will render a non-editable display of the content of the field.
      *
      * @return array The HTML code for the TCEform field

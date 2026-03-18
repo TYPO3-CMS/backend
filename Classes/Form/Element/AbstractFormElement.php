@@ -128,7 +128,9 @@ abstract class AbstractFormElement extends AbstractNode
             $fieldName = $this->data['flexFormContainerFieldName'] ?? $this->data['flexFormFieldName'] ?? $this->data['containerFieldName'] ?? $this->data['fieldName'];
             $label .= ' <code>[' . htmlspecialchars($fieldName) . ']</code>';
         }
-        return '<label for="' . htmlspecialchars($for) . '" class="form-label t3js-formengine-label">' . $label . '</label>';
+        $html = '<label for="' . htmlspecialchars($for) . '" class="form-label t3js-formengine-label">' . $label . '</label>';
+        $html .= $this->renderDescription();
+        return $html;
     }
 
     /**
@@ -145,9 +147,23 @@ abstract class AbstractFormElement extends AbstractNode
         $html = [];
         $html[] = '<fieldset>';
         $html[] =     '<legend class="form-label t3js-formengine-label">' . $legend . '</legend>';
+        $html[] =     $this->renderDescription();
         $html[] =     $innerHTML;
         $html[] = '</fieldset>';
         return implode(LF, $html);
+    }
+
+    protected function renderDescription(): string
+    {
+        $description = (string)($this->data['parameterArray']['fieldConf']['description'] ?? '');
+        if ($description === '') {
+            return '';
+        }
+        $description = $this->getLanguageService()->sL($description);
+        if ($description === '') {
+            return '';
+        }
+        return '<div class="form-description">' . nl2br(htmlspecialchars($description)) . '</div>';
     }
 
     /**

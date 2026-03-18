@@ -37,17 +37,6 @@ final class TablePermissionElement extends AbstractFormElement
         'modify' => 'modify',
     ];
 
-    /**
-     * Default field information enabled for this element.
-     *
-     * @var array
-     */
-    protected $defaultFieldInformation = [
-        'tcaDescription' => [
-            'renderType' => 'tcaDescription',
-        ],
-    ];
-
     public function __construct(
         private readonly IconFactory $iconFactory,
     ) {}

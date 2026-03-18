@@ -290,13 +290,6 @@ readonly class ContextualRecordEditController
         $dataHandler->process_datamap();
         $dataHandler->process_cmdmap();
 
-        // Signal page tree refresh if needed
-        if ($dataHandler->pagetreeNeedsRefresh
-            && (isset($dataMap['pages']) || ($this->getBackendUser()->workspace !== 0 && !empty($dataMap)))
-        ) {
-            BackendUtility::setUpdateSignal('updatePageTree');
-        }
-
         // Check if save succeeded (no errors for this record)
         $erroneousRecords = $dataHandler->printLogErrorMessages();
         return !in_array($table . '.' . $uid, $erroneousRecords, true) && isset($dataMap[$table][$uid]);

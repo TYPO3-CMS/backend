@@ -119,9 +119,7 @@ class FlexFormContainerContainer extends AbstractContainer
         $html[] =        '</div>';
         $html[] =    '</div>';
         $html[] =    '<div id="' . htmlspecialchars($flexFormDomContainerId) . '" class="panel-collapse collapse t3js-flex-section-content">';
-        $html[] =        '<div class="panel-body">';
-        $html[] =            $containerContentResult['html'];
-        $html[] =        '</div>';
+        $html[] =       $containerContentResult['html'];
         $html[] =    '</div>';
         $html[] =    '<input class="t3js-flex-control-action" type="hidden" name="' . htmlspecialchars($actionFieldName) . '" value="" />';
         $html[] = '</div>';

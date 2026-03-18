@@ -45,6 +45,7 @@ class FlexFormEntryContainer extends AbstractContainer
         }
 
         $resultArray = $this->nodeFactory->create($options)->render();
+        $resultArray['html'] = '<div class="panel">' . $resultArray['html'] . '</div>';
         $resultArray['html'] = $this->wrapWithFieldsetAndLegend($resultArray['html']);
         return $resultArray;
     }

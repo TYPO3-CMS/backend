@@ -515,4 +515,24 @@ return [
         'target' => Controller\QrCodeController::class . '::downloadAction',
         'methods' => ['POST'],
     ],
+    'wizard_page_get_doktypes' => [
+        'path' => '/wizard/page/doktypes',
+        'target' => Controller\Wizard\PageWizardController::class . '::getDoktypesAction',
+    ],
+    'wizard_page_get_page_detail' => [
+        'path' => '/wizard/page/page-detail',
+        'target' => Controller\Wizard\PageWizardController::class . '::getPageDetailAction',
+    ],
+    'wizard_page_get_processed_value' => [
+        'path' => '/wizard/page/processed-value',
+        'target' => Controller\Wizard\PageWizardController::class . '::getProcessedValueAction',
+    ],
+    'wizard_config' => [
+        'path' => '/wizard/config',
+        'target' => Controller\Wizard\WizardController::class . '::getConfigurationAction',
+    ],
+    'wizard_submit' => [
+        'path' => '/wizard/submit',
+        'target' => Controller\Wizard\WizardController::class . '::submitDataAction',
+    ],
 ];

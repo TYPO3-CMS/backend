@@ -105,20 +105,10 @@ class PageProvider extends RecordProvider
             'iconIdentifier' => '',
             'callbackAction' => 'openSubmenu',
             'childItems' => [
-                'newWizard' => [
-                    'label' => 'LLL:EXT:core/Resources/Private/Language/locallang_misc.xlf:CM_newWizard',
-                    'iconIdentifier' => 'actions-page-new',
-                    'callbackAction' => 'newPageWizard',
-                ],
                 'pagesSort' => [
                     'label' => 'LLL:EXT:backend/Resources/Private/Language/locallang_pages_sort.xlf:title',
                     'iconIdentifier' => 'actions-page-move',
                     'callbackAction' => 'pagesSort',
-                ],
-                'pagesNewMultiple' => [
-                    'label' => 'LLL:EXT:backend/Resources/Private/Language/locallang_pages_new.xlf:title',
-                    'iconIdentifier' => 'apps-pagetree-drag-move-between',
-                    'callbackAction' => 'pagesNewMultiple',
                 ],
                 'mountAsTreeRoot' => [
                     'label' => 'LLL:EXT:core/Resources/Private/Language/locallang_core.xlf:cm.tempMountPoint',
@@ -203,8 +193,6 @@ class PageProvider extends RecordProvider
                 $canRender = $this->canBeEdited();
                 break;
             case 'new':
-            case 'newWizard':
-            case 'pagesNewMultiple':
                 $canRender = $this->canBeCreated();
                 break;
             case 'info':
@@ -502,18 +490,7 @@ class PageProvider extends RecordProvider
                 'data-pages-sort-url' => (string)$uriBuilder->buildUriFromRoute('pages_sort', ['id' => $this->record['uid'] ?? null]),
             ];
         }
-        if ($itemName === 'newWizard') {
-            $uriBuilder = GeneralUtility::makeInstance(UriBuilder::class);
-            $attributes += [
-                'data-pages-new-wizard-url' => (string)$uriBuilder->buildUriFromRoute('db_new_pages', ['id' => $this->record['uid'] ?? 0]),
-            ];
-        }
-        if ($itemName === 'pagesNewMultiple') {
-            $uriBuilder = GeneralUtility::makeInstance(UriBuilder::class);
-            $attributes += [
-                'data-pages-new-multiple-url' => (string)$uriBuilder->buildUriFromRoute('pages_new', ['id' => $this->record['uid'] ?? 0]),
-            ];
-        }
+
         if ($itemName === 'edit') {
             $attributes = [
                 'data-pages-language-uid' => $this->record[$this->getLanguageField()] ?? null,

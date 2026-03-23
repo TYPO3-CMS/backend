@@ -1009,28 +1009,37 @@ class DatabaseRecordList
             ->setShowLabelText(true);
 
         if ($table === 'pages') {
-            $button->setIcon($this->iconFactory->getIcon('actions-page-new', IconSize::SMALL));
-            $button->setHref((string)$this->uriBuilder->buildUriFromRoute(
-                'db_new_pages',
-                ['id' => $this->id, 'returnUrl' => $this->listURL()]
-            ));
-            $dataAttributes['new'] = 'page';
-        } else {
-            $button->setIcon($this->iconFactory->getIcon('actions-plus', IconSize::SMALL));
-            $button->setHref((string)$this->uriBuilder->buildUriFromRoute(
-                'record_edit',
-                [
-                    'edit' => [
-                        $table => [
-                            $this->id => 'new',
+            $button = $this->componentFactory->createGenericButton()
+                ->setTag('typo3-backend-new-page-wizard-button')
+                ->setLabel($label)
+                ->setShowLabelText(true)
+                ->setIcon($this->iconFactory->getIcon('actions-page-new', IconSize::SMALL))
+                ->setAttributes([
+                    'configuration' => json_encode([
+                        'disablePositionAutoAdvance' => true,
+                        'positionData' => [
+                            'pageUid' => $this->id,
+                            'insertPosition' => 'insert',
                         ],
-                    ],
-                    'module' => $this->request->getAttribute('module')?->getIdentifier() ?? '',
-                    'returnUrl' => $this->listURL(),
-                ]
-            ));
+                    ]),
+                ]);
+
+            return $button;
         }
 
+        $button->setIcon($this->iconFactory->getIcon('actions-plus', IconSize::SMALL));
+        $button->setHref((string)$this->uriBuilder->buildUriFromRoute(
+            'record_edit',
+            [
+                'edit' => [
+                    $table => [
+                        $this->id => 'new',
+                    ],
+                ],
+                'module' => $this->request->getAttribute('module')?->getIdentifier() ?? '',
+                'returnUrl' => $this->listURL(),
+            ]
+        ));
         return $button->setDataAttributes($dataAttributes);
     }
 
@@ -1797,11 +1806,22 @@ class DatabaseRecordList
                                 $titleLabel = $this->getLanguageService()->sL('LLL:EXT:core/Resources/Private/Language/locallang_mod_web_list.xlf:newPage');
                             }
                         }
-                        $newLink = $this->uriBuilder->buildUriFromRoute('record_edit', $params);
-                        $newButton = $this->componentFactory->createLinkButton()
-                            ->setIcon($icon)
-                            ->setTitle($titleLabel)
-                            ->setHref((string)$newLink);
+
+                        if ($table === 'pages') {
+                            $newButton = $this->componentFactory->createGenericButton()
+                                ->setTag('typo3-backend-new-page-wizard-button')
+                                ->setIcon($icon)
+                                ->setTitle($titleLabel)
+                                ->setAttributes([
+                                    'configuration' => json_encode(['positionData' => ['pageUid' => $record->getUid(), 'insertPosition' => 'after']]),
+                                ]);
+                        } else {
+                            $newLink = $this->uriBuilder->buildUriFromRoute('record_edit', $params);
+                            $newButton = $this->componentFactory->createLinkButton()
+                                ->setIcon($icon)
+                                ->setTitle($titleLabel)
+                                ->setHref((string)$newLink);
+                        }
                     }
                     $secondary->add('new', $newButton);
                 }

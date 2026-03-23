@@ -2878,6 +2878,8 @@ typo3-backend-component-filestorage-browser>:last-child,typo3-backend-component-
 typo3-backend-form-selecttree{display:flex;flex-direction:column;height:100%}
 typo3-backend-form-selecttree>:last-child{flex:1}
 typo3-backend-form-selecttree-toolbar{display:block}
+.wizard-content:has(typo3-backend-component-page-position-select){padding:0!important;--tree-toolbar-padding:calc(var(--wizard-padding)*0.75) var(--wizard-padding)}
+typo3-backend-component-page-position-select>typo3-breadcrumb{padding:var(--wizard-padding);padding-bottom:0}
 .tree-element{border:var(--typo3-component-border-width) solid var(--typo3-component-border-color);border-radius:var(--typo3-input-border-radius);overflow:hidden}
 .tree-toolbar{background-color:var(--tree-bg);color:var(--tree-color)}
 .tree-toolbar__menu{border-bottom:var(--tree-toolbar-border-width) solid var(--tree-toolbar-border-color);gap:var(--tree-toolbar-spacing-x);min-height:calc(var(--tree-toolbar-bar-height) + var(--tree-toolbar-border-width))}

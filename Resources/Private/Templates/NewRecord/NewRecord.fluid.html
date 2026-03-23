@@ -8,7 +8,7 @@
 <f:section name="Content">
 
     <h1><f:translate key="LLL:EXT:core/Resources/Private/Language/locallang_core.xlf:db_new.php.pagetitle" /></h1>
-    <f:for each="{recordTypeGroups}" as="recordTypeGroup">
+    <f:for each="{recordTypeGroups}" as="recordTypeGroup" key="recordTypeGroupIdentifier">
         <div class="row mb-4">
             <div class="col-12">
                 <strong>{recordTypeGroup.icon -> f:format.raw()} <f:format.case mode="capital">{recordTypeGroup.title}</f:format.case></strong>
@@ -25,6 +25,7 @@
                                     <div class="collapse" id="{recordTypeTable}-types">
                                         <div class="list-group m-2 mt-0">
                                             <f:for each="{recordTypeItem.types}" key="name" as="type">
+
                                                 <a class="list-group-item list-group-item-action" href="{type.url}" title="">
                                                     {type.icon -> f:format.raw()}
                                                     {type.label}
@@ -34,6 +35,15 @@
                                     </div>
                                 </div>
                             </f:then>
+                            <f:else if="{recordTypeGroupIdentifier} == 'pages'">
+                                <typo3-backend-new-page-wizard-button class="list-group-item list-group-item-action"
+                                    configuration="{recordTypeItem.wizardConfiguration -> f:format.json()}"
+                                    data-page-create="{recordTypeTable}"
+                                >
+                                    {recordTypeItem.icon -> f:format.raw()}
+                                    {recordTypeItem.label}
+                                </typo3-backend-new-page-wizard-button>
+                            </f:else>
                             <f:else>
                                 <a class="list-group-item list-group-item-action" href="{recordTypeItem.url}">
                                     {recordTypeItem.icon -> f:format.raw()}

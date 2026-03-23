@@ -173,7 +173,7 @@ class NewRecordController
         );
         $this->view->assign('pagePositionMapForPagesOnly', $content);
         // Setting up the buttons and markers for docheader (done after permissions are checked)
-        $this->getButtons(true);
+        $this->getButtons();
         return $this->view->renderResponse('NewRecord/NewPagePosition');
     }
 
@@ -206,6 +206,7 @@ class NewRecordController
         // Setting up the context sensitive menu:
         $this->pageRenderer->loadJavaScriptModule('@typo3/backend/context-menu.js');
         $this->pageRenderer->loadJavaScriptModule('@typo3/backend/new-content-element-wizard-button.js');
+        $this->pageRenderer->loadJavaScriptModule('@typo3/backend/page-wizard/new-page-wizard-button.js');
         // If a positive id is supplied, ask for the page record with permission information contained:
         if ($this->id > 0) {
             $this->pageinfo = BackendUtility::readPageAccess($this->id, $this->perms_clause) ?: [];
@@ -265,21 +266,8 @@ class NewRecordController
     /**
      * Create the panel of buttons for submitting the form or otherwise perform operations.
      */
-    protected function getButtons(bool $createPage = false): void
+    protected function getButtons(): void
     {
-        $lang = $this->getLanguageService();
-        // Regular new element:
-        if (!$createPage) {
-            // New page
-            if ($this->isRecordCreationAllowedForTable('pages')) {
-                $newPageButton = $this->componentFactory->createLinkButton()
-                    ->setHref((string)$this->uriBuilder->buildUriFromRoute('db_new_pages', ['id' => $this->id, 'returnUrl' => $this->returnUrl]))
-                    ->setTitle($lang->sL('LLL:EXT:backend/Resources/Private/Language/locallang_layout.xlf:newPage'))
-                    ->setShowLabelText(true)
-                    ->setIcon($this->iconFactory->getIcon('actions-page-new', IconSize::SMALL));
-                $this->view->addButtonToButtonBar($newPageButton, ButtonBar::BUTTON_POSITION_LEFT, 20);
-            }
-        }
         // Back
         if ($this->returnUrl) {
             $this->view->addButtonToButtonBar($this->componentFactory->createBackButton($this->returnUrl), ButtonBar::BUTTON_POSITION_LEFT, 10);
@@ -371,40 +359,23 @@ class NewRecordController
             if ($table === 'pages') {
                 // New pages INSIDE this pages
                 $newPageLinks = [];
-                $hasPageTypesForDirectCreation = $this->hasRecordTypesForDirectCreation($schema);
                 if ($displayNewPagesIntoLink && $this->isTableAllowedOnPage($schema, $this->pageinfo)) {
                     // Create link to new page inside
                     $newPageLinks['inside'] = [
                         'icon' => $this->iconFactory->getIconForRecord($table, [], IconSize::SMALL),
                         'label' => $lang->sL($ctrlTitle) . ' (' . $lang->sL('LLL:EXT:core/Resources/Private/Language/locallang_core.xlf:db_new.php.inside') . ')',
+                        'wizardConfiguration' => ['positionData' => ['pageUid' => $this->id, 'insertPosition' => 'inside']],
                     ];
-                    if ($hasPageTypesForDirectCreation) {
-                        $newPageLinks['inside']['types'] = $this->getRecordTypesForDirectCreation($schema, $this->id);
-                    } else {
-                        $newPageLinks['inside']['url'] = $this->renderLink($table, $this->id);
-                    }
                 }
                 // New pages AFTER this pages
                 if ($displayNewPagesAfterLink && $this->isTableAllowedOnPage($schema, $this->pidInfo)) {
                     $newPageLinks['after'] = [
                         'icon' => $this->iconFactory->getIconForRecord($table, [], IconSize::SMALL),
                         'label' => $lang->sL($ctrlTitle) . ' (' . $lang->sL('LLL:EXT:core/Resources/Private/Language/locallang_core.xlf:db_new.php.after') . ')',
-                    ];
-                    if ($hasPageTypesForDirectCreation) {
-                        $newPageLinks['after']['types'] = $this->getRecordTypesForDirectCreation($schema, -$this->id);
-                    } else {
-                        $newPageLinks['after']['url'] = $this->renderLink($table, -$this->id);
-                    }
-                }
-                // New pages at selection position
-                if ($this->newPagesSelectPosition) {
-                    // Link to page-wizard
-                    $newPageLinks['select_position'] = [
-                        'url' => $this->renderPageSelectPositionLink(),
-                        'icon' => $this->iconFactory->getIconForRecord($table, [], IconSize::SMALL),
-                        'label' => $lang->sL('LLL:EXT:core/Resources/Private/Language/locallang_misc.xlf:pageSelectPosition'),
+                        'wizardConfiguration' => ['positionData' => ['pageUid' => $this->id, 'insertPosition' => 'after']],
                     ];
                 }
+
                 if (!empty($newPageLinks)) {
                     $groupedLinksOnTop['pages'] = [
                         'title' => $lang->sL('LLL:EXT:core/Resources/Private/Language/locallang_misc.xlf:createNewPage'),

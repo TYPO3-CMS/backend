@@ -1,0 +1,13 @@
+/*
+ * This file is part of the TYPO3 CMS project.
+ *
+ * It is free software; you can redistribute it and/or modify it under
+ * the terms of the GNU General Public License, either version 2
+ * of the License, or any later version.
+ *
+ * For the full copyright and license information, please read the
+ * LICENSE.txt file that was distributed with this source code.
+ *
+ * The TYPO3 project - inspiring people to share!
+ */
+import"@typo3/backend/tree/page-position-select.js";import{html as a}from"lit";import{Task as c}from"@lit/task";import{unsafeHTML as u}from"lit/directives/unsafe-html.js";import{executeJavaScriptModuleInstruction as d}from"@typo3/core/java-script-item-processor.js";import f from"@typo3/core/ajax/ajax-request.js";class l{constructor(){this.autoAdvance=!1,this.key="",this.title="",this.context=null,this.modules=[],this.labels={},this.summaryTask=null}getValue(){const e=this.context.wizard.querySelector('form[name="editform"]');if(!e)return null;const t=this.context.getStoreData("fields")||{},o=new FormData(e);return t[this.key]=Object.fromEntries(Array.from(o.entries()).filter(([,i])=>i!=="")),t}setValue(e){const t=this.context.wizard.querySelector('form[name="editform"]'),o=e?.[this.key];if(!(!t||!o))for(const[i,r]of Object.entries(o)){const s=t.elements[i];s&&(s.type==="checkbox"?s.checked=!!r:s.value=r)}}render(){return a`${u(this.html)}`}getSummaryData(){const e=this.context.getStoreData("position")?.pageUid||0,o=(this.context.getStoreData("fields")||{})[this.key]||{},i={};for(const[r,s]of Object.entries(o))i[this.getLabelKey(r)]=s;return this.summaryTask||(this.summaryTask=new c(this.context.wizard,{task:async([r,s])=>await(await new f(TYPO3.settings.ajaxUrls.wizard_page_get_processed_value).withQueryArguments({fields:r,pageUid:s}).get()).resolve(),args:()=>[i,e]})),Object.keys(i).map(r=>{const s=i[r],n=this.summaryTask.render({complete:m=>a`${m[r]??s}`,pending:()=>this.context.wizard.renderLoader(),error:()=>a`${s}`});return{label:this.labels[r]||r,value:n}})}async afterRender(){if(this.modules.length>0&&await this.loadModules(),this.setValue(this.context.getStoreData("fields")),TYPO3.FormEngine){TYPO3.FormEngine.reinitialize();const e=this.context.wizard.querySelector('form[name="editform"]');if(e){e.addEventListener("t3-formengine-postfieldvalidation",()=>{this.context.wizard.requestUpdate()});const t=e.querySelector(".has-error");t&&t.focus()}}}isComplete(){return TYPO3.FormEngine&&TYPO3.FormEngine.Validation?TYPO3.FormEngine.Validation.isValid():!0}beforeAdvance(){this.context.setStoreData("fields",this.getValue())}async loadModules(){const e=this.modules.map(t=>d(t));await Promise.all(e)}getLabelKey(e){const t=e.match(/\[([^\]]+)\]$/);return t?t[1]:e}}export{l as FormEngineStep,l as default};

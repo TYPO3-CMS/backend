@@ -87,20 +87,15 @@ final readonly class PageWizardController
                 $formDataGroup
             )['processedTca']['columns']['doktype']['config']['items'] ?? [];
 
-        $result = array_values(
-            array_map(
-                static fn(array $doktype) => [
-                    'value' => $doktype['value'],
-                    'label' => $doktype['label'] ?? '',
-                    'icon' => $doktype['icon'] ?? '',
-                    'description' => $doktype['description'] ?? '',
-                ],
-                array_filter(
-                    $doktypes,
-                    static fn(array $doktype) => ($doktype['value'] ?? '') !== '--div--' && ($doktype['value'] ?? '') !== ''
-                )
-            )
-        );
+        $result = [];
+        foreach ($doktypes as $doktype) {
+            $result[] = [
+                'value' => $doktype['value'] ?? '',
+                'label' => $doktype['label'] ?? '',
+                'icon' => $doktype['icon'] ?? '',
+                'description' => $doktype['description'] ?? '',
+            ];
+        }
 
         return new JsonResponse($result, 200);
     }

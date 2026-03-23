@@ -57,46 +57,71 @@ final class PageWizardControllerTest extends FunctionalTestCase
         self::assertInstanceOf(JsonResponse::class, $response);
         $payload = json_decode((string)$response->getBody(), true, 512, JSON_THROW_ON_ERROR);
 
-        self::assertSame([
+        self::assertSame(
             [
-                'value' => '1',
-                'label' => 'Standard Page',
-                'icon' => 'apps-pagetree-page-default',
-                'description' => '',
-            ], [
-                'value' => '6',
-                'label' => 'Backend User Section',
-                'icon' => 'apps-pagetree-page-backend-users',
-                'description' => '',
-            ], [
-                'value' => '4',
-                'label' => 'Shortcut',
-                'icon' => 'apps-pagetree-page-shortcut',
-                'description' => '',
-
-            ], [
-                'value' => '7',
-                'label' => 'Mount Point',
-                'icon' => 'apps-pagetree-page-mountpoint',
-                'description' => '',
-            ], [
-                'value' => '3',
-                'label' => 'Link',
-                'icon' => 'apps-pagetree-page-shortcut-external',
-                'description' => '',
-            ], [
-                'value' => '254',
-                'label' => 'Folder',
-                'icon' => 'apps-pagetree-folder-default',
-                'description' => '',
-            ], [
-                'value' => '199',
-                'label' => 'Menu Separator',
-                'icon' => 'apps-pagetree-spacer',
-                'description' => '',
+                [
+                    'value' => '--div--',
+                    'label' => 'Page',
+                    'icon' => '',
+                    'description' => '',
+                ],
+                [
+                    'value' => '1',
+                    'label' => 'Standard Page',
+                    'icon' => 'apps-pagetree-page-default',
+                    'description' => '',
+                ],
+                [
+                    'value' => '6',
+                    'label' => 'Backend User Section',
+                    'icon' => 'apps-pagetree-page-backend-users',
+                    'description' => '',
+                ],
+                [
+                    'value' => '--div--',
+                    'label' => 'Link',
+                    'icon' => '',
+                    'description' => '',
+                ],
+                [
+                    'value' => '4',
+                    'label' => 'Shortcut',
+                    'icon' => 'apps-pagetree-page-shortcut',
+                    'description' => '',
+                ],
+                [
+                    'value' => '7',
+                    'label' => 'Mount Point',
+                    'icon' => 'apps-pagetree-page-mountpoint',
+                    'description' => '',
+                ],
+                [
+                    'value' => '3',
+                    'label' => 'Link',
+                    'icon' => 'apps-pagetree-page-shortcut-external',
+                    'description' => '',
+                ],
+                [
+                    'value' => '--div--',
+                    'label' => 'Special',
+                    'icon' => '',
+                    'description' => '',
+                ],
+                [
+                    'value' => '254',
+                    'label' => 'Folder',
+                    'icon' => 'apps-pagetree-folder-default',
+                    'description' => '',
+                ],
+                [
+                    'value' => '199',
+                    'label' => 'Menu Separator',
+                    'icon' => 'apps-pagetree-spacer',
+                    'description' => '',
+                ],
             ],
-
-        ], $payload);
+            $payload
+        );
     }
 
     #[Test]

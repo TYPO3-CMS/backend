@@ -2126,6 +2126,8 @@ typo3-backend-formengine-suggest-result-item .formengine-suggest-result-item-lab
 .form-check-card-container{--typo3-form-check-card-grid-gap:1rem;--typo3-form-check-card-min-size:200px;--typo3-form-check-card-max-size:1fr;display:grid;gap:var(--typo3-form-check-card-grid-gap);grid-template-columns:repeat(auto-fit,minmax(var(--typo3-form-check-card-min-size),var(--typo3-form-check-card-max-size)));margin-bottom:var(--typo3-spacing)}
 .form-check-card-container-small{--typo3-form-check-card-max-size:300px}
 .form-check-card-container .form-check-type-card{margin-bottom:0}
+.form-check-card-container-headline{font-size:.8125rem;font-weight:700;grid-column:1/-1;margin-bottom:-3px}
+*+.form-check-card-container-headline{margin-top:calc(var(--typo3-form-check-card-grid-gap)*.5)}
 .form-check.form-check-size-input{margin-bottom:calc(var(--typo3-spacing)/2);margin-top:calc(var(--typo3-spacing)/2)}
 .form-text{margin-top:calc(var(--typo3-spacing)*.25)}
 .form-description{color:var(--typo3-text-color-variant);margin-bottom:calc(var(--typo3-spacing)*.25)}

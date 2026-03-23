@@ -26,6 +26,7 @@ use TYPO3\CMS\Backend\Template\Components\ButtonBar;
 use TYPO3\CMS\Backend\Template\Components\Buttons\ButtonInterface;
 use TYPO3\CMS\Backend\Template\Components\ComponentFactory;
 use TYPO3\CMS\Backend\Template\Components\DocHeaderComponent;
+use TYPO3\CMS\Backend\Template\Enum\ModuleLayout;
 use TYPO3\CMS\Backend\Utility\BackendUtility;
 use TYPO3\CMS\Core\Authentication\BackendUserAuthentication;
 use TYPO3\CMS\Core\Configuration\ExtensionConfiguration;
@@ -55,6 +56,10 @@ final class ModuleTemplate implements ViewInterface, ResponsableViewInterface
     private string $moduleId = '';
     private string $moduleName = '';
     private string $moduleClass = '';
+    /**
+     * @internal
+     */
+    private ModuleLayout $moduleLayout = ModuleLayout::WIDE;
     private string $title = '';
     private string $bodyTag = '<body>';
     private string $formTag = '';
@@ -152,6 +157,7 @@ final class ModuleTemplate implements ViewInterface, ResponsableViewInterface
             'moduleId' => $this->moduleId,
             'moduleName' => $this->moduleName,
             'moduleClass' => $this->moduleClass,
+            'moduleLayout' => $this->moduleLayout->value,
             'uiBlock' => $this->uiBlock,
             'flashMessageQueueIdentifier' => $this->flashMessageQueue->getIdentifier(),
             'formTag' => $this->formTag,
@@ -171,6 +177,15 @@ final class ModuleTemplate implements ViewInterface, ResponsableViewInterface
             $this->pageRenderer->addHeaderData(implode("\n", $updateSignalDetails['html']));
         }
         $this->dispatchNotificationMessages();
+    }
+
+    /**
+     * @internal
+     */
+    public function setLayout(ModuleLayout $moduleLayout): self
+    {
+        $this->moduleLayout = $moduleLayout;
+        return $this;
     }
 
     /**

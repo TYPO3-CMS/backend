@@ -22,6 +22,7 @@ use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use TYPO3\CMS\Backend\Attribute\AsController;
 use TYPO3\CMS\Backend\Module\ModuleProvider;
+use TYPO3\CMS\Backend\Template\Enum\ModuleLayout;
 use TYPO3\CMS\Backend\Template\ModuleTemplateFactory;
 use TYPO3\CMS\Core\Authentication\BackendUserAuthentication;
 use TYPO3\CMS\Core\Information\Typo3Information;
@@ -54,6 +55,7 @@ class AboutController
         $event = new Event\ModifyGenericBackendMessagesEvent();
         $event = $this->eventDispatcher->dispatch($event);
         $view = $this->moduleTemplateFactory->create($request);
+        $view->setLayout(ModuleLayout::NORMAL);
         $view->assignMultiple([
             'typo3Info' => $this->typo3Information,
             'typo3Version' => $this->version,

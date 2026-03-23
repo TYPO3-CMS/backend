@@ -48,6 +48,7 @@ use TYPO3\CMS\Backend\Routing\PreviewUriBuilder;
 use TYPO3\CMS\Backend\Routing\UriBuilder;
 use TYPO3\CMS\Backend\Template\Components\ButtonBar;
 use TYPO3\CMS\Backend\Template\Components\ComponentFactory;
+use TYPO3\CMS\Backend\Template\Enum\ModuleLayout;
 use TYPO3\CMS\Backend\Template\ModuleTemplate;
 use TYPO3\CMS\Backend\Template\ModuleTemplateFactory;
 use TYPO3\CMS\Backend\Utility\BackendUtility;
@@ -205,6 +206,7 @@ class EditDocumentController
     public function mainAction(ServerRequestInterface $request): ResponseInterface
     {
         $view = $this->moduleTemplateFactory->create($request);
+        $view->setLayout(ModuleLayout::NORMAL);
         $view->setUiBlock(true);
         $body = '';
 
@@ -363,6 +365,7 @@ class EditDocumentController
         }
 
         $view->setTitle($documentTitle);
+        $view->setLayout(ModuleLayout::NORMAL);
         $view->assign('bodyHtml', $body);
 
         return $view->renderResponse('Form/EditDocument');

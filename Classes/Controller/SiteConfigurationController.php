@@ -31,6 +31,7 @@ use TYPO3\CMS\Backend\Form\NodeFactory;
 use TYPO3\CMS\Backend\Routing\UriBuilder;
 use TYPO3\CMS\Backend\Template\Components\ButtonBar;
 use TYPO3\CMS\Backend\Template\Components\ComponentFactory;
+use TYPO3\CMS\Backend\Template\Enum\ModuleLayout;
 use TYPO3\CMS\Backend\Template\ModuleTemplate;
 use TYPO3\CMS\Backend\Template\ModuleTemplateFactory;
 use TYPO3\CMS\Backend\Utility\BackendUtility;
@@ -148,6 +149,7 @@ readonly class SiteConfigurationController
         );
         $this->addDocHeaderViewModeButton($view, $viewMode);
         $view->setTitle($this->getLanguageService()->translate('title', 'backend.modules.site_configuration'));
+        $view->setLayout(ModuleLayout::NORMAL);
         $view->assignMultiple([
             'pages' => $pages,
             'viewMode' => $viewMode,
@@ -205,6 +207,7 @@ readonly class SiteConfigurationController
         $view->setTitle(
             $this->getLanguageService()->translate('title', 'backend.modules.site_settings')
         );
+        $view->setLayout(ModuleLayout::NORMAL);
         $view->assignMultiple([
             'site' => $site,
             'page' => $pageRecord,
@@ -284,6 +287,7 @@ readonly class SiteConfigurationController
         $this->configureEditViewDocHeader($view, $siteIdentifier, $documentTitle);
         $view->getDocHeaderComponent()->setPageBreadcrumb($pageRecord);
         $view->setTitle($documentTitle);
+        $view->setLayout(ModuleLayout::NORMAL);
         return $view->renderResponse('SiteConfiguration/Edit');
     }
 

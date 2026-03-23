@@ -22,6 +22,7 @@ use Psr\Http\Message\ServerRequestInterface;
 use TYPO3\CMS\Backend\Attribute\AsController;
 use TYPO3\CMS\Backend\Module\ModuleInterface;
 use TYPO3\CMS\Backend\Module\ModuleProvider;
+use TYPO3\CMS\Backend\Template\Enum\ModuleLayout;
 use TYPO3\CMS\Backend\Template\ModuleTemplateFactory;
 use TYPO3\CMS\Backend\Utility\BackendUtility;
 use TYPO3\CMS\Core\Authentication\BackendUserAuthentication;
@@ -69,6 +70,7 @@ final readonly class SubmoduleOverviewController
         );
 
         $view->setTitle($this->getLanguageService()->sL($currentModule->getTitle()));
+        $view->setLayout(ModuleLayout::NORMAL);
         $view->assign('currentModule', $currentModule);
         $view->assignMultiple([
             'additionalParameters' => array_filter(['id' => $id]),

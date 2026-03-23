@@ -16,6 +16,9 @@
       <trans-unit id="step.doktype.filter.noResults">
         <source>No matching page type found.</source>
       </trans-unit>
+      <trans-unit id="step.doktype.load_error">
+        <source>Failed to fetch available page types. This is likely due to missing permissions.</source>
+      </trans-unit>
       <trans-unit id="step.setup">
         <source>Page Setup</source>
       </trans-unit>

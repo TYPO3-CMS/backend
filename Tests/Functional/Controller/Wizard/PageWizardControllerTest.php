@@ -32,7 +32,7 @@ final class PageWizardControllerTest extends FunctionalTestCase
     protected function setUp(): void
     {
         parent::setUp();
-        $this->importCSVDataSet(__DIR__ . '/../../Fixtures/be_users.csv');
+        $this->importCSVDataSet(__DIR__ . '/../../Fixtures/be_users_with_editor.csv');
         $this->importCSVDataSet(__DIR__ . '/../../Fixtures/pages.csv');
         $backendUser = $this->setUpBackendUser(1);
         $GLOBALS['LANG'] = $this->get(LanguageServiceFactory::class)->createFromUserPreferences($backendUser);
@@ -142,7 +142,7 @@ final class PageWizardControllerTest extends FunctionalTestCase
     }
 
     #[Test]
-    public function getPageDetailActionReturns404IfPageDoesNotExist(): void
+    public function getPageDetailActionReturns403IfPageDoesNotExist(): void
     {
         $request = (new ServerRequest('https://example.com/typo3/', 'GET'))->withQueryParams([
             'pageUid' => '999',
@@ -151,13 +151,10 @@ final class PageWizardControllerTest extends FunctionalTestCase
         $response = $this->subject->getPageDetailAction($request);
 
         self::assertInstanceOf(JsonResponse::class, $response);
-        self::assertSame(404, $response->getStatusCode());
+        self::assertSame(403, $response->getStatusCode());
 
-        $body = json_decode((string)$response->getBody(), true, 512, JSON_THROW_ON_ERROR);
-        self::assertSame(
-            ['error' => 'Page not found for pageUid: 999'],
-            $body
-        );
+        $body = json_decode((string)$response->getBody(), true);
+        self::assertNull($body);
     }
 
     #[Test]
@@ -202,5 +199,73 @@ final class PageWizardControllerTest extends FunctionalTestCase
             'title' => 'New TYPO3 site',
             'icon' => 'apps-pagetree-root',
         ], $body);
+    }
+    #[Test]
+    public function getDoktypesActionReturns403IfMissingNewPagePermission(): void
+    {
+        // Use a non-admin user
+        $this->setUpBackendUser(9);
+        // Permission 1 is PAGE_SHOW only, so no PAGE_NEW (8)
+        $this->updatePagePermissions(1, 1);
+
+        $request = (new ServerRequest('https://example.com/typo3/', 'GET'))->withQueryParams([
+            'data' => [
+                'position' => [
+                    'pageUid' => 1,
+                    'insertPosition' => 'inside',
+                ],
+            ],
+        ]);
+
+        $response = $this->subject->getDoktypesAction($request);
+
+        self::assertInstanceOf(JsonResponse::class, $response);
+        self::assertSame(403, $response->getStatusCode());
+    }
+
+    #[Test]
+    public function getPageDetailActionReturns403IfMissingShowPermission(): void
+    {
+        // Use a non-admin user
+        $this->setUpBackendUser(9);
+        // Permission 0 is NOTHING
+        $this->updatePagePermissions(1, 0);
+
+        $request = (new ServerRequest('https://example.com/typo3/', 'GET'))->withQueryParams([
+            'pageUid' => '1',
+        ]);
+
+        $response = $this->subject->getPageDetailAction($request);
+
+        self::assertInstanceOf(JsonResponse::class, $response);
+        self::assertSame(403, $response->getStatusCode());
+    }
+
+    #[Test]
+    public function getProcessedValueActionReturns403IfMissingShowPermission(): void
+    {
+        // Use a non-admin user
+        $this->setUpBackendUser(9);
+        // Permission 0 is NOTHING
+        $this->updatePagePermissions(1, 0);
+
+        $request = (new ServerRequest('https://example.com/typo3/', 'GET'))->withQueryParams([
+            'pageUid' => '1',
+            'fields' => ['title' => 'foo'],
+        ]);
+
+        $response = $this->subject->getProcessedValueAction($request);
+
+        self::assertInstanceOf(JsonResponse::class, $response);
+        self::assertSame(403, $response->getStatusCode());
+    }
+
+    private function updatePagePermissions(int $uid, int $permissions): void
+    {
+        $this->getConnectionPool()->getConnectionForTable('pages')->update(
+            'pages',
+            ['perms_everybody' => $permissions],
+            ['uid' => $uid]
+        );
     }
 }

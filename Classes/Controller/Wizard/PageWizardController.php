@@ -32,10 +32,11 @@ use TYPO3\CMS\Backend\Form\FormDataProvider\PageTsConfig;
 use TYPO3\CMS\Backend\Form\FormDataProvider\TcaSelectItems;
 use TYPO3\CMS\Backend\Form\FormDataProvider\UserTsConfig;
 use TYPO3\CMS\Backend\Utility\BackendUtility;
-use TYPO3\CMS\Core\Domain\Repository\PageRepository;
+use TYPO3\CMS\Core\Authentication\BackendUserAuthentication;
 use TYPO3\CMS\Core\Http\JsonResponse;
 use TYPO3\CMS\Core\Imaging\IconFactory;
 use TYPO3\CMS\Core\Imaging\IconSize;
+use TYPO3\CMS\Core\Type\Bitmask\Permission;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 
 /**
@@ -48,7 +49,6 @@ use TYPO3\CMS\Core\Utility\GeneralUtility;
 final readonly class PageWizardController
 {
     public function __construct(
-        private PageRepository $pageRepository,
         private IconFactory $iconFactory,
         private FormDataCompiler $formDataCompiler
     ) {}
@@ -61,7 +61,13 @@ final readonly class PageWizardController
 
         $parentPageUid = $insertPosition === 'inside'
             ? $pageUid
-            : $this->pageRepository->getPage($pageUid)['pid'] ?? null;
+            : (BackendUtility::getRecord('pages', $pageUid, 'pid')['pid'] ?? null);
+
+        $backendUser = $this->getBackendUser();
+        $parentPage = BackendUtility::readPageAccess((int)$parentPageUid, $backendUser->getPagePermsClause(Permission::PAGE_NEW));
+        if (!$parentPage) {
+            return new JsonResponse(null, 403);
+        }
 
         $formDataGroup = GeneralUtility::makeInstance(OnTheFly::class);
         $formDataGroup->setProviderList([
@@ -117,11 +123,12 @@ final readonly class PageWizardController
             ]);
         }
 
-        $page = $this->pageRepository->getPage((int)$pageUid);
+        $page = BackendUtility::readPageAccess((int)$pageUid, $this->getBackendUser()->getPagePermsClause(Permission::PAGE_SHOW));
 
-        if ($page === []) {
-            return new JsonResponse(['error' => 'Page not found for pageUid: ' . $pageUid], 404);
+        if (!$page) {
+            return new JsonResponse(null, 403);
         }
+
         $recordInfo = [
             'uid' => $page['uid'],
             'title' => $page['title'],
@@ -137,11 +144,21 @@ final readonly class PageWizardController
         $fields = $params['fields'] ?? [];
         $pageUid = (int)($params['pageUid'] ?? 0);
 
+        $page = BackendUtility::readPageAccess($pageUid, $this->getBackendUser()->getPagePermsClause(Permission::PAGE_SHOW));
+        if (!$page) {
+            return new JsonResponse(null, 403);
+        }
+
         $result = [];
         foreach ($fields as $fieldName => $value) {
             $result[$fieldName] = BackendUtility::getProcessedValue('pages', $fieldName, $value, 0, false, false, 0, true, $pageUid);
         }
 
         return new JsonResponse($result);
+    }
+
+    private function getBackendUser(): BackendUserAuthentication
+    {
+        return $GLOBALS['BE_USER'];
     }
 }

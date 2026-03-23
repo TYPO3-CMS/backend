@@ -2064,12 +2064,14 @@ class EditDocumentController
             $fieldName = $schema->getSubSchemaTypeInformation()->getFieldName();
             $rawTypeValue = $record[$fieldName] ?? '';
             $typeValue = is_array($rawTypeValue) ? (string)($rawTypeValue[0] ?? '') : (string)$rawTypeValue;
-            $label = $languageService->sL(BackendUtility::getLabelFromItemlist($table, $fieldName, $typeValue, $record));
-            if ($label === '' && $typeValue !== '' && $schema->hasSubSchema($typeValue)) {
-                $label = $schema->getSubSchema($typeValue)->getTitle($languageService->sL(...));
-            }
-            if ($label !== '') {
-                $typeLabel = $label;
+            if ($typeValue !== '') {
+                $label = $languageService->sL(BackendUtility::getLabelFromItemlist($table, $fieldName, $typeValue, $record));
+                if ($label === '' && $schema->hasSubSchema($typeValue)) {
+                    $label = $schema->getSubSchema($typeValue)->getTitle($languageService->sL(...));
+                }
+                if ($label !== '') {
+                    $typeLabel = $label;
+                }
             }
         }
 

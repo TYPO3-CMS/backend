@@ -1016,10 +1016,10 @@ class DatabaseRecordList
                 ->setIcon($this->iconFactory->getIcon('actions-page-new', IconSize::SMALL))
                 ->setAttributes([
                     'configuration' => json_encode([
-                        'disablePositionAutoAdvance' => true,
+                        'preventPositionAutoAdvance' => true,
                         'positionData' => [
                             'pageUid' => $this->id,
-                            'insertPosition' => 'insert',
+                            'insertPosition' => 'inside',
                         ],
                     ]),
                 ]);

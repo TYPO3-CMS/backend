@@ -17,7 +17,6 @@ declare(strict_types=1);
 
 namespace TYPO3\CMS\Backend\Tests\Unit\Wizard\DTO;
 
-use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Test;
 use TYPO3\CMS\Backend\Wizard\DTO\Finisher;
 use TYPO3\CMS\Backend\Wizard\DTO\SubmissionResult;
@@ -30,9 +29,6 @@ final class SubmissionResultTest extends UnitTestCase
     {
         $finisher = Finisher::createNoopFinisher('Done', 'Everything fine');
         $result = SubmissionResult::createSuccessResult($finisher);
-
-        self::assertTrue($result->isSuccess());
-        self::assertFalse($result->hasErrors());
 
         self::assertSame(
             [
@@ -49,9 +45,6 @@ final class SubmissionResultTest extends UnitTestCase
         $errors = ['Something went wrong'];
         $result = SubmissionResult::createErrorResult($errors);
 
-        self::assertFalse($result->isSuccess());
-        self::assertTrue($result->hasErrors());
-
         self::assertSame(
             [
                 'success' => false,
@@ -59,32 +52,5 @@ final class SubmissionResultTest extends UnitTestCase
             ],
             $result->jsonSerialize()
         );
-    }
-
-    #[Test]
-    #[DataProvider('errorProvider')]
-    public function hasErrorsReflectsErrorState(array $errors, bool $expected): void
-    {
-        $result = SubmissionResult::createErrorResult($errors);
-
-        self::assertSame($expected, $result->hasErrors());
-    }
-
-    public static function errorProvider(): iterable
-    {
-        yield 'no errors' => [
-            [],
-            false,
-        ];
-
-        yield 'single error' => [
-            ['Error message'],
-            true,
-        ];
-
-        yield 'multiple errors' => [
-            ['Error 1', 'Error 2'],
-            true,
-        ];
     }
 }

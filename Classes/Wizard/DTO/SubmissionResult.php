@@ -25,16 +25,6 @@ final readonly class SubmissionResult implements \JsonSerializable
         private array $errors = []
     ) {}
 
-    public function hasErrors(): bool
-    {
-        return !empty($this->errors);
-    }
-
-    public function isSuccess(): bool
-    {
-        return $this->success;
-    }
-
     public function jsonSerialize(): mixed
     {
         $data = [

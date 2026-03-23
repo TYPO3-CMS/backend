@@ -135,7 +135,7 @@ final class MfaConfigurationControllerTest extends FunctionalTestCase
         $response->getBody()->rewind();
         $responseContent = $response->getBody()->getContents();
         self::assertStringContainsString('Multi-factor authentication required', $responseContent);
-        self::assertMatchesRegularExpression('/<div.*class="card card-size-fixed-small card-success".*id="totp-provider"/s', $responseContent);
+        self::assertMatchesRegularExpression('/<div.*class="card card-size-small card-success".*id="totp-provider"/s', $responseContent);
     }
 
     #[Test]

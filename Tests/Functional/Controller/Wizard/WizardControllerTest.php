@@ -15,11 +15,10 @@ declare(strict_types=1);
  * The TYPO3 project - inspiring people to share!
  */
 
-namespace TYPO3\CMS\Backend\Tests\Unit\Controller\Wizard;
+namespace TYPO3\CMS\Backend\Tests\Functional\Controller\Wizard;
 
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\MockObject\MockObject;
-use Psr\Http\Message\ServerRequestInterface;
 use Symfony\Component\DependencyInjection\ServiceLocator;
 use TYPO3\CMS\Backend\Controller\Wizard\WizardController;
 use TYPO3\CMS\Backend\Wizard\DTO\Configuration;
@@ -29,13 +28,16 @@ use TYPO3\CMS\Backend\Wizard\DTO\SubmissionResult;
 use TYPO3\CMS\Backend\Wizard\WizardProviderInterface;
 use TYPO3\CMS\Backend\Wizard\WizardProviderRegistry;
 use TYPO3\CMS\Core\Http\JsonResponse;
-use TYPO3\TestingFramework\Core\Unit\UnitTestCase;
+use TYPO3\CMS\Core\Http\ServerRequest;
+use TYPO3\TestingFramework\Core\Functional\FunctionalTestCase;
 
-final class WizardControllerTest extends UnitTestCase
+final class WizardControllerTest extends FunctionalTestCase
 {
     private WizardController $subject;
 
     private MockObject|WizardProviderInterface $wizardProviderMock;
+
+    protected bool $initializeDatabase = false;
 
     protected function setUp(): void
     {
@@ -53,9 +55,9 @@ final class WizardControllerTest extends UnitTestCase
     #[Test]
     public function getConfigurationActionReturnsJsonFromProvider(): void
     {
-        $request = $this->createMock(ServerRequestInterface::class);
-        $request->method('getQueryParams')
-            ->willReturn(['mode' => 'foo']);
+        $request = (new ServerRequest('https://example.com/typo3/', 'GET'))->withQueryParams([
+            'mode' => 'foo',
+        ]);
 
         $this->wizardProviderMock->expects($this->once())
             ->method('getConfiguration')
@@ -75,9 +77,9 @@ final class WizardControllerTest extends UnitTestCase
     #[Test]
     public function submitDataActionReturnsJsonFromProvider(): void
     {
-        $request = $this->createMock(ServerRequestInterface::class);
-        $request->method('getQueryParams')
-            ->willReturn(['mode' => 'foo']);
+        $request = (new ServerRequest('https://example.com/typo3/', 'GET'))->withQueryParams([
+            'mode' => 'foo',
+        ]);
 
         $this->wizardProviderMock->expects($this->once())
             ->method('handleSubmit')

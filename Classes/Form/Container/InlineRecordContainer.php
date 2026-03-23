@@ -317,7 +317,7 @@ class InlineRecordContainer extends AbstractContainer
                     aria-expanded="' . ($isExpanded ? 'true' : 'false') . '" aria-controls="' . $ariaControls . '">
                 <span class="caret"></span>
                 <div class="panel-icon" id="' . $objectId . '_iconcontainer">
-                    ' . $this->iconFactory->getIconForRecord($foreignTable, $record, IconSize::SMALL)->setTitle(BackendUtility::getRecordIconAltText($record, $foreignTable, false))->render() . '
+                    ' . $this->iconFactory->getIconForRecord($foreignTable, $record, IconSize::SMALL, $this->data['tcaSchemata']->get($foreignTable))->setTitle(BackendUtility::getRecordIconAltText($record, $foreignTable, false))->render() . '
                 </div>
                 <div class="panel-title"><span id="' . $objectId . '_label">' . $recordTitle . '</span></div>
             </button>

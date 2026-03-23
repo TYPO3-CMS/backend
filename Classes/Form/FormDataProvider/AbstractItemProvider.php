@@ -392,7 +392,7 @@ abstract class AbstractItemProvider
                     }
                 } else {
                     // Else, determine icon based on record type, or a generic fallback
-                    $icon = $this->iconFactory->mapRecordTypeToIconIdentifier($foreignTable, $foreignRow);
+                    $icon = $this->iconFactory->mapRecordTypeToIconIdentifier($foreignTable, $foreignRow, $result['tcaSchemata']->get($foreignTable));
                 }
                 $item = [
                     'label' => $labelPrefix . BackendUtility::getRecordTitle($foreignTable, $foreignRow),

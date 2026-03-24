@@ -345,6 +345,7 @@ final class ElementBrowserParametersTest extends UnitTestCase
             'data-rte-parameters' => 'rteParam',
             'data-rte-configuration' => 'rteConfig',
             'data-irre-object-id' => 'data-4-pages-4-nav_icon',
+            'data-use-events' => null,
         ];
 
         self::assertSame($expected, $params->toDataAttributes());
@@ -374,7 +375,8 @@ final class ElementBrowserParametersTest extends UnitTestCase
             rteConfiguration: 'rteConfig',
             allowedTypes: 'gif,jpg',
             disallowedFileExtensions: 'exe,bat',
-            irreObjectId: 'data-4-pages'
+            irreObjectId: 'data-4-pages',
+            useEvents: true,
         );
 
         $expected = [
@@ -384,6 +386,7 @@ final class ElementBrowserParametersTest extends UnitTestCase
             'allowedTypes' => 'gif,jpg',
             'disallowedFileExtensions' => 'exe,bat',
             'irreObjectId' => 'data-4-pages',
+            'useEvents' => true,
         ];
 
         self::assertSame($expected, $params->toArray());
@@ -422,6 +425,7 @@ final class ElementBrowserParametersTest extends UnitTestCase
             'allowedTypes' => 'gif,jpg',
             'disallowedFileExtensions' => '',
             'irreObjectId' => '',
+            'useEvents' => false,
         ];
 
         self::assertSame($expected, $params->jsonSerialize());

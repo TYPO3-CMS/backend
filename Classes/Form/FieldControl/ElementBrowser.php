@@ -96,6 +96,7 @@ class ElementBrowser extends AbstractNode
             'data-field-reference' => $elementName,
             'data-allowed-types' => $allowed,
             'data-irre-object-id' => $objectPrefix,
+            'data-use-events' => 'true',
         ];
 
         // Add the default entry point - if found

@@ -48,6 +48,7 @@ final readonly class ElementBrowserParameters implements \JsonSerializable
         public string $allowedTypes = '',
         public string $disallowedFileExtensions = '',
         public string $irreObjectId = '',
+        public bool $useEvents = false,
     ) {}
 
     /**
@@ -112,6 +113,7 @@ final readonly class ElementBrowserParameters implements \JsonSerializable
             allowedTypes: (string)($parsedBody['allowedTypes'] ?? $queryParams['allowedTypes'] ?? ''),
             disallowedFileExtensions: (string)($parsedBody['disallowedFileExtensions'] ?? $queryParams['disallowedFileExtensions'] ?? ''),
             irreObjectId: (string)($parsedBody['irreObjectId'] ?? $queryParams['irreObjectId'] ?? ''),
+            useEvents: (bool)(int)($parsedBody['useEvents'] ?? $queryParams['useEvents'] ?? 0),
         );
     }
 
@@ -261,13 +263,22 @@ final readonly class ElementBrowserParameters implements \JsonSerializable
             // @deprecated Remove in v15.0: data-rte-configuration is a legacy attribute
             'data-rte-configuration' => $this->rteConfiguration ?: null,
             'data-irre-object-id' => $this->irreObjectId ?: null,
+            'data-use-events' => $this->useEvents ? 'true' : null,
         ];
     }
 
     /**
      * Returns array representation of the parameters.
      *
-     * @return array<string, string>
+     * @return array{
+     *   fieldReference: string,
+     *   rteParameters: string,
+     *   rteConfiguration: string,
+     *   allowedTypes: string,
+     *   disallowedFileExtensions: string,
+     *   irreObjectId: string,
+     *   useEvents: bool
+     * }
      */
     public function toArray(): array
     {
@@ -278,6 +289,7 @@ final readonly class ElementBrowserParameters implements \JsonSerializable
             'allowedTypes' => $this->allowedTypes,
             'disallowedFileExtensions' => $this->disallowedFileExtensions,
             'irreObjectId' => $this->irreObjectId,
+            'useEvents' => $this->useEvents,
         ];
     }
 
@@ -306,6 +318,9 @@ final readonly class ElementBrowserParameters implements \JsonSerializable
         }
         if ($this->irreObjectId !== '') {
             $params['irreObjectId'] = $this->irreObjectId;
+        }
+        if ($this->useEvents) {
+            $params['useEvents'] = '1';
         }
         return $params;
     }

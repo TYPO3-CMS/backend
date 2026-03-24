@@ -18,13 +18,21 @@ declare(strict_types=1);
 namespace TYPO3\CMS\Backend\Wizard;
 
 use Psr\Http\Message\ServerRequestInterface;
+use Symfony\Component\DependencyInjection\Attribute\AutoconfigureTag;
 use TYPO3\CMS\Backend\Wizard\DTO\Configuration;
 use TYPO3\CMS\Backend\Wizard\DTO\SubmissionResult;
 
+/**
+ * Interface for wizard providers.
+ *
+ * Use `Symfony\Component\DependencyInjection\Attribute\AsTaggedItem` attribute to define
+ * the wizard identifier.
+ *
+ * @internal
+ */
+#[AutoconfigureTag('backend.wizard.provider')]
 interface WizardProviderInterface
 {
-    public function getName(): string;
-
     public function getConfiguration(ServerRequestInterface $serverRequest): Configuration;
 
     public function handleSubmit(ServerRequestInterface $serverRequest): SubmissionResult;

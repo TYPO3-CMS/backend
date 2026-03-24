@@ -19,24 +19,22 @@ namespace TYPO3\CMS\Backend\Tests\Unit\Wizard;
 
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\MockObject\MockObject;
-use TYPO3\CMS\Backend\Wizard\WizardProviderFactory;
+use Symfony\Component\DependencyInjection\ServiceLocator;
 use TYPO3\CMS\Backend\Wizard\WizardProviderInterface;
+use TYPO3\CMS\Backend\Wizard\WizardProviderRegistry;
 use TYPO3\TestingFramework\Core\Unit\UnitTestCase;
 
-final class WizardProviderFactoryTest extends UnitTestCase
+final class WizardProviderRegistryTest extends UnitTestCase
 {
-    private WizardProviderFactory $subject;
+    private WizardProviderRegistry $subject;
 
     private MockObject|WizardProviderInterface $wizardProviderMock;
 
     protected function setUp(): void
     {
         parent::setUp();
-        $this->wizardProviderMock = $this->createConfiguredMock(WizardProviderInterface::class, [
-            'getName' => 'foo',
-
-        ]);
-        $this->subject = new WizardProviderFactory(new \ArrayIterator([$this->wizardProviderMock]));
+        $this->wizardProviderMock = $this->createMock(WizardProviderInterface::class);
+        $this->subject = new WizardProviderRegistry(new ServiceLocator(['foo' => fn() => $this->wizardProviderMock]));
     }
 
     #[Test]

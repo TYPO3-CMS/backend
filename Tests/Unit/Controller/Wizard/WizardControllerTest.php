@@ -20,13 +20,14 @@ namespace TYPO3\CMS\Backend\Tests\Unit\Controller\Wizard;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\MockObject\MockObject;
 use Psr\Http\Message\ServerRequestInterface;
+use Symfony\Component\DependencyInjection\ServiceLocator;
 use TYPO3\CMS\Backend\Controller\Wizard\WizardController;
 use TYPO3\CMS\Backend\Wizard\DTO\Configuration;
 use TYPO3\CMS\Backend\Wizard\DTO\Finisher;
 use TYPO3\CMS\Backend\Wizard\DTO\Step;
 use TYPO3\CMS\Backend\Wizard\DTO\SubmissionResult;
-use TYPO3\CMS\Backend\Wizard\WizardProviderFactory;
 use TYPO3\CMS\Backend\Wizard\WizardProviderInterface;
+use TYPO3\CMS\Backend\Wizard\WizardProviderRegistry;
 use TYPO3\CMS\Core\Http\JsonResponse;
 use TYPO3\TestingFramework\Core\Unit\UnitTestCase;
 
@@ -42,11 +43,9 @@ final class WizardControllerTest extends UnitTestCase
 
         $this->wizardProviderMock = $this->createMock(WizardProviderInterface::class);
 
-        $wizardProviderFactory = $this->createMock(WizardProviderFactory::class);
-        $wizardProviderFactory->expects($this->once())
-            ->method('getProvider')
-            ->with('foo')
-            ->willReturn($this->wizardProviderMock);
+        $wizardProviderFactory = new WizardProviderRegistry(
+            new ServiceLocator(['foo' => fn() => $this->wizardProviderMock])
+        );
 
         $this->subject = new WizardController($wizardProviderFactory);
     }

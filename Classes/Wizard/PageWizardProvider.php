@@ -18,6 +18,7 @@ declare(strict_types=1);
 namespace TYPO3\CMS\Backend\Wizard;
 
 use Psr\Http\Message\ServerRequestInterface;
+use Symfony\Component\DependencyInjection\Attribute\AsTaggedItem;
 use TYPO3\CMS\Backend\Routing\UriBuilder;
 use TYPO3\CMS\Backend\Utility\BackendUtility;
 use TYPO3\CMS\Backend\Wizard\DTO\Configuration;
@@ -26,20 +27,16 @@ use TYPO3\CMS\Backend\Wizard\DTO\Step;
 use TYPO3\CMS\Backend\Wizard\DTO\SubmissionResult;
 use TYPO3\CMS\Core\DataHandling\DataHandler;
 use TYPO3\CMS\Core\Localization\LanguageService;
+use TYPO3\CMS\Core\Utility\GeneralUtility;
 use TYPO3\CMS\Core\Utility\StringUtility;
 
+#[AsTaggedItem(index: 'page_wizard')]
 class PageWizardProvider implements WizardProviderInterface
 {
     public function __construct(
-        private DataHandler $dataHandler,
         private UriBuilder $uriBuilder,
         private PageWizardStepBuilder $stepFactory,
     ) {}
-
-    public function getName(): string
-    {
-        return 'page_wizard';
-    }
 
     public function getConfiguration(ServerRequestInterface $serverRequest): Configuration
     {
@@ -84,16 +81,16 @@ class PageWizardProvider implements WizardProviderInterface
             }
         }
 
-        $this->dataHandler->start($dataMap, []);
-        $this->dataHandler->process_datamap();
-        $this->dataHandler->process_cmdmap();
+        $dataHandler = GeneralUtility::makeInstance(DataHandler::class);
+        $dataHandler->start($dataMap, []);
+        $dataHandler->process_datamap();
 
-        if ($this->dataHandler->errorLog !== []) {
+        if ($dataHandler->errorLog !== []) {
             return SubmissionResult::createErrorResult(
-                $this->dataHandler->errorLog,
+                $dataHandler->errorLog,
             );
         }
-        $newPageUid = $this->dataHandler->substNEWwithIDs[$newPageUid] ?? null;
+        $newPageUid = $dataHandler->substNEWwithIDs[$newPageUid] ?? null;
 
         $redirectUrl = (string)$this->uriBuilder->buildUriFromRoute('web_layout', [
             'id' => $newPageUid,

@@ -20,8 +20,8 @@ namespace TYPO3\CMS\Backend\Controller\Wizard;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use TYPO3\CMS\Backend\Attribute\AsController;
-use TYPO3\CMS\Backend\Wizard\WizardProviderFactory;
 use TYPO3\CMS\Backend\Wizard\WizardProviderInterface;
+use TYPO3\CMS\Backend\Wizard\WizardProviderRegistry;
 use TYPO3\CMS\Core\Http\JsonResponse;
 
 /**
@@ -31,7 +31,7 @@ use TYPO3\CMS\Core\Http\JsonResponse;
 final readonly class WizardController
 {
     public function __construct(
-        private WizardProviderFactory $wizardProviderFactory
+        private WizardProviderRegistry $wizardProviderRegistry
     ) {}
 
     public function getConfigurationAction(ServerRequestInterface $request): ResponseInterface
@@ -54,6 +54,6 @@ final readonly class WizardController
 
     private function getProviderByRequest(ServerRequestInterface $request): WizardProviderInterface
     {
-        return $this->wizardProviderFactory->getProvider($request->getQueryParams()['mode'] ?? '');
+        return $this->wizardProviderRegistry->getProvider($request->getQueryParams()['mode'] ?? '');
     }
 }

@@ -78,12 +78,3 @@ services:
   TYPO3\CMS\Backend\Authentication\PasswordReset:
     arguments:
       $rateLimiterFactory: '@backendPasswordRecovery.rateLimiterFactory'
-
-  TYPO3\CMS\Backend\Wizard\WizardProviderFactory:
-    arguments:
-      - !tagged_iterator { tag: backend.wizard.provider }
-
-  TYPO3\CMS\Backend\Wizard\PageWizardProvider:
-    tags:
-      - { name: 'backend.wizard.provider' }
-

@@ -17,6 +17,12 @@ declare(strict_types=1);
 
 namespace TYPO3\CMS\Backend\Wizard\DTO;
 
+/**
+ * DTO for wizard configuration holding all steps.
+ * Used in WizardProviderInterface::getConfiguration() when dynamically loading wizard steps.
+ *
+ * @internal
+ */
 final readonly class Configuration implements \JsonSerializable
 {
     /**

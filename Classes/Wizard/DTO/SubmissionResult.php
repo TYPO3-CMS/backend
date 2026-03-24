@@ -17,6 +17,12 @@ declare(strict_types=1);
 
 namespace TYPO3\CMS\Backend\Wizard\DTO;
 
+/**
+ * DTO for the result of submitting wizard data, including success state, errors, and optional finisher.
+ * Used in WizardProviderInterface::handleSubmit() when returning the outcome of a wizard submission.
+ *
+ * @internal
+ */
 final readonly class SubmissionResult implements \JsonSerializable
 {
     private function __construct(

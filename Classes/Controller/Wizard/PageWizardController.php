@@ -39,6 +39,9 @@ use TYPO3\CMS\Core\Imaging\IconSize;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 
 /**
+ * Controller providing AJAX endpoints for page wizard functionality.
+ * Handles fetching doktypes, page details, and processed field values
+ *
  * @internal This class is a specific Backend controller implementation and is not considered part of the Public TYPO3 API.
  */
 #[AsController]

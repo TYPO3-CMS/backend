@@ -55,26 +55,6 @@ final class PageWizardStepBuilderTest extends FunctionalTestCase
     }
 
     #[Test]
-    public function getStepsForDokTypeThrowsExceptionIfConfigurationIsMissingFields(): void
-    {
-        $GLOBALS['TCA']['pages']['types']['999'] = [
-            'showitem' => 'title',
-            'wizardSteps' => [
-                'step1' => [
-                    'title' => 'Step 1',
-                ],
-            ],
-        ];
-        $this->get(TcaSchemaFactory::class)->rebuild($GLOBALS['TCA']);
-
-        $this->expectException(\UnexpectedValueException::class);
-        $this->expectExceptionCode(1773741784);
-
-        $subject = $this->get(PageWizardStepBuilder::class);
-        $subject->getStepsForDokType('999', 0, $this->getRequest());
-    }
-
-    #[Test]
     public function getStepsForDokTypeBuildsSteps(): void
     {
         $GLOBALS['TCA']['pages']['types']['999'] = [

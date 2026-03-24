@@ -27,22 +27,22 @@ use TYPO3\CMS\Backend\Wizard\DTO\Step;
 use TYPO3\CMS\Core\Localization\LanguageService;
 use TYPO3\CMS\Core\Page\JavaScriptModuleInstruction;
 use TYPO3\CMS\Core\Schema\Exception\UndefinedSchemaException;
+use TYPO3\CMS\Core\Schema\Field\FieldCollection;
 use TYPO3\CMS\Core\Schema\Field\FieldTypeInterface;
+use TYPO3\CMS\Core\Schema\Struct\WizardStep;
 use TYPO3\CMS\Core\Schema\TcaSchema;
 use TYPO3\CMS\Core\Schema\TcaSchemaFactory;
-use TYPO3\CMS\Core\Service\DependencyOrderingService;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 use TYPO3\CMS\Core\Utility\StringUtility;
 
 /**
  * @internal This is not a public API method, do not use in own extensions
  */
-readonly class PageWizardStepBuilder
+final readonly class PageWizardStepBuilder
 {
     public function __construct(
         private TcaSchemaFactory $tcaSchemaFactory,
         private UriBuilder $uriBuilder,
-        private DependencyOrderingService $dependencyOrderingService,
         private NodeFactory $nodeFactory,
         private FormResultFactory $formResultFactory,
         private FormDataCompiler $formDataCompiler,
@@ -50,44 +50,38 @@ readonly class PageWizardStepBuilder
 
     /**
      * @throws UndefinedSchemaException
-     * @throws \UnexpectedValueException
      */
     public function getStepsForDokType(string $dokType, int $pageUid, ServerRequestInterface $serverRequest): array
     {
         $steps = [];
         $dokTypeSchema = $this->getSchemaForDokType($dokType);
         $requiredFields = $dokTypeSchema->getFields(fn(FieldTypeInterface $field) => $field->isRequired())->getNames();
-        $sortedWizardConfiguration = $this->dependencyOrderingService->orderByDependencies($dokTypeSchema->getRawConfiguration()['wizardSteps'] ?? []);
         $newId = StringUtility::getUniqueId('NEW');
 
-        foreach ($sortedWizardConfiguration as $key => $configuration) {
-            $fields = $configuration['fields'] ?? [];
-            if ($fields === []) {
-                throw new \UnexpectedValueException('Wizard step configuration is missing fields.', 1773741784);
-            }
-
-            $requiredFields = array_diff($requiredFields, $fields);
-            $formData = $this->getFormData($serverRequest, $dokType, $pageUid, $fields, $newId);
-            $steps[] = $this->buildStep($key, $configuration['title'] ?? '', $formData);
+        foreach ($dokTypeSchema->getWizardSteps() as $wizardStep) {
+            $requiredFields = array_diff($requiredFields, $wizardStep->getFields()->getNames());
+            $formData = $this->getFormData($serverRequest, $dokType, $pageUid, $wizardStep, $newId);
+            $steps[] = $this->buildStep($wizardStep, $formData);
         }
 
         if ($requiredFields !== []) {
-            $formData = $this->getFormData($serverRequest, $dokType, $pageUid, $requiredFields, $newId);
-            $steps[] = $this->buildStep('requiredFields', 'Required fields', $formData);
+            $requiredStep = new WizardStep('requiredFields', $this->getLanguageService()->sL('core.wizard:wizard.step.required'), $this->getFieldCollection($requiredFields, $dokTypeSchema));
+            $formData = $this->getFormData($serverRequest, $dokType, $pageUid, $requiredStep, $newId);
+            $steps[] = $this->buildStep($requiredStep, $formData);
         }
 
         return $steps;
     }
 
-    protected function buildStep(string $key, string $title, array $formData): Step
+    private function buildStep(WizardStep $wizardStep, array $formData): Step
     {
         $formResult = $this->nodeFactory->create($formData)->render();
         $formResult = $this->formResultFactory->create($formResult);
 
         return Step::create('@typo3/backend/page-wizard/steps/form-engine-step.js')
             ->withConfigurationData([
-                'title' => $this->getLanguageService()->sL($title),
-                'key' => $key,
+                'title' => $this->getLanguageService()->sL($wizardStep->getTitle()),
+                'key' => $wizardStep->getIdentifier(),
                 'html' => '<form name="editform">' . $formResult->html . implode(LF, $formResult->hiddenFieldsHtml) . '</form>',
                 'modules' => [
                     JavaScriptModuleInstruction::create('@typo3/backend/form-engine.js')
@@ -101,9 +95,9 @@ readonly class PageWizardStepBuilder
             ]);
     }
 
-    protected function getFormData(ServerRequestInterface $serverRequest, string $doktype, int $pid, array $fields, string $newId): array
+    private function getFormData(ServerRequestInterface $serverRequest, string $doktype, int $pid, WizardStep $wizardStep, string $newId): array
     {
-        $fieldList = implode(',', $fields);
+        $fieldList = implode(',', $wizardStep->getFields()->getNames());
 
         $formDataCompilerInput = [
             'request' => $serverRequest,
@@ -124,7 +118,16 @@ readonly class PageWizardStepBuilder
         return $formData;
     }
 
-    protected function getLabelsForFields(array $formData): array
+    private function getFieldCollection(array $fieldNames, TcaSchema $tcaSchema): FieldCollection
+    {
+        $fields = [];
+        foreach ($fieldNames as $fieldName) {
+            $fields[$fieldName] = $tcaSchema->getField($fieldName);
+        }
+        return new FieldCollection($fields);
+    }
+
+    private function getLabelsForFields(array $formData): array
     {
         $labels = [];
         $processedFields = $formData['processedTca']['columns'] ?? [];
@@ -140,7 +143,7 @@ readonly class PageWizardStepBuilder
      * @throws UndefinedSchemaException
      * @throws \RuntimeException
      */
-    protected function getSchemaForDokType(string $dokType): TcaSchema
+    private function getSchemaForDokType(string $dokType): TcaSchema
     {
         $tcaSchema = $this->tcaSchemaFactory->get('pages');
         if (!$tcaSchema->hasSubSchema($dokType)) {
@@ -149,7 +152,7 @@ readonly class PageWizardStepBuilder
         return $tcaSchema->getSubSchema($dokType);
     }
 
-    protected function getLanguageService(): LanguageService
+    private function getLanguageService(): LanguageService
     {
         return $GLOBALS['LANG'];
     }

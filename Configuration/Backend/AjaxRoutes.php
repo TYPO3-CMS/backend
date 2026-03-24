@@ -518,21 +518,26 @@ return [
     'wizard_page_get_doktypes' => [
         'path' => '/wizard/page/doktypes',
         'target' => Controller\Wizard\PageWizardController::class . '::getDoktypesAction',
+        'methods' => ['GET'],
     ],
     'wizard_page_get_page_detail' => [
         'path' => '/wizard/page/page-detail',
         'target' => Controller\Wizard\PageWizardController::class . '::getPageDetailAction',
+        'methods' => ['GET'],
     ],
     'wizard_page_get_processed_value' => [
         'path' => '/wizard/page/processed-value',
         'target' => Controller\Wizard\PageWizardController::class . '::getProcessedValueAction',
+        'methods' => ['GET'],
     ],
     'wizard_config' => [
         'path' => '/wizard/config',
         'target' => Controller\Wizard\WizardController::class . '::getConfigurationAction',
+        'methods' => ['GET'],
     ],
     'wizard_submit' => [
         'path' => '/wizard/submit',
         'target' => Controller\Wizard\WizardController::class . '::submitDataAction',
+        'methods' => ['POST'],
     ],
 ];

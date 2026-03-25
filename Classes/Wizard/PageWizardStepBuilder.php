@@ -32,6 +32,7 @@ use TYPO3\CMS\Core\Schema\TcaSchema;
 use TYPO3\CMS\Core\Schema\TcaSchemaFactory;
 use TYPO3\CMS\Core\Service\DependencyOrderingService;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
+use TYPO3\CMS\Core\Utility\StringUtility;
 
 /**
  * @internal This is not a public API method, do not use in own extensions
@@ -57,6 +58,7 @@ readonly class PageWizardStepBuilder
         $dokTypeSchema = $this->getSchemaForDokType($dokType);
         $requiredFields = $dokTypeSchema->getFields(fn(FieldTypeInterface $field) => $field->isRequired())->getNames();
         $sortedWizardConfiguration = $this->dependencyOrderingService->orderByDependencies($dokTypeSchema->getRawConfiguration()['wizardSteps'] ?? []);
+        $newId = StringUtility::getUniqueId('NEW');
 
         foreach ($sortedWizardConfiguration as $key => $configuration) {
             $fields = $configuration['fields'] ?? [];
@@ -65,12 +67,12 @@ readonly class PageWizardStepBuilder
             }
 
             $requiredFields = array_diff($requiredFields, $fields);
-            $formData = $this->getFormData($serverRequest, $dokType, $pageUid, $fields);
+            $formData = $this->getFormData($serverRequest, $dokType, $pageUid, $fields, $newId);
             $steps[] = $this->buildStep($key, $configuration['title'] ?? '', $formData);
         }
 
         if ($requiredFields !== []) {
-            $formData = $this->getFormData($serverRequest, $dokType, $pageUid, $requiredFields);
+            $formData = $this->getFormData($serverRequest, $dokType, $pageUid, $requiredFields, $newId);
             $steps[] = $this->buildStep('requiredFields', 'Required fields', $formData);
         }
 
@@ -99,7 +101,7 @@ readonly class PageWizardStepBuilder
             ]);
     }
 
-    protected function getFormData(ServerRequestInterface $serverRequest, string $doktype, int $pid, array $fields): array
+    protected function getFormData(ServerRequestInterface $serverRequest, string $doktype, int $pid, array $fields, string $newId): array
     {
         $fieldList = implode(',', $fields);
 
@@ -110,6 +112,9 @@ readonly class PageWizardStepBuilder
             'command' => 'new',
             'vanillaUid' => $pid,
             'processedTca' => $GLOBALS['TCA']['pages'],
+            'databaseRow' => [
+                'uid' => $newId,
+            ],
         ];
         $formDataCompilerInput['processedTca']['types'][$doktype]['showitem'] = $fieldList;
 

@@ -27,7 +27,6 @@ use TYPO3\CMS\Backend\Wizard\DTO\SubmissionResult;
 use TYPO3\CMS\Core\DataHandling\DataHandler;
 use TYPO3\CMS\Core\Localization\LanguageService;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
-use TYPO3\CMS\Core\Utility\StringUtility;
 
 #[AsTaggedItem(index: 'page_wizard')]
 class PageWizardProvider implements WizardProviderInterface
@@ -59,25 +58,16 @@ class PageWizardProvider implements WizardProviderInterface
     public function handleSubmit(ServerRequestInterface $serverRequest): SubmissionResult
     {
         $params = $serverRequest->getParsedBody();
-        $newPageUid = StringUtility::getUniqueId('NEW_');
 
-        $dataMap = [
-            'pages' => [
-                $newPageUid => [
-                    'pid' => (int)$params['position']['pageUid'],
-                    'doktype' => (string)$params['doktype'],
-                ],
-            ],
-        ];
-
-        // TODO: either clean up the data we get passed beforehand
-        //       or make this code cleaner. ('data[pages'...)
-        foreach ($params['fields'] ?? [] as $stepData) {
-            foreach ($stepData['data[pages'] ?? [] as $randomKey => $fields) {
-                foreach ($fields as $fieldName => $fieldValue) {
-                    $dataMap['pages'][$newPageUid][$fieldName] = $fieldValue;
-                }
-            }
+        try {
+            $pageData = $params['data']['pages'] ?? throw new \InvalidArgumentException('No data was submitted.', 1774432979);
+            $newPageIdPlaceholder = key($pageData);
+            $dataMap['pages'] = $pageData;
+            // set doktype and pid manually as they are no native formengine fields
+            $dataMap['pages'][$newPageIdPlaceholder]['pid'] = (int)($params['position']['pageUid'] ?? throw new \InvalidArgumentException('Page position is not set', 1774433001));
+            $dataMap['pages'][$newPageIdPlaceholder]['doktype'] = (string)($params['doktype'] ?? throw new \InvalidArgumentException('Doktype is not set', 1774433002));
+        } catch (\InvalidArgumentException $e) {
+            return SubmissionResult::createErrorResult([$e->getMessage()]);
         }
 
         $dataHandler = GeneralUtility::makeInstance(DataHandler::class);
@@ -89,7 +79,7 @@ class PageWizardProvider implements WizardProviderInterface
                 $dataHandler->errorLog,
             );
         }
-        $newPageUid = $dataHandler->substNEWwithIDs[$newPageUid] ?? null;
+        $newPageUid = $dataHandler->substNEWwithIDs[$newPageIdPlaceholder] ?? null;
 
         $redirectUrl = (string)$this->uriBuilder->buildUriFromRoute('web_layout', [
             'id' => $newPageUid,

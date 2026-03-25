@@ -27,7 +27,10 @@ use TYPO3\CMS\Core\Utility\GeneralUtility;
  */
 class ModuleProvider
 {
-    public function __construct(protected readonly ModuleRegistry $moduleRegistry) {}
+    public function __construct(
+        protected readonly ModuleRegistry $moduleRegistry,
+        protected readonly ModuleAccessGateRegistry $gateRegistry,
+    ) {}
 
     /**
      * Simple wrapper for the registry, which just checks if a
@@ -201,24 +204,8 @@ class ModuleProvider
             return true;
         }
 
-        // Check if this module is only allowed by system maintainers (= admins who are in the list of system maintainers)
-        if ($moduleAccess === BackendUserAuthentication::ROLE_SYSTEMMAINTAINER) {
-            return $user->isSystemMaintainer();
-        }
-
-        // Check if this module is only allowed by admins
-        if ($moduleAccess === 'admin') {
-            return $user->isAdmin();
-        }
-
-        // This checks if a user is permitted to access the module as admin
-        if ($user->isAdmin()) {
-            return true;
-        }
-
-        // This checks if the user is having necessary module access permissions by either identifier or alias
-        if ($this->checkModuleAccess($user, $identifier)) {
-            return true;
+        if ($this->gateRegistry->has($moduleAccess)) {
+            return $this->gateRegistry->get($moduleAccess)->decide($module, $user) === ModuleAccessResult::Granted;
         }
 
         return false;
@@ -333,20 +320,6 @@ class ModuleProvider
             }
         }
         return false;
-    }
-
-    /**
-     * Check if user has access to module based on the identifier or an alias for the identifier
-     */
-    protected function checkModuleAccess(BackendUserAuthentication $user, string $identifier): bool
-    {
-        if ($user->check('modules', $identifier)) {
-            return true;
-        }
-
-        $alias = array_search($identifier, $this->moduleRegistry->getModuleAliases(), true);
-
-        return $alias !== false && $user->check('modules', $alias);
     }
 
     protected function getModuleMenuState(BackendUserAuthentication $user): array

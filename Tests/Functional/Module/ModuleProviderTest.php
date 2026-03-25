@@ -18,6 +18,10 @@ declare(strict_types=1);
 namespace TYPO3\CMS\Backend\Tests\Functional\Module;
 
 use PHPUnit\Framework\Attributes\Test;
+use TYPO3\CMS\Backend\Module\AccessGate\AdminGate;
+use TYPO3\CMS\Backend\Module\AccessGate\SystemMaintainerGate;
+use TYPO3\CMS\Backend\Module\AccessGate\UserGate;
+use TYPO3\CMS\Backend\Module\ModuleAccessGateRegistry;
 use TYPO3\CMS\Backend\Module\ModuleFactory;
 use TYPO3\CMS\Backend\Module\ModuleProvider;
 use TYPO3\CMS\Backend\Module\ModuleRegistry;
@@ -28,6 +32,16 @@ use TYPO3\TestingFramework\Core\Functional\FunctionalTestCase;
 final class ModuleProviderTest extends FunctionalTestCase
 {
     protected array $coreExtensionsToLoad = ['workspaces'];
+
+    private function createModuleProvider(ModuleRegistry $moduleRegistry): ModuleProvider
+    {
+        $gateRegistry = new ModuleAccessGateRegistry([
+            'systemMaintainer' => new SystemMaintainerGate(),
+            'admin' => new AdminGate(),
+            'user' => new UserGate($moduleRegistry),
+        ]);
+        return new ModuleProvider($moduleRegistry, $gateRegistry);
+    }
 
     #[Test]
     public function workspaceAccessIsInherited(): void
@@ -77,7 +91,7 @@ final class ModuleProviderTest extends FunctionalTestCase
         );
 
         $moduleRegistry = new ModuleRegistry([$parentModule, $subModule, $offlineWorkspace, $allWorkspaces]);
-        $moduleProvider = new ModuleProvider($moduleRegistry);
+        $moduleProvider = $this->createModuleProvider($moduleRegistry);
 
         $user = new BackendUserAuthentication();
 
@@ -158,7 +172,7 @@ final class ModuleProviderTest extends FunctionalTestCase
         );
 
         $moduleRegistry = new ModuleRegistry([$parentModule, $subModule, $anotherSubModule, $subModuleWithAlias]);
-        $moduleProvider = new ModuleProvider($moduleRegistry);
+        $moduleProvider = $this->createModuleProvider($moduleRegistry);
 
         $user = new BackendUserAuthentication();
         $user->workspace = 0;
@@ -209,7 +223,7 @@ final class ModuleProviderTest extends FunctionalTestCase
         );
 
         $moduleRegistry = new ModuleRegistry([$mainModule, $secondLevelModule, $thirdLevelModule1, $thirdLevelModule2]);
-        $moduleProvider = new ModuleProvider($moduleRegistry);
+        $moduleProvider = $this->createModuleProvider($moduleRegistry);
 
         $user = new BackendUserAuthentication();
         $user->workspace = 0;
@@ -261,7 +275,7 @@ final class ModuleProviderTest extends FunctionalTestCase
         );
 
         $moduleRegistry = new ModuleRegistry([$mainModule, $secondLevelModule, $anotherSecondLevelModule]);
-        $moduleProvider = new ModuleProvider($moduleRegistry);
+        $moduleProvider = $this->createModuleProvider($moduleRegistry);
 
         $user = new BackendUserAuthentication();
         $user->workspace = 0;
@@ -319,7 +333,7 @@ final class ModuleProviderTest extends FunctionalTestCase
         );
 
         $moduleRegistry = new ModuleRegistry([$mainModule, $secondLevelModule, $thirdLevelModule1, $thirdLevelModule2]);
-        $moduleProvider = new ModuleProvider($moduleRegistry);
+        $moduleProvider = $this->createModuleProvider($moduleRegistry);
 
         $user = new BackendUserAuthentication();
         $user->workspace = 0;
@@ -352,7 +366,7 @@ final class ModuleProviderTest extends FunctionalTestCase
             $level1, $level2, $level3Accessible, $level3Denied,
             $level4Accessible, $level4Denied, $level5Accessible, $level5Denied,
         ]);
-        $moduleProvider = new ModuleProvider($moduleRegistry);
+        $moduleProvider = $this->createModuleProvider($moduleRegistry);
 
         $user = new BackendUserAuthentication();
         $user->workspace = 0;
@@ -399,7 +413,7 @@ final class ModuleProviderTest extends FunctionalTestCase
         $moduleRegistry = new ModuleRegistry([
             $main1, $main2, $sub1, $sub2, $subsub1, $subsub2, $subsubsub1, $subsubsub2,
         ]);
-        $moduleProvider = new ModuleProvider($moduleRegistry);
+        $moduleProvider = $this->createModuleProvider($moduleRegistry);
 
         $user = new BackendUserAuthentication();
         $user->workspace = 0;
@@ -444,7 +458,7 @@ final class ModuleProviderTest extends FunctionalTestCase
         $level4b = $this->get(ModuleFactory::class)->createModule('level4b', ['parent' => 'level3b']);
 
         $moduleRegistry = new ModuleRegistry([$main, $level2, $level3a, $level3b, $level4a, $level4b]);
-        $moduleProvider = new ModuleProvider($moduleRegistry);
+        $moduleProvider = $this->createModuleProvider($moduleRegistry);
 
         // Set TSConfig via database
         $this->importCSVDataSet(__DIR__ . '/../Fixtures/be_users.csv');
@@ -509,7 +523,7 @@ final class ModuleProviderTest extends FunctionalTestCase
         ]);
 
         $moduleRegistry = new ModuleRegistry([$main, $level2, $level3, $level4accessible, $level4denied]);
-        $moduleProvider = new ModuleProvider($moduleRegistry);
+        $moduleProvider = $this->createModuleProvider($moduleRegistry);
 
         $user = new BackendUserAuthentication();
         $user->workspace = 0;

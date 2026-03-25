@@ -154,6 +154,7 @@ final class FilesControlContainerTest extends FunctionalTestCase
                 ],
             ],
             'returnUrl' => '',
+            'tcaSchemata' => new SchemaCollection([]),
         ]);
         $result = $subject->render();
 

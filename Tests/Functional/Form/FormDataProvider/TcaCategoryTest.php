@@ -64,7 +64,7 @@ final class TcaCategoryTest extends FunctionalTestCase
         // We expect no change to the input data
         $expected = $input;
 
-        self::assertEquals($expected, (new TcaCategory())->addData($input));
+        self::assertEquals($expected, $this->createSubject()->addData($input));
     }
 
     #[Test]
@@ -94,7 +94,7 @@ final class TcaCategoryTest extends FunctionalTestCase
         // We expect no change to the input data
         $expected = $input;
 
-        self::assertEquals($expected, (new TcaCategory())->addData($input));
+        self::assertEquals($expected, $this->createSubject()->addData($input));
     }
 
     #[Test]
@@ -115,9 +115,18 @@ final class TcaCategoryTest extends FunctionalTestCase
                     ],
                 ],
             ],
+            'rootline' => [],
+            'site' => null,
         ];
         $input = $this->addTcaSchemata($input);
 
+        $result = $this->createSubject()->addData($input);
+
+        // Verify items are populated (flat item list from foreign table)
+        self::assertNotEmpty($result['processedTca']['columns']['categories']['config']['items']);
+
+        // Compare structural result without items (tested separately in AJAX tests)
+        unset($result['processedTca']['columns']['categories']['config']['items']);
         $expected = $input;
         $expected['databaseRow']['categories'] = ['2'];
         $expected['processedTca']['columns']['categories']['config']['treeConfig'] = [
@@ -129,7 +138,7 @@ final class TcaCategoryTest extends FunctionalTestCase
             ],
         ];
 
-        self::assertEquals($expected, (new TcaCategory())->addData($input));
+        self::assertEquals($expected, $result);
     }
 
     #[Test]
@@ -167,8 +176,14 @@ final class TcaCategoryTest extends FunctionalTestCase
                     ],
                 ],
             ],
+            'rootline' => [],
+            'site' => null,
         ];
         $input = $this->addTcaSchemata($input);
+
+        $result = $this->createSubject()->addData($input);
+        self::assertNotEmpty($result['processedTca']['columns']['categories']['config']['items']);
+        unset($result['processedTca']['columns']['categories']['config']['items']);
 
         $expected = $input;
         $expected['databaseRow']['categories'] = ['2'];
@@ -182,7 +197,7 @@ final class TcaCategoryTest extends FunctionalTestCase
             ],
         ];
 
-        self::assertEquals($expected, (new TcaCategory())->addData($input));
+        self::assertEquals($expected, $result);
     }
 
     public static function addDataOverridesDefaultFieldConfigurationBySiteConfigDataProvider(): array
@@ -246,8 +261,13 @@ final class TcaCategoryTest extends FunctionalTestCase
                 ],
             ],
             'site' => $site,
+            'rootline' => [],
         ];
         $input = $this->addTcaSchemata($input);
+
+        $result = $this->createSubject()->addData($input);
+        self::assertNotEmpty($result['processedTca']['columns']['categories']['config']['items']);
+        unset($result['processedTca']['columns']['categories']['config']['items']);
 
         $expected = $input;
         $expected['databaseRow']['categories'] = ['2'];
@@ -261,7 +281,7 @@ final class TcaCategoryTest extends FunctionalTestCase
             ],
         ];
 
-        self::assertEquals($expected, (new TcaCategory())->addData($input));
+        self::assertEquals($expected, $result);
     }
 
     #[Test]
@@ -282,8 +302,14 @@ final class TcaCategoryTest extends FunctionalTestCase
                     ],
                 ],
             ],
+            'rootline' => [],
+            'site' => null,
         ];
         $input = $this->addTcaSchemata($input);
+
+        $result = $this->createSubject()->addData($input);
+        self::assertNotEmpty($result['processedTca']['columns']['categories']['config']['items']);
+        unset($result['processedTca']['columns']['categories']['config']['items']);
 
         $expected = $input;
         $expected['databaseRow']['categories'] = [
@@ -299,7 +325,7 @@ final class TcaCategoryTest extends FunctionalTestCase
             ],
         ];
 
-        self::assertEquals($expected, (new TcaCategory())->addData($input));
+        self::assertEquals($expected, $result);
     }
 
     #[Test]
@@ -335,7 +361,7 @@ final class TcaCategoryTest extends FunctionalTestCase
         $this->expectExceptionCode(1627336557);
         $this->expectException(\RuntimeException::class);
 
-        (new TcaCategory())->addData($input);
+        $this->createSubject()->addData($input);
     }
 
     #[Test]
@@ -378,10 +404,7 @@ final class TcaCategoryTest extends FunctionalTestCase
         // Expect fetched category items
         $expected['processedTca']['columns']['categories']['config']['items'] = $this->getExpectedCategoryItems([31]);
 
-        $category = new TcaCategory();
-        $category->injectConnectionPool($this->get(ConnectionPool::class));
-        $category->injectIconFactory($this->get(IconFactory::class));
-        self::assertEquals($expected, $category->addData($input));
+        self::assertEquals($expected, $this->createSubject()->addData($input));
     }
 
     #[Test]
@@ -450,10 +473,7 @@ final class TcaCategoryTest extends FunctionalTestCase
             $expected['processedTca']['columns']['categories']['config']['items']
         );
 
-        $category = new TcaCategory();
-        $category->injectConnectionPool($this->get(ConnectionPool::class));
-        $category->injectIconFactory($this->get(IconFactory::class));
-        self::assertEquals($expected, $category->addData($input));
+        self::assertEquals($expected, $this->createSubject()->addData($input));
     }
 
     #[Test]
@@ -512,10 +532,15 @@ final class TcaCategoryTest extends FunctionalTestCase
             $expected['processedTca']['columns']['categories']['config']['items']
         );
 
+        self::assertEquals($expected, $this->createSubject()->addData($input));
+    }
+
+    private function createSubject(): TcaCategory
+    {
         $category = new TcaCategory();
         $category->injectConnectionPool($this->get(ConnectionPool::class));
         $category->injectIconFactory($this->get(IconFactory::class));
-        self::assertEquals($expected, $category->addData($input));
+        return $category;
     }
 
     private function addTcaSchemata(array $result): array

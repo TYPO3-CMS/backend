@@ -118,6 +118,7 @@ class NodeFactory
         'tcaDescription' => FieldInformation\TcaDescription::class,
         'adminIsSystemMaintainer' => FieldInformation\AdminIsSystemMaintainer::class,
         'backendLayoutFromParentPage' => FieldInformation\BackendLayoutFromParentPage::class,
+        'noSelectableItemsAvailable' => FieldInformation\NoSelectableItemsAvailable::class,
 
         // Element wizards
         'defaultLanguageDifferences' => FieldWizard\DefaultLanguageDifferences::class,

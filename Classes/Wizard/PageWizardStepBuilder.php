@@ -20,7 +20,6 @@ namespace TYPO3\CMS\Backend\Wizard;
 use Psr\Http\Message\ServerRequestInterface;
 use TYPO3\CMS\Backend\Form\FormDataCompiler;
 use TYPO3\CMS\Backend\Form\FormDataGroup\TcaDatabaseRecord;
-use TYPO3\CMS\Backend\Form\FormResult;
 use TYPO3\CMS\Backend\Form\FormResultFactory;
 use TYPO3\CMS\Backend\Form\NodeFactory;
 use TYPO3\CMS\Backend\Routing\UriBuilder;
@@ -66,20 +65,23 @@ readonly class PageWizardStepBuilder
             }
 
             $requiredFields = array_diff($requiredFields, $fields);
-            $formResult = $this->getFormResultForStep($serverRequest, $dokType, $pageUid, $fields);
-            $steps[] = $this->buildStep($key, $configuration['title'] ?? '', $fields, $formResult);
+            $formData = $this->getFormData($serverRequest, $dokType, $pageUid, $fields);
+            $steps[] = $this->buildStep($key, $configuration['title'] ?? '', $formData);
         }
 
         if ($requiredFields !== []) {
-            $formResult = $this->getFormResultForStep($serverRequest, $dokType, $pageUid, $requiredFields);
-            $steps[] = $this->buildStep('requiredFields', 'Required fields', $requiredFields, $formResult);
+            $formData = $this->getFormData($serverRequest, $dokType, $pageUid, $requiredFields);
+            $steps[] = $this->buildStep('requiredFields', 'Required fields', $formData);
         }
 
         return $steps;
     }
 
-    protected function buildStep(string $key, string $title, array $fields, FormResult $formResult): Step
+    protected function buildStep(string $key, string $title, array $formData): Step
     {
+        $formResult = $this->nodeFactory->create($formData)->render();
+        $formResult = $this->formResultFactory->create($formResult);
+
         return Step::create('@typo3/backend/page-wizard/steps/form-engine-step.js')
             ->withConfigurationData([
                 'title' => $this->getLanguageService()->sL($title),
@@ -93,11 +95,11 @@ readonly class PageWizardStepBuilder
                         ),
                     ...$formResult->javaScriptModules,
                 ],
-                'labels' => $this->getLabelsForFields($fields),
+                'labels' => $this->getLabelsForFields($formData),
             ]);
     }
 
-    protected function getFormResultForStep(ServerRequestInterface $serverRequest, string $doktype, int $pid, array $fields): FormResult
+    protected function getFormData(ServerRequestInterface $serverRequest, string $doktype, int $pid, array $fields): array
     {
         $fieldList = implode(',', $fields);
 
@@ -114,21 +116,16 @@ readonly class PageWizardStepBuilder
         $formData = $this->formDataCompiler->compile($formDataCompilerInput, GeneralUtility::makeInstance(TcaDatabaseRecord::class));
         $formData['renderType'] = 'listOfFieldsContainer';
         $formData['fieldListToRender'] = $fieldList;
-
-        $formResult = $this->nodeFactory->create($formData)->render();
-        return $this->formResultFactory->create($formResult);
+        return $formData;
     }
 
-    protected function getLabelsForFields(array $fields): array
+    protected function getLabelsForFields(array $formData): array
     {
-        $languageService = $this->getLanguageService();
-        $pageSchema = $this->tcaSchemaFactory->get('pages');
-        $fields = $pageSchema->getFields(fn(FieldTypeInterface $field) => in_array($field->getName(), $fields));
-
         $labels = [];
+        $processedFields = $formData['processedTca']['columns'] ?? [];
 
-        foreach ($fields as $field) {
-            $labels[$field->getName()] = $languageService->sL($field->getLabel());
+        foreach ($processedFields as $fieldName => $fieldConfiguration) {
+            $labels[$fieldName] = $fieldConfiguration['label'] ?? '';
         }
 
         return $labels;

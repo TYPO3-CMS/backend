@@ -51,6 +51,24 @@
       <trans-unit id="pagesCreated.message">
         <source>The pages were created successfully.</source>
       </trans-unit>
+      <trans-unit id="multiplePagesCanNotBeCreated.title">
+        <source>Creation of multiple is disabled because of field requirements</source>
+      </trans-unit>
+      <trans-unit id="multiplePagesCanNotBeCreated.message">
+        <source>Please use the page creation wizard instead.</source>
+      </trans-unit>
+      <trans-unit id="multiplePagesCanNotBeCreated.buttonLabel">
+        <source>Create single page</source>
+      </trans-unit>
+      <trans-unit id="availablePageTypesHaveBeenFiltered.title">
+        <source>Some page types have been filtered because of field requirements</source>
+      </trans-unit>
+      <trans-unit id="availablePageTypesHaveBeenFiltered.message">
+        <source>The following page types need to be created using the page creation wizard:</source>
+      </trans-unit>
+      <trans-unit id="availablePageTypesHaveBeenFiltered.buttonLabel">
+        <source>Create single page</source>
+      </trans-unit>
     </body>
   </file>
 </xliff>

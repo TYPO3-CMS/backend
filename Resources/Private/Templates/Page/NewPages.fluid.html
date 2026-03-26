@@ -94,92 +94,133 @@
                     </f:if>
                 </f:then>
                 <f:else>
-                    <div class="t3js-newmultiplepages-newlinetemplate" style="display:none">
-                        <f:render section="FormLine" arguments="{line: {index: '[0]', label: '[1]', pageTypes: '{pageTypes}'}}" />
-                    </div>
+                    <f:if condition="{pageTypes->f:count()} === 0">
+                        <f:then>
+                            <f:asset.module identifier="@typo3/backend/page-wizard/new-page-wizard-button.js"/>
+                            <f:be.infobox
+                                title="{f:translate(key: 'multiplePagesCanNotBeCreated.title', domain: 'backend.pages_new')}"
+                                state="{f:constant(name: 'TYPO3\CMS\Core\Type\ContextualFeedbackSeverity::INFO')}"
+                            >
+                                <p>
+                                    <f:translate key="multiplePagesCanNotBeCreated.message" domain="backend.pages_new"/>
+                                </p>
+                                <typo3-backend-new-page-wizard-button
+                                    class="btn btn-secondary"
+                                    configuration="{wizardConfiguration -> f:format.json()}"
+                                    data-page-create="inside"
+                                >
+                                    <f:translate key="multiplePagesCanNotBeCreated.buttonLabel" domain="backend.pages_new"/>
+                                </typo3-backend-new-page-wizard-button>
+                            </f:be.infobox>
+                        </f:then>
+                        <f:else>
+                            <f:if condition="{filteredTypes->f:count()} > 0">
+                                <f:asset.module identifier="@typo3/backend/page-wizard/new-page-wizard-button.js"/>
+                                <f:be.infobox
+                                    title="{f:translate(key: 'availablePageTypesHaveBeenFiltered.title', domain: 'backend.pages_new')}"
+                                    state="{f:constant(name: 'TYPO3\CMS\Core\Type\ContextualFeedbackSeverity::INFO')}"
+                                >
+                                    <p>
+                                        <f:translate key="availablePageTypesHaveBeenFiltered.message" domain="backend.pages_new"/>
+                                        <f:for each="{filteredTypes}" as="label" iteration="i"><f:if condition="{i.isFirst}"><f:else>, </f:else></f:if>{label}</f:for>
+                                    </p>
+                                    <typo3-backend-new-page-wizard-button
+                                        class="btn btn-secondary"
+                                        configuration="{wizardConfiguration -> f:format.json()}"
+                                        data-page-create="inside"
+                                    >
+                                        <f:translate key="availablePageTypesHaveBeenFiltered.buttonLabel" domain="backend.pages_new"/>
+                                    </typo3-backend-new-page-wizard-button>
+                                </f:be.infobox>
+                            </f:if>
+                            <div class="t3js-newmultiplepages-newlinetemplate" style="display:none">
+                                <f:render section="FormLine" arguments="{line: {index: '[0]', label: '[1]', pageTypes: '{pageTypes}'}}" />
+                            </div>
 
-                    <form action="{be:moduleLink(route:'pages_new', arguments:'{id:pageUid}')}" method="post">
-                        <div class="form-group t3js-newmultiplepages-container">
-                            <f:render section="FormLine" arguments="{line: {index: '0', label: '1', pageTypes: '{pageTypes}'}}" />
-                            <f:render section="FormLine" arguments="{line: {index: '1', label: '2', pageTypes: '{pageTypes}'}}" />
-                            <f:render section="FormLine" arguments="{line: {index: '2', label: '3', pageTypes: '{pageTypes}'}}" />
-                            <f:render section="FormLine" arguments="{line: {index: '3', label: '4', pageTypes: '{pageTypes}'}}" />
-                            <f:render section="FormLine" arguments="{line: {index: '4', label: '5', pageTypes: '{pageTypes}'}}" />
-                        </div>
+                            <form action="{be:moduleLink(route:'pages_new', arguments:'{id:pageUid}')}" method="post">
+                                <div class="form-group t3js-newmultiplepages-container">
+                                    <f:render section="FormLine" arguments="{line: {index: '0', label: '1', pageTypes: '{pageTypes}'}}" />
+                                    <f:render section="FormLine" arguments="{line: {index: '1', label: '2', pageTypes: '{pageTypes}'}}" />
+                                    <f:render section="FormLine" arguments="{line: {index: '2', label: '3', pageTypes: '{pageTypes}'}}" />
+                                    <f:render section="FormLine" arguments="{line: {index: '3', label: '4', pageTypes: '{pageTypes}'}}" />
+                                    <f:render section="FormLine" arguments="{line: {index: '4', label: '5', pageTypes: '{pageTypes}'}}" />
+                                </div>
 
-                        <div class="form-group">
-                            <input
-                                class="btn btn-default t3js-newmultiplepages-createnewfields"
-                                type="button"
-                                value="{f:translate(key:'LLL:EXT:backend/Resources/Private/Language/locallang_pages_new.xlf:addMoreLines')}"
-                            />
-                        </div>
+                                <div class="form-group">
+                                    <input
+                                        class="btn btn-default t3js-newmultiplepages-createnewfields"
+                                        type="button"
+                                        value="{f:translate(key:'LLL:EXT:backend/Resources/Private/Language/locallang_pages_new.xlf:addMoreLines')}"
+                                    />
+                                </div>
 
-                        <div class="form-group">
-                            <div class="formengine-field-item">
-                                <div class="form-wizards-wrap">
-                                    <div class="form-wizards-item-element">
-                                        <div class="form-check form-check-type-icon-toggle">
-                                            <input type="checkbox" class="form-check-input" name="createInListEnd" id="createInListEnd" value="1" />
-                                            <label for="createInListEnd" class="form-check-label">
-                                                <span class="form-check-label-icon">
-                                                    <span class="form-check-label-icon-checked">
-                                                        <core:icon identifier="actions-check" size="small" alternativeMarkupIdentifier="inline" />
-                                                    </span>
-                                                    <span class="form-check-label-icon-unchecked">
-                                                        <core:icon identifier="miscellaneous-placeholder" size="small" alternativeMarkupIdentifier="inline" />
-                                                    </span>
-                                                </span>
-                                                <f:translate key="LLL:EXT:backend/Resources/Private/Language/locallang_pages_new.xlf:listEnd" />
-                                            </label>
-                                        </div>
-                                        <div class="form-check form-check-type-icon-toggle">
-                                            <input type="checkbox" class="form-check-input" name="hidePages" id="hidePages" value="1" />
-                                            <label for="hidePages" class="form-check-label">
-                                                <span class="form-check-label-icon">
-                                                    <span class="form-check-label-icon-checked">
-                                                        <core:icon identifier="actions-check" size="small" alternativeMarkupIdentifier="inline" />
-                                                    </span>
-                                                    <span class="form-check-label-icon-unchecked">
-                                                        <core:icon identifier="miscellaneous-placeholder" size="small" alternativeMarkupIdentifier="inline" />
-                                                    </span>
-                                                </span>
-                                                <f:translate key="LLL:EXT:backend/Resources/Private/Language/locallang_pages_new.xlf:hidePages" />
-                                            </label>
-                                        </div>
-                                        <div class="form-check form-check-type-icon-toggle">
-                                            <input type="checkbox" class="form-check-input" name="hidePagesInMenus" id="hidePagesInMenus" value="1" />
-                                            <label for="hidePagesInMenus" class="form-check-label">
-                                                <span class="form-check-label-icon">
-                                                    <span class="form-check-label-icon-checked">
-                                                        <core:icon identifier="actions-check" size="small" alternativeMarkupIdentifier="inline" />
-                                                    </span>
-                                                    <span class="form-check-label-icon-unchecked">
-                                                        <core:icon identifier="miscellaneous-placeholder" size="small" alternativeMarkupIdentifier="inline" />
-                                                    </span>
-                                                </span>
-                                                <f:translate key="LLL:EXT:backend/Resources/Private/Language/locallang_pages_new.xlf:hidePagesInMenus" />
-                                            </label>
+                                <div class="form-group">
+                                    <div class="formengine-field-item">
+                                        <div class="form-wizards-wrap">
+                                            <div class="form-wizards-item-element">
+                                                <div class="form-check form-check-type-icon-toggle">
+                                                    <input type="checkbox" class="form-check-input" name="createInListEnd" id="createInListEnd" value="1" />
+                                                    <label for="createInListEnd" class="form-check-label">
+                                                        <span class="form-check-label-icon">
+                                                            <span class="form-check-label-icon-checked">
+                                                                <core:icon identifier="actions-check" size="small" alternativeMarkupIdentifier="inline" />
+                                                            </span>
+                                                            <span class="form-check-label-icon-unchecked">
+                                                                <core:icon identifier="miscellaneous-placeholder" size="small" alternativeMarkupIdentifier="inline" />
+                                                            </span>
+                                                        </span>
+                                                        <f:translate key="LLL:EXT:backend/Resources/Private/Language/locallang_pages_new.xlf:listEnd" />
+                                                    </label>
+                                                </div>
+                                                <div class="form-check form-check-type-icon-toggle">
+                                                    <input type="checkbox" class="form-check-input" name="hidePages" id="hidePages" value="1" />
+                                                    <label for="hidePages" class="form-check-label">
+                                                        <span class="form-check-label-icon">
+                                                            <span class="form-check-label-icon-checked">
+                                                                <core:icon identifier="actions-check" size="small" alternativeMarkupIdentifier="inline" />
+                                                            </span>
+                                                            <span class="form-check-label-icon-unchecked">
+                                                                <core:icon identifier="miscellaneous-placeholder" size="small" alternativeMarkupIdentifier="inline" />
+                                                            </span>
+                                                        </span>
+                                                        <f:translate key="LLL:EXT:backend/Resources/Private/Language/locallang_pages_new.xlf:hidePages" />
+                                                    </label>
+                                                </div>
+                                                <div class="form-check form-check-type-icon-toggle">
+                                                    <input type="checkbox" class="form-check-input" name="hidePagesInMenus" id="hidePagesInMenus" value="1" />
+                                                    <label for="hidePagesInMenus" class="form-check-label">
+                                                        <span class="form-check-label-icon">
+                                                            <span class="form-check-label-icon-checked">
+                                                                <core:icon identifier="actions-check" size="small" alternativeMarkupIdentifier="inline" />
+                                                            </span>
+                                                            <span class="form-check-label-icon-unchecked">
+                                                                <core:icon identifier="miscellaneous-placeholder" size="small" alternativeMarkupIdentifier="inline" />
+                                                            </span>
+                                                        </span>
+                                                        <f:translate key="LLL:EXT:backend/Resources/Private/Language/locallang_pages_new.xlf:hidePagesInMenus" />
+                                                    </label>
+                                                </div>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
-                            </div>
-                        </div>
 
-                        <div class="form-group">
-                            <input
-                                class="btn btn-primary"
-                                type="submit"
-                                name="create"
-                                value="{f:translate(key:'LLL:EXT:backend/Resources/Private/Language/locallang_pages_new.xlf:create')}"
-                            />
-                            <input
-                                class="btn btn-default t3js-newmultiplepages-reset-fields"
-                                type="reset"
-                                value="{f:translate(key: 'LLL:EXT:backend/Resources/Private/Language/locallang_pages_new.xlf:reset')}"
-                            />
-                        </div>
-                    </form>
+                                <div class="form-group">
+                                    <input
+                                        class="btn btn-primary"
+                                        type="submit"
+                                        name="create"
+                                        value="{f:translate(key:'LLL:EXT:backend/Resources/Private/Language/locallang_pages_new.xlf:create')}"
+                                    />
+                                    <input
+                                        class="btn btn-default t3js-newmultiplepages-reset-fields"
+                                        type="reset"
+                                        value="{f:translate(key: 'LLL:EXT:backend/Resources/Private/Language/locallang_pages_new.xlf:reset')}"
+                                    />
+                                </div>
+                            </form>
+                        </f:else>
+                    </f:if>
                 </f:else>
             </f:if>
         </f:else>

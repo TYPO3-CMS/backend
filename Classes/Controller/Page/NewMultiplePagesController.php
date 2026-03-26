@@ -117,7 +117,12 @@ readonly class NewMultiplePagesController
                 $view->assign('visiblePages', $visiblePages);
             } else {
                 $hasNewPagesData = false;
-                $view->assign('pageTypes', $this->getTypeSelectData($pageUid, $request));
+                $types = $this->getTypeSelectData($pageUid, $request);
+                $filteredTypes = [];
+                $types = $this->filterTypesThatOnlyRequireTitle($types, $filteredTypes);
+                $view->assign('pageTypes', $types);
+                $view->assign('filteredTypes', $filteredTypes);
+                $view->assign('wizardConfiguration', ['positionData' => ['pageUid' => $pageUid, 'insertPosition' => 'inside']]);
             }
             $view->assign('hasNewPagesData', $hasNewPagesData);
         }
@@ -178,6 +183,30 @@ readonly class NewMultiplePagesController
         }
 
         return $pagesCreated;
+    }
+
+    protected function filterTypesThatOnlyRequireTitle(array $selectData, array &$filteredTypes): array
+    {
+        $pageSchema = $this->tcaSchemaFactory->get('pages');
+
+        foreach ($selectData as $group => $types) {
+            foreach ($types as $index => $type) {
+                $typeValue = (string)$type['value'];
+                $schema = $pageSchema->getSubSchema($typeValue);
+                foreach ($schema->getFields() as $field) {
+                    if ($field->isRequired() && $field->getName() !== 'title') {
+                        unset($selectData[$group][$index]);
+                        $filteredTypes[$typeValue] = $type['label'];
+                        continue 2;
+                    }
+                }
+            }
+        }
+
+        // Remove empty categories
+        $selectData = array_filter($selectData, static fn(array $types) => count($types) > 0);
+
+        return $selectData;
     }
 
     /**

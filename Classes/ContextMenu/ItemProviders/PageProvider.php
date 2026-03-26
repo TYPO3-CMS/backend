@@ -110,6 +110,11 @@ class PageProvider extends RecordProvider
                     'iconIdentifier' => 'actions-page-move',
                     'callbackAction' => 'pagesSort',
                 ],
+                'pagesNewMultiple' => [
+                    'label' => 'LLL:EXT:backend/Resources/Private/Language/locallang_pages_new.xlf:title',
+                    'iconIdentifier' => 'apps-pagetree-drag-move-between',
+                    'callbackAction' => 'pagesNewMultiple',
+                ],
                 'mountAsTreeRoot' => [
                     'label' => 'LLL:EXT:core/Resources/Private/Language/locallang_core.xlf:cm.tempMountPoint',
                     'iconIdentifier' => 'actions-pagetree-mountroot',
@@ -193,6 +198,7 @@ class PageProvider extends RecordProvider
                 $canRender = $this->canBeEdited();
                 break;
             case 'new':
+            case 'pagesNewMultiple':
                 $canRender = $this->canBeCreated();
                 break;
             case 'info':
@@ -488,6 +494,12 @@ class PageProvider extends RecordProvider
             $uriBuilder = GeneralUtility::makeInstance(UriBuilder::class);
             $attributes += [
                 'data-pages-sort-url' => (string)$uriBuilder->buildUriFromRoute('pages_sort', ['id' => $this->record['uid'] ?? null]),
+            ];
+        }
+        if ($itemName === 'pagesNewMultiple') {
+            $uriBuilder = GeneralUtility::makeInstance(UriBuilder::class);
+            $attributes += [
+                'data-pages-new-multiple-url' => (string)$uriBuilder->buildUriFromRoute('pages_new', ['id' => $this->record['uid'] ?? 0]),
             ];
         }
 

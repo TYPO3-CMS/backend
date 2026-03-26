@@ -13,6 +13,9 @@
       <trans-unit id="step.doktype.not_allowed_doktype.message">
         <source>The selected page type is not allowed here. Please choose a different type.</source>
       </trans-unit>
+      <trans-unit id="step.doktype.filter.noResults">
+        <source>No matching page type found.</source>
+      </trans-unit>
       <trans-unit id="step.setup">
         <source>Page Setup</source>
       </trans-unit>

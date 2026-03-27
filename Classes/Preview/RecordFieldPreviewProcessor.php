@@ -124,6 +124,9 @@ final class RecordFieldPreviewProcessor
     {
         if ($record->has($fieldName)) {
             $content = $record->get($fieldName);
+            if (!is_string($content)) {
+                return null;
+            }
             $builder = $this->sanitizerBuilderFactory->build('preview');
             return $builder->build()->sanitize($content);
         }

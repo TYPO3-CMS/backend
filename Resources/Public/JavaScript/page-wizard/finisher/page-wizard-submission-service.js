@@ -10,4 +10,4 @@
  *
  * The TYPO3 project - inspiring people to share!
  */
-import t from"@typo3/core/ajax/ajax-request.js";class s{constructor(e){this.context=e}async execute(){return await(await new t(TYPO3.settings.ajaxUrls.wizard_submit).withQueryArguments({mode:"page_wizard"}).post(this.context.getDataStore())).resolve()}}export{s as PageWizardSubmissionService};
+import s from"@typo3/core/ajax/ajax-request.js";class r{constructor(e){this.context=e}async execute(){const t=await(await new s(TYPO3.settings.ajaxUrls.wizard_submit).withQueryArguments({mode:"page_wizard"}).post(this.context.getDataStore())).resolve();return document.dispatchEvent(new CustomEvent("typo3:pagetree:refresh")),t}}export{r as PageWizardSubmissionService};

@@ -20,7 +20,6 @@ namespace TYPO3\CMS\Backend\Wizard;
 use Psr\Http\Message\ServerRequestInterface;
 use Symfony\Component\DependencyInjection\Attribute\AsTaggedItem;
 use TYPO3\CMS\Backend\Routing\UriBuilder;
-use TYPO3\CMS\Backend\Utility\BackendUtility;
 use TYPO3\CMS\Backend\Wizard\DTO\Configuration;
 use TYPO3\CMS\Backend\Wizard\DTO\Finisher;
 use TYPO3\CMS\Backend\Wizard\DTO\Step;
@@ -95,8 +94,6 @@ class PageWizardProvider implements WizardProviderInterface
         $redirectUrl = (string)$this->uriBuilder->buildUriFromRoute('web_layout', [
             'id' => $newPageUid,
         ]);
-
-        BackendUtility::setUpdateSignal('updatePageTree');
 
         return SubmissionResult::createSuccessResult(
             Finisher::createRedirectFinisher(

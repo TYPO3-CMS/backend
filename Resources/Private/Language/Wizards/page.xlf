@@ -32,7 +32,7 @@
         <source>Page created</source>
       </trans-unit>
       <trans-unit id="page_wizard.success.description">
-        <source>The page has been successfully created. You will be redirected to the newly created page.</source>
+        <source>The page has been successfully created. Click "Finish" to be redirected to the newly created page.</source>
       </trans-unit>
       <trans-unit id="page_wizard.button.create_another_page">
         <source>Create another page</source>

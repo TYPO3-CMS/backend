@@ -31,19 +31,19 @@
         <source>Localization completed</source>
       </trans-unit>
       <trans-unit id="localization_wizard.finisher.redirect.success.description">
-        <source>The content has been successfully localized. You will be redirected to the new language version.</source>
+        <source>The content has been successfully localized. Click "Finish" to be redirected to the new language version.</source>
       </trans-unit>
       <trans-unit id="localization_wizard.finisher.reload.success.title">
         <source>Localization completed</source>
       </trans-unit>
       <trans-unit id="localization_wizard.finisher.reload.success.description">
-        <source>The content has been successfully localized. The page will reload to show the updated content.</source>
+        <source>The content has been successfully localized. Click "Finish" to reload the page and view the updated content.</source>
       </trans-unit>
       <trans-unit id="localization_wizard.finisher.noop.success.title">
         <source>No operation required</source>
       </trans-unit>
       <trans-unit id="localization_wizard.finisher.noop.success.description">
-        <source>No records were selected that need processing. The page will reload.</source>
+        <source>No records were selected that need processing. Click "Finish" to reload the page.</source>
       </trans-unit>
       <!-- Step: Content selection -->
       <trans-unit id="step.content_selection.title">

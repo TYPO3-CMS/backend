@@ -17,6 +17,9 @@ declare(strict_types=1);
 
 namespace TYPO3\CMS\Backend\Localization;
 
+use Psr\EventDispatcher\EventDispatcherInterface;
+use TYPO3\CMS\Backend\Localization\Event\ModifyLocalizationHandlerIsAvailableEvent;
+
 /**
  * Registry for localization handlers
  *
@@ -35,8 +38,10 @@ class LocalizationHandlerRegistry
     /**
      * @param iterable<LocalizationHandlerInterface> $handlers
      */
-    public function __construct(iterable $handlers)
-    {
+    public function __construct(
+        iterable $handlers,
+        private readonly EventDispatcherInterface $eventDispatcher,
+    ) {
         foreach ($handlers as $handler) {
             $this->handlers[$handler->getIdentifier()] = $handler;
         }
@@ -78,7 +83,13 @@ class LocalizationHandlerRegistry
     {
         $availableHandlers = [];
         foreach ($this->handlers as $handler) {
-            if ($handler->isAvailable($instructions)) {
+            $isAvailable = $this->eventDispatcher->dispatch(new ModifyLocalizationHandlerIsAvailableEvent(
+                identifier: $handler->getIdentifier(),
+                className: $handler::class,
+                instructions: $instructions,
+                isAvailable: $handler->isAvailable($instructions),
+            ))->isAvailable;
+            if ($isAvailable === true) {
                 $availableHandlers[$handler->getIdentifier()] = $handler;
             }
         }

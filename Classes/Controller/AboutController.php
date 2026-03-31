@@ -81,7 +81,7 @@ class AboutController
             }
             $extensions[] = [
                 'key' => $package->getPackageKey(),
-                'title' => $package->getPackageMetaData()->getDescription(),
+                'title' => $package->getPackageMetaData()->getTitle(),
                 'authors' => $package->getValueFromComposerManifest('authors'),
             ];
         }
